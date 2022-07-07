@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+	<AssemblyName>Jitter.Core</AssemblyName>
+	<AssemblyVersion>0.2.0.0</AssemblyVersion>
+	<ProductName>Jitter.Core</ProductName>
+	<Description>Realtime physics engine for .NET Core</Description>
+	<Copyright>Copyright (c) 2015 Thorben Linneweber, Matthew Leibowitz</Copyright>
+	<RootNamespace>Jitter</RootNamespace>
+	<Title>Jitter Physics 3D</Title>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <IntermediateOutputPath>obj\netstandard2.0\Debug\</IntermediateOutputPath>
+    <OutputPath>bin\netstandard2.0\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Debug\netstandard2.0\Jitter.Core.xml</DocumentationFile>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <IntermediateOutputPath>obj\netstandard2.0\Release\</IntermediateOutputPath>
+    <OutputPath>bin\netstandard2.0\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Release\netstandard2.0\Jitter.Core.xml</DocumentationFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+</Project>
