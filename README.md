@@ -2,7 +2,9 @@
 [![JitterPhysics Build][appveyor-badge]][appveyor-link] [![JitterPhysics on NuGet][nuget-badge]][nuget-link]
 
 ---
-## Project Update: August 8, 2021
+## Project Update: July 8, 2022
+
+This is a simple port from Jitter Physics to be used by Core projects (.Net Standard 2.0)
 
 Jitter Physics is under active development again. Expect new updates, improvements and code fixes in the near future.
 

@@ -2,20 +2,37 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-	<AssemblyName>Jitter.Core</AssemblyName>
-	<AssemblyVersion>0.2.0.0</AssemblyVersion>
-	<ProductName>Jitter.Core</ProductName>
-	<Description>Realtime physics engine for .NET Core</Description>
-	<Copyright>Copyright (c) 2015 Thorben Linneweber, Matthew Leibowitz</Copyright>
-	<RootNamespace>Jitter</RootNamespace>
-	<Title>Jitter Physics 3D</Title>
+    <IsPackable>true</IsPackable>
+    <AssemblyName>Jitter.Core</AssemblyName>
+    <Version>0.2.0</Version>
+    <PackageVersion>0.2.0</PackageVersion>
+    <Authors>Original from Thorben Linneweber, Matthew Leibowitz</Authors>
+    <AssemblyVersion>0.2.0.0</AssemblyVersion>
+    <ProductName>Jitter.Core</ProductName>
+    <Description>Realtime physics engine port to .NET Standard 2.0 (Core)</Description>
+    <Copyright>Copyright (c) 2015 Thorben Linneweber, Matthew Leibowitz</Copyright>
+    <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/RogerBarreto/Jitterphysics.Core</PackageProjectUrl>
+    <PackageIcon>Jitter128x128.png</PackageIcon>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <RepositoryUrl>https://github.com/RogerBarreto/Jitterphysics.Core</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryBranch>master</RepositoryBranch>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RootNamespace>Jitter</RootNamespace>
+    <Title>Jitter Physics Core</Title>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
+  <ItemGroup>
+    <None Include="Jitter128x128.png" Pack="true" PackagePath=""/>
+    <None Include="..\..\README.md" Pack="true" PackagePath=""/>
+  </ItemGroup>
+
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <IntermediateOutputPath>obj\netstandard2.0\Debug\</IntermediateOutputPath>
-    <OutputPath>bin\netstandard2.0\Debug\</OutputPath>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -25,13 +42,14 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <IntermediateOutputPath>obj\netstandard2.0\Release\</IntermediateOutputPath>
-    <OutputPath>bin\netstandard2.0\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\netstandard2.0\Jitter.Core.xml</DocumentationFile>
+    <DocumentationFile>Jitter.Core.xml</DocumentationFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    
   </PropertyGroup>
 </Project>

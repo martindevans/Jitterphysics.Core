@@ -7,7 +7,7 @@ for /D %%p in ("output\*") do rmdir "%%p" /s /q
 
 
 rem build 3D library
-msbuild source\Jitter.Core.sln /p:Configuration=Release /t:Rebuild
+rem msbuild source\Jitter.Core.sln /p:Configuration=Release /t:Rebuild
 
 rem ready for packaging
 if not exist output\netstandard2.0\ mkdir output\netstandard2.0\
