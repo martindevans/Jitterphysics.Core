@@ -72,7 +72,7 @@ namespace Jitter.Collision.Shapes
 
         public override void SupportMapping(ref JVector direction, out JVector result)
         {
-            JVector temp1, temp2 = JVector.Zero;
+            JVector temp1, temp2 = default;
 
             for (var i = 0; i < shapes.Count; i++)
             {

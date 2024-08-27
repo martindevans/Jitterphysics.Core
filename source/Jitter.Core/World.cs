@@ -691,8 +691,8 @@ namespace Jitter
                     }
                 }
 
-                body.force = JVector.Zero;
-                body.torque = JVector.Zero;
+                body.force = default;
+                body.torque = default;
 
             }
         }

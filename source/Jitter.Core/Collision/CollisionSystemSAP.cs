@@ -146,7 +146,7 @@ namespace Jitter.Collision
         /// </summary>
         public override bool Raycast(JVector rayOrigin, JVector rayDirection, RaycastCallback raycast, out RigidBody body, out JVector normal, out float fraction)
         {
-            body = null; normal = JVector.Zero; fraction = float.MaxValue;
+            body = null; normal = default; fraction = float.MaxValue;
 
             var result = false;
 
@@ -180,7 +180,8 @@ namespace Jitter.Collision
         /// </summary>
         public override bool Raycast(RigidBody body, JVector rayOrigin, JVector rayDirection, out JVector normal, out float fraction)
         {
-            fraction = float.MaxValue; normal = JVector.Zero;
+            fraction = float.MaxValue;
+            normal = default;
 
             if (!body.BoundingBox.RayIntersect(ref rayOrigin, ref rayDirection)) return false;
 

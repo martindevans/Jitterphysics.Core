@@ -277,10 +277,9 @@ namespace Jitter.Collision
         /// <param name="result"></param>
         private void CreateAABox(ref JBBox aabb, EChild child,out JBBox result)
         {
-            var dims = aabb.Max - aabb.Min;
-            dims = dims * 0.5f;
+            var dims = 0.5f * (aabb.Max - aabb.Min);
 
-            var offset = JVector.Zero;
+            var offset = default(JVector);
 
             switch (child)
             {

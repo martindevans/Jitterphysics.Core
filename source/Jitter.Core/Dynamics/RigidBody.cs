@@ -236,8 +236,8 @@ namespace Jitter.Dynamics
                 {
                     // if active and should be inactive
                     inactiveTime = float.PositiveInfinity;
-                    angularVelocity = JVector.Zero;
-                    linearVelocity = JVector.Zero;
+                    angularVelocity = default;
+                    linearVelocity = default;
                 }
 
                 isActive = value;
@@ -487,8 +487,8 @@ namespace Jitter.Dynamics
                     if(island != null)
                     island.islandManager.MakeBodyStatic(this);
 
-                    angularVelocity = JVector.Zero;
-                    linearVelocity = JVector.Zero;
+                    angularVelocity = default;
+                    linearVelocity = default;
                 }
                 isStatic = value;
             }
@@ -526,7 +526,7 @@ namespace Jitter.Dynamics
         }
 
 
-        internal JVector sweptDirection = JVector.Zero;
+        internal JVector sweptDirection = default;
 
         public void SweptExpandBoundingBox(float timestep)
         {
@@ -575,7 +575,7 @@ namespace Jitter.Dynamics
                 boundingBox.Min = boundingBox.Min + position;
                 boundingBox.Max = boundingBox.Max + position;
 
-                angularVelocity = JVector.Zero;
+                angularVelocity = default;
             }
             else
             {

@@ -51,9 +51,9 @@ namespace Jitter.Dynamics.Joints
             hingeAxis = JVector.Normalize(hingeAxis);
 
             // choose a direction that is perpendicular to the hinge
-            var perpDir = JVector.Up;
+            var perpDir = JVectorExtensions.Up;
 
-            if (JVector.Dot(perpDir, hingeAxis) > 0.1f) perpDir = JVector.Right;
+            if (JVector.Dot(perpDir, hingeAxis) > 0.1f) perpDir = JVectorExtensions.Right;
 
             // now make it perpendicular to the hinge
             var sideAxis = JVector.Cross(hingeAxis, perpDir);

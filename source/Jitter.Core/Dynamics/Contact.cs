@@ -183,8 +183,8 @@ namespace Jitter.Dynamics
         /// </summary>
         public void Iterate()
         {
-            //body1.linearVelocity = JVector.Zero;
-            //body2.linearVelocity = JVector.Zero;
+            //body1.linearVelocity = default;
+            //body2.linearVelocity = default;
             //return;
 
             if (treatBody1AsStatic && treatBody2AsStatic) return;
@@ -491,7 +491,7 @@ namespace Jitter.Dynamics
 
             var kNormal = 0.0f;
 
-            var rantra = JVector.Zero;
+            var rantra = default(JVector);
             if (!treatBody1AsStatic)
             {
                 kNormal += body1.inverseMass;
@@ -520,7 +520,7 @@ namespace Jitter.Dynamics
                 }
             }
 
-            var rbntrb = JVector.Zero;
+            var rbntrb = default(JVector);
             if (!treatBody2AsStatic)
             {
                 kNormal += body2.inverseMass;
@@ -573,7 +573,7 @@ namespace Jitter.Dynamics
             var kTangent = 0.0f;
 
             if (treatBody1AsStatic)
-                rantra = JVector.Zero;
+                rantra = default;
             else
             {
                 kTangent += body1.inverseMass;
@@ -603,7 +603,7 @@ namespace Jitter.Dynamics
             }
 
             if (treatBody2AsStatic)
-                rbntrb = JVector.Zero;
+                rbntrb = default;
             else
             {
                 kTangent += body2.inverseMass;

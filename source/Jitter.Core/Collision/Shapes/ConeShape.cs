@@ -79,7 +79,7 @@ namespace Jitter.Collision.Shapes
             // J_x=J_y=3/20 M (R^2+4 H^2)
 
             // the supportmap center is in the half height, the real geomcenter is:
-            geomCen = JVector.Zero;
+            geomCen = default;
         }
 
         /// <summary>

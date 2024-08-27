@@ -46,7 +46,7 @@ namespace Jitter.Collision.Shapes
         internal float mass = 1.0f;
 
         internal JBBox boundingBox = JBBox.LargeBox;
-        internal JVector geomCen = JVector.Zero;
+        internal JVector geomCen = default;
 
         /// <summary>
         /// Gets called when the shape changes one of the parameters.
@@ -283,7 +283,7 @@ namespace Jitter.Collision.Shapes
                                                  out JMatrix inertia)
         {
             var mass = 0.0f;
-            centerOfMass = JVector.Zero; inertia = JMatrix.Zero;
+            centerOfMass = default; inertia = JMatrix.Zero;
 
             if (shape is Multishape) throw new ArgumentException("Can't calculate inertia of multishapes.", "shape");
 

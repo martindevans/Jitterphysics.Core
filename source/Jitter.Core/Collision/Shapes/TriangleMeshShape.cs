@@ -213,7 +213,7 @@ namespace Jitter.Collision.Shapes
             if (flipNormal) normal = -normal;
         }
 
-        private JVector normal = JVector.Up;
+        private JVector normal = JVectorExtensions.Up;
 
         public void CollisionNormal(out JVector normal)
         {

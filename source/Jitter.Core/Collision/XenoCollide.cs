@@ -97,7 +97,7 @@ namespace Jitter.Collision
             JVector mn;
 
             // Initialization of the output
-            point = normal = JVector.Zero;
+            point = normal = default;
             penetration = 0.0f;
 
             //JVector right = JVector.Right;

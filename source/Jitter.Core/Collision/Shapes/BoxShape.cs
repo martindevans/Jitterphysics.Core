@@ -28,7 +28,7 @@ namespace Jitter.Collision.Shapes
     /// </summary>
     public class BoxShape : Shape
     {
-        private JVector size = JVector.Zero;
+        private JVector size = default;
 
         /// <summary>
         /// The sidelength of the box.
@@ -62,7 +62,7 @@ namespace Jitter.Collision.Shapes
             UpdateShape();
         }
 
-        private JVector halfSize = JVector.Zero;
+        private JVector halfSize = default;
 
         /// <summary>
         /// This method uses the <see cref="ISupportMappable"/> implementation
@@ -106,7 +106,7 @@ namespace Jitter.Collision.Shapes
             inertia.M22 = 1.0f / 12.0f * mass * (size.X * size.X + size.Z * size.Z);
             inertia.M33 = 1.0f / 12.0f * mass * (size.X * size.X + size.Y * size.Y);
 
-            geomCen = JVector.Zero;
+            geomCen = default;
         }
 
         /// <summary>

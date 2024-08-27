@@ -119,7 +119,7 @@ namespace Jitter.Collision
             var simplexSolver = simplexSolverPool.GetNew();
             simplexSolver.Reset();
 
-            p1 = p2 = JVector.Zero;
+            p1 = p2 = default;
 
             var r = position1 - position2;
             JVector w, v;
@@ -134,7 +134,7 @@ namespace Jitter.Collision
 
             v = supVertexA - supVertexB;
 
-            normal = JVector.Zero;
+            normal = default;
 
             var maxIter = 15;
 
@@ -179,7 +179,7 @@ namespace Jitter.Collision
 
     //        float lambda = 0.0f;
 
-    //        p1 = p2 = JVector.Zero;
+    //        p1 = p2 = default;
 
     //        JVector x1 = position1;
     //        JVector x2 = position2;
@@ -198,7 +198,7 @@ namespace Jitter.Collision
 
     //        bool hasResult = false;
 
-    //        normal = JVector.Zero;
+    //        normal = default;
 
 
     //        float lastLambda = lambda;
@@ -291,7 +291,7 @@ namespace Jitter.Collision
             var simplexSolver = simplexSolverPool.GetNew();
             simplexSolver.Reset();
 
-            normal = JVector.Zero;
+            normal = default;
             fraction = float.MaxValue;
 
             var lambda = 0.0f;

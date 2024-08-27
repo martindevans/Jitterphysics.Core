@@ -23,6 +23,45 @@ namespace Jitter.LinearMath
 {
     public static class JVectorExtensions
     {
+        /// <summary>
+        /// A vector with components (0,0,0);
+        /// </summary>
+        public static readonly JVector Zero = new JVector(0);
+
+        /// <summary>
+        /// A vector with components (1,0,0);
+        /// </summary>
+        public static readonly JVector Left = new JVector(1, 0, 0);
+
+        /// <summary>
+        /// A vector with components (-1,0,0);
+        /// </summary>
+        public static readonly JVector Right = -Left;
+
+        /// <summary>
+        /// A vector with components (0,1,0);
+        /// </summary>
+        public static readonly JVector Up = new JVector(0, 1, 0);
+
+        /// <summary>
+        /// A vector with components (0,-1,0);
+        /// </summary>
+        public static readonly JVector Down = -Up;
+
+        /// <summary>
+        /// A vector with components (0,0,1);
+        /// </summary>
+        public static readonly JVector Backward = new JVector(0, 0, 1);
+        /// <summary>
+        /// A vector with components (0,0,-1);
+        /// </summary>
+        public static readonly JVector Forward = -Backward;
+
+        /// <summary>
+        /// A vector with components (1,1,1);
+        /// </summary>
+        public static readonly JVector One = new JVector(1);
+
         private const float ZeroEpsilonSq = JMath.Epsilon * JMath.Epsilon;
 
         /// <summary>
@@ -82,51 +121,6 @@ namespace Jitter.LinearMath
         public float Y;
         /// <summary>The Z component of the vector.</summary>
         public float Z;
-
-        /// <summary>
-        /// A vector with components (0,0,0);
-        /// </summary>
-        public static readonly JVector Zero;
-        /// <summary>
-        /// A vector with components (1,0,0);
-        /// </summary>
-        public static readonly JVector Left;
-        /// <summary>
-        /// A vector with components (-1,0,0);
-        /// </summary>
-        public static readonly JVector Right;
-        /// <summary>
-        /// A vector with components (0,1,0);
-        /// </summary>
-        public static readonly JVector Up;
-        /// <summary>
-        /// A vector with components (0,-1,0);
-        /// </summary>
-        public static readonly JVector Down;
-        /// <summary>
-        /// A vector with components (0,0,1);
-        /// </summary>
-        public static readonly JVector Backward;
-        /// <summary>
-        /// A vector with components (0,0,-1);
-        /// </summary>
-        public static readonly JVector Forward;
-        /// <summary>
-        /// A vector with components (1,1,1);
-        /// </summary>
-        public static readonly JVector One;
-
-        static JVector()
-        {
-            One = new JVector(1, 1, 1);
-            Zero = new JVector(0, 0, 0);
-            Left = new JVector(1, 0, 0);
-            Right = new JVector(-1, 0, 0);
-            Up = new JVector(0, 1, 0);
-            Down = new JVector(0, -1, 0);
-            Backward = new JVector(0, 0, 1);
-            Forward = new JVector(0, 0, -1);
-        }
 
         /// <summary>
         /// Constructor initializing a new instance of the structure

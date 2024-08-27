@@ -128,7 +128,7 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         public override void CalculateMassInertia()
         {
-            geomCen = JVector.Zero;
+            geomCen = default;
 
             // TODO: calc this right
             inertia = JMatrix.Identity;

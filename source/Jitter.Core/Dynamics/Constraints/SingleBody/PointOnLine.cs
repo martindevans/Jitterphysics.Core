@@ -30,7 +30,7 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         private JVector localAnchor1;
         private JVector r1;
 
-        private JVector lineNormal = JVector.Right;
+        private JVector lineNormal;
         private JVector anchor;
 
         private float biasFactor = 0.5f;
