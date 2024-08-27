@@ -56,8 +56,8 @@ namespace Jitter.Dynamics.Constraints
         public PointPointDistance(RigidBody body1, RigidBody body2, JVector anchor1,JVector anchor2)
             : base(body1, body2)
         {
-            localAnchor1 = JVector.Subtract(anchor1, body1.position);
-            localAnchor2 = JVector.Subtract(anchor2, body2.position);
+            localAnchor1 = anchor1 - body1.position;
+            localAnchor2 = anchor2 - body2.position;
 
             JVector.Transform(ref localAnchor1, ref body1.invOrientation, out localAnchor1);
             JVector.Transform(ref localAnchor2, ref body2.invOrientation, out localAnchor2);
@@ -127,10 +127,10 @@ namespace Jitter.Dynamics.Constraints
             JVector.Transform(ref localAnchor1, ref body1.orientation, out r1);
             JVector.Transform(ref localAnchor2, ref body2.orientation, out r2);
 
-            var p1 = JVector.Add(body1.position, r1);
-            var p2 = JVector.Add(body2.position, r2);
+            var p1 = body1.position + r1;
+            var p2 = body2.position + r2;
 
-            var dp = JVector.Subtract(p2, p1);
+            var dp = p2 - p1;
 
             var deltaLength = dp.Length() - distance;
 
@@ -147,16 +147,16 @@ namespace Jitter.Dynamics.Constraints
                 skipConstraint = false;
 
                 var n = p2 - p1;
-                if (n.LengthSquared() != 0.0f) n.Normalize();
+                if (n.LengthSquared() != 0.0f) n = JVector.Normalize(n);
 
                 jacobian[0] = -1.0f * n;
-                jacobian[1] = -1.0f * (r1 % n);
+                jacobian[1] = -1.0f * JVector.Cross(r1, n);
                 jacobian[2] = 1.0f * n;
-                jacobian[3] = r2 % n;
+                jacobian[3] = JVector.Cross(r2, n);
 
                 effectiveMass = body1.inverseMass + body2.inverseMass
-                    + JVector.Transform(jacobian[1], body1.invInertiaWorld) * jacobian[1]
-                    + JVector.Transform(jacobian[3], body2.invInertiaWorld) * jacobian[3];
+                    + JVector.Dot(JVector.Transform(jacobian[1], body1.invInertiaWorld), jacobian[1])
+                                                  + JVector.Dot(JVector.Transform(jacobian[3], body2.invInertiaWorld), jacobian[3]);
 
                 softnessOverDt = softness / timestep;
                 effectiveMass += softnessOverDt;
@@ -188,10 +188,10 @@ namespace Jitter.Dynamics.Constraints
             if (skipConstraint) return;
 
             var jv =
-                body1.linearVelocity * jacobian[0] +
-                body1.angularVelocity * jacobian[1] +
-                body2.linearVelocity * jacobian[2] +
-                body2.angularVelocity * jacobian[3];
+                JVector.Dot(body1.linearVelocity, jacobian[0]) +
+                JVector.Dot(body1.angularVelocity, jacobian[1]) +
+                JVector.Dot(body2.linearVelocity, jacobian[2]) +
+                JVector.Dot(body2.angularVelocity, jacobian[3]);
 
             var softnessScalar = accumulatedImpulse * softnessOverDt;
 

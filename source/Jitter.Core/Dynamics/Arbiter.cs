@@ -156,7 +156,7 @@ namespace Jitter.Dynamics
         public Contact AddContact(JVector point1, JVector point2, JVector normal, float penetration, 
             ContactSettings contactSettings)
         {
-            var relPos1 = JVector.Subtract(point1, body1.position);
+            var relPos1 = point1 - body1.position;
 
             int index;
 
@@ -204,7 +204,7 @@ namespace Jitter.Dynamics
             var nearestPoint = -1;
             for (var i = 0; i < size; i++)
             {
-                var diffA = JVector.Subtract(contactList[i].relativePos1, realRelPos1);
+                var diffA = contactList[i].relativePos1 - realRelPos1;
                 var distToManiPoint = diffA.LengthSquared();
                 if (distToManiPoint < shortestDist)
                 {
@@ -235,31 +235,39 @@ namespace Jitter.Dynamics
             float res0 = 0, res1 = 0, res2 = 0, res3 = 0;
             if (maxPenetrationIndex != 0)
             {
-                var a0 = JVector.Subtract(realRelPos1, contactList[1].relativePos1);
-                var b0 = JVector.Subtract(contactList[3].relativePos1, contactList[2].relativePos1);
+                JVector value2 = contactList[1].relativePos1;
+                var a0 = realRelPos1 - value2;
+                JVector value3 = contactList[2].relativePos1;
+                var b0 = contactList[3].relativePos1 - value3;
                 var cross = JVector.Cross(a0, b0);
                 res0 = cross.LengthSquared();
             }
             if (maxPenetrationIndex != 1)
             {
-                var a0 = JVector.Subtract(realRelPos1, contactList[0].relativePos1);
-                var b0 = JVector.Subtract(contactList[3].relativePos1, contactList[2].relativePos1);
+                JVector value2 = contactList[0].relativePos1;
+                var a0 = realRelPos1 - value2;
+                JVector value3 = contactList[2].relativePos1;
+                var b0 = contactList[3].relativePos1 - value3;
                 var cross = JVector.Cross(a0, b0);
                 res1 = cross.LengthSquared();
             }
 
             if (maxPenetrationIndex != 2)
             {
-                var a0 = JVector.Subtract(realRelPos1, contactList[0].relativePos1);
-                var b0 = JVector.Subtract(contactList[3].relativePos1, contactList[1].relativePos1);
+                JVector value2 = contactList[0].relativePos1;
+                var a0 = realRelPos1 - value2;
+                JVector value3 = contactList[1].relativePos1;
+                var b0 = contactList[3].relativePos1 - value3;
                 var cross = JVector.Cross(a0, b0);
                 res2 = cross.LengthSquared();
             }
 
             if (maxPenetrationIndex != 3)
             {
-                var a0 = JVector.Subtract(realRelPos1, contactList[0].relativePos1);
-                var b0 = JVector.Subtract(contactList[2].relativePos1, contactList[1].relativePos1);
+                JVector value2 = contactList[0].relativePos1;
+                var a0 = realRelPos1 - value2;
+                JVector value3 = contactList[1].relativePos1;
+                var b0 = contactList[2].relativePos1 - value3;
                 var cross = JVector.Cross(a0, b0);
                 res3 = cross.LengthSquared();
             }

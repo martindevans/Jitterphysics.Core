@@ -156,7 +156,8 @@ namespace Jitter.Collision.Shapes
                 {
                     var pos = triangles[e];
                     JVector.Transform(ref pos,ref shapes[i].orientation,out pos);
-                    pos = JVector.Add(pos, shapes[i].position);
+                    JVector value2 = shapes[i].position;
+                    pos = pos + value2;
                     triangleList.Add(pos);
                 }
                 triangles.Clear();
@@ -229,7 +230,8 @@ namespace Jitter.Collision.Shapes
             JVector.Transform(ref direction, ref shapes[currentShape].invOrientation, out result);
             shapes[currentShape].Shape.SupportMapping(ref direction, out result);
             JVector.Transform(ref result, ref shapes[currentShape].orientation, out result);
-            result = JVector.Add(result, shapes[currentShape].position);
+            JVector value2 = shapes[currentShape].position;
+            result = result + value2;
         }
 
         /// <summary>

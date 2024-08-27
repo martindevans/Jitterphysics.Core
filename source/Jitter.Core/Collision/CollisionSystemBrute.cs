@@ -145,7 +145,7 @@ namespace Jitter.Collision
 
                 var multiShapeCollides = false;
 
-                var transformedOrigin = JVector.Subtract(rayOrigin, body.position);
+                var transformedOrigin = rayOrigin - body.position;
                 JVector.Transform(ref transformedOrigin, ref body.invOrientation, out transformedOrigin);
                 JVector.Transform(ref rayDirection, ref body.invOrientation, out var transformedDirection);
 
@@ -164,7 +164,7 @@ namespace Jitter.Collision
                             {
                                 (ms as TriangleMeshShape).CollisionNormal(out tempNormal);
                                 JVector.Transform(ref tempNormal, ref body.orientation, out tempNormal);
-                                tempNormal.Negate();
+                                tempNormal = -tempNormal;
                             }
 
                             normal = tempNormal;

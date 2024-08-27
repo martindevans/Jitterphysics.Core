@@ -56,9 +56,9 @@ namespace Jitter.Collision.Shapes
         public override void SupportMapping(ref JVector direction, out JVector result)
         {
             result = direction;
-            result.Normalize();
+            result = JVector.Normalize(result);
 
-            result = JVector.Multiply(result, radius);
+            result = result * radius;
         }
 
         /// <summary>

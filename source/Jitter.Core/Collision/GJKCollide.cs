@@ -65,17 +65,17 @@ namespace Jitter.Collision
         public static bool Pointcast(ISupportMappable support, ref JMatrix orientation,ref JVector position,ref JVector point)
         {
             SupportMapTransformed(support, ref orientation, ref position, ref point, out var arbitraryPoint);
-            arbitraryPoint = JVector.Subtract(point, arbitraryPoint);
+            arbitraryPoint = point - arbitraryPoint;
 
             support.SupportCenter(out var r);
             JVector.Transform(ref r, ref orientation, out r);
-            r = JVector.Add(position, r);
-            r = JVector.Subtract(point, r);
+            r = position + r;
+            r = point - r;
 
             var x = point;
             float VdotR;
 
-            var v = JVector.Subtract(x, arbitraryPoint);
+            var v = x - arbitraryPoint;
             var dist = v.LengthSquared();
             var epsilon = 0.0001f;
 
@@ -88,7 +88,7 @@ namespace Jitter.Collision
             while (dist > epsilon && maxIter-- != 0)
             {
                 SupportMapTransformed(support, ref orientation, ref position, ref v, out var p);
-                var w = JVector.Subtract(x, p);
+                var w = x - p;
 
                 var VdotW = JVector.Dot(v, w);
 
@@ -143,7 +143,7 @@ namespace Jitter.Collision
 
             while (distSq > epsilon && maxIter-- != 0)
             {
-                vn = JVector.Negate(v);
+                vn = -v;
                 SupportMapTransformed(support1, ref orientation1, ref position1, ref vn, out supVertexA);
                 SupportMapTransformed(support2, ref orientation2, ref position2, ref v, out supVertexB);
                 w = supVertexA - supVertexB;
@@ -161,7 +161,7 @@ namespace Jitter.Collision
             simplexSolver.ComputePoints(out p1, out p2);
 
             if (normal.LengthSquared() > JMath.Epsilon * JMath.Epsilon)
-                normal.Normalize();
+                normal = JVector.Normalize(normal);
 
             simplexSolverPool.GiveBack(simplexSolver);
 
@@ -300,7 +300,7 @@ namespace Jitter.Collision
             var x = origin;
 
             SupportMapTransformed(support, ref orientation, ref position, ref r, out var arbitraryPoint);
-            var v = JVector.Subtract(x, arbitraryPoint);
+            var v = x - arbitraryPoint;
 
             var maxIter = MaxIterations;
 
@@ -312,7 +312,7 @@ namespace Jitter.Collision
             while (distSq > epsilon && maxIter-- != 0)
             {
                 SupportMapTransformed(support, ref orientation, ref position, ref v, out var p);
-                var w = JVector.Subtract(x, p);
+                var w = x - p;
 
                 var VdotW = JVector.Dot(v, w);
 
@@ -328,9 +328,9 @@ namespace Jitter.Collision
                     else
                     {
                         lambda = lambda - VdotW / VdotR;
-                        x = JVector.Multiply(r, lambda);
-                        x = JVector.Add(origin, x);
-                        w = JVector.Subtract(x, p);
+                        x = r * lambda;
+                        x = origin + x;
+                        w = x - p;
                         normal = v;
                     }
                 }
@@ -350,7 +350,7 @@ namespace Jitter.Collision
             fraction = p2.Length() / direction.Length();
 
             if (normal.LengthSquared() > JMath.Epsilon * JMath.Epsilon)
-                normal.Normalize();
+                normal = JVector.Normalize(normal);
 
             simplexSolverPool.GiveBack(simplexSolver);
 

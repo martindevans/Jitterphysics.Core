@@ -39,8 +39,8 @@ namespace Jitter.Dynamics.Joints
 
             hingeAxis *= 0.5f;
 
-            var pos1 = position; pos1 = JVector.Add(pos1, hingeAxis);
-            var pos2 = position; pos2 = JVector.Subtract(pos2, hingeAxis);
+            var pos1 = position; pos1 = pos1 + hingeAxis;
+            var pos2 = position; pos2 = pos2 - hingeAxis;
 
             worldPointConstraint[0] = new PointOnPoint(body1, body2, pos1);
             worldPointConstraint[1] = new PointOnPoint(body1, body2, pos2);
@@ -48,7 +48,7 @@ namespace Jitter.Dynamics.Joints
 
             // Now the limit, one max distance constraint
 
-            hingeAxis.Normalize();
+            hingeAxis = JVector.Normalize(hingeAxis);
 
             // choose a direction that is perpendicular to the hinge
             var perpDir = JVector.Up;
@@ -58,7 +58,7 @@ namespace Jitter.Dynamics.Joints
             // now make it perpendicular to the hinge
             var sideAxis = JVector.Cross(hingeAxis, perpDir);
             perpDir = JVector.Cross(sideAxis, hingeAxis);
-            perpDir.Normalize();
+            perpDir = JVector.Normalize(perpDir);
 
             // the length of the "arm" TODO take this as a parameter? what's
             // the effect of changing it?

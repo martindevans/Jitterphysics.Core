@@ -18,10 +18,23 @@
 */
 
 using System;
-using UnityEngine;
 
 namespace Jitter.LinearMath
 {
+    public static class JVectorExtensions
+    {
+        private const float ZeroEpsilonSq = JMath.Epsilon * JMath.Epsilon;
+
+        /// <summary>
+        /// Checks if the length of the vector is nearly zero.
+        /// </summary>
+        /// <returns>Returns true if the vector is nearly zero, otherwise false.</returns>
+        public static bool IsNearlyZero(this JVector vector)
+        {
+            return vector.LengthSquared() < ZeroEpsilonSq;
+        }
+    }
+
     /// <summary>
     /// A vector structure. Member of the math 
     /// namespace, so every method has it's 'by reference' equivalent
@@ -29,8 +42,6 @@ namespace Jitter.LinearMath
     /// </summary>
     public struct JVector
     {
-        private const float ZeroEpsilonSq = JMath.Epsilon * JMath.Epsilon;
-
         /// <summary>The X component of the vector.</summary>
         public float X;
         /// <summary>The Y component of the vector.</summary>
@@ -198,15 +209,6 @@ namespace Jitter.LinearMath
         }
 
         /// <summary>
-        /// Checks if the length of the vector is nearly zero.
-        /// </summary>
-        /// <returns>Returns true if the vector is nearly zero, otherwise false.</returns>
-        public bool IsNearlyZero()
-        {
-            return LengthSquared() < ZeroEpsilonSq;
-        }
-
-        /// <summary>
         /// Transforms a vector by the given matrix.
         /// </summary>
         /// <param name="position">The vector to transform.</param>
@@ -264,44 +266,6 @@ namespace Jitter.LinearMath
         }
 
         /// <summary>
-        /// Adds to vectors.
-        /// </summary>
-        /// <param name="value1">The first vector.</param>
-        /// <param name="value2">The second vector.</param>
-        /// <returns>The sum of both vectors.</returns>
-        public static JVector Add(JVector value1, JVector value2)
-        {
-            JVector result;
-            var num0 = value1.X + value2.X;
-            var num1 = value1.Y + value2.Y;
-            var num2 = value1.Z + value2.Z;
-
-            result.X = num0;
-            result.Y = num1;
-            result.Z = num2;
-            return result;
-        }
-
-        /// <summary>
-        /// Subtracts to vectors.
-        /// </summary>
-        /// <param name="value1">The first vector.</param>
-        /// <param name="value2">The second vector.</param>
-        /// <returns>The difference of both vectors.</returns>
-        public static JVector Subtract(JVector value1, JVector value2)
-        {
-            JVector result;
-            var num0 = value1.X - value2.X;
-            var num1 = value1.Y - value2.Y;
-            var num2 = value1.Z - value2.Z;
-
-            result.X = num0;
-            result.Y = num1;
-            result.Z = num2;
-            return result;
-        }
-
-        /// <summary>
         /// The cross product of two vectors.
         /// </summary>
         /// <param name="vector1">The first vector.</param>
@@ -309,13 +273,16 @@ namespace Jitter.LinearMath
         /// <param name="result">The cross product of both vectors.</param>
         public static JVector Cross(JVector vector1, JVector vector2)
         {
-            var result = new JVector();
             var num3 = vector1.Y * vector2.Z - vector1.Z * vector2.Y;
             var num2 = vector1.Z * vector2.X - vector1.X * vector2.Z;
             var num = vector1.X * vector2.Y - vector1.Y * vector2.X;
-            result.X = num3;
-            result.Y = num2;
-            result.Z = num;
+
+            var result = new JVector
+            {
+                X = num3,
+                Y = num2,
+                Z = num,
+            };
 
             return result;
         }
@@ -330,77 +297,13 @@ namespace Jitter.LinearMath
         }
 
         /// <summary>
-        /// Inverses the direction of the vector.
-        /// </summary>
-        public void Negate()
-        {
-            X = -X;
-            Y = -Y;
-            Z = -Z;
-        }
-
-        /// <summary>
-        /// Inverses the direction of a vector.
-        /// </summary>
-        /// <param name="value">The vector to inverse.</param>
-        /// <returns>The negated vector.</returns>
-        public static JVector Negate(JVector value)
-        {
-            Negate(ref value,out var result);
-            return result;
-        }
-
-        /// <summary>
-        /// Inverses the direction of a vector.
-        /// </summary>
-        /// <param name="value">The vector to inverse.</param>
-        /// <param name="result">The negated vector.</param>
-        public static void Negate(ref JVector value, out JVector result)
-        {
-            var num0 = -value.X;
-            var num1 = -value.Y;
-            var num2 = -value.Z;
-
-            result.X = num0;
-            result.Y = num1;
-            result.Z = num2;
-        }
-
-        /// <summary>
         /// Normalizes the given vector.
         /// </summary>
         /// <param name="value">The vector which should be normalized.</param>
         /// <returns>A normalized vector.</returns>
         public static JVector Normalize(JVector value)
         {
-            Normalize(ref value, out var result);
-            return result;
-        }
-
-        /// <summary>
-        /// Normalizes this vector.
-        /// </summary>
-        public void Normalize()
-        {
-            var num2 = X * X + Y * Y + Z * Z;
-            var num = 1f / (float)Math.Sqrt(num2);
-            X *= num;
-            Y *= num;
-            Z *= num;
-        }
-
-        /// <summary>
-        /// Normalizes the given vector.
-        /// </summary>
-        /// <param name="value">The vector which should be normalized.</param>
-        /// <param name="result">A normalized vector.</param>
-        public static void Normalize(ref JVector value, out JVector result)
-        {
-            var num2 = value.X * value.X + value.Y * value.Y + value.Z * value.Z;
-            var num = 1f / (float)Math.Sqrt(num2);
-            result.X = value.X * num;
-            result.Y = value.Y * num;
-            result.Z = value.Z * num;
+            return value * (1 / value.Length());
         }
 
         /// <summary>
@@ -423,46 +326,13 @@ namespace Jitter.LinearMath
         }
 
         /// <summary>
-        /// Multiply a vector with a factor.
+        /// 
         /// </summary>
-        /// <param name="value1">The vector to multiply.</param>
-        /// <param name="scaleFactor">The scale factor.</param>
-        /// <param name="result">Returns the multiplied vector.</param>
-        public static JVector Multiply(JVector value1, float scaleFactor)
-        {
-            JVector result;
-            result.X = value1.X * scaleFactor;
-            result.Y = value1.Y * scaleFactor;
-            result.Z = value1.Z * scaleFactor;
-            return result;
-        }
-
+        /// <param name="value1"></param>
+        /// <returns></returns>
         public static JVector operator -(JVector value1)
         {
             return new JVector(-value1.X, -value1.Y, -value1.Z);
-        }
-
-        /// <summary>
-        /// Calculates the cross product of two vectors.
-        /// </summary>
-        /// <param name="value1">The first vector.</param>
-        /// <param name="value2">The second vector.</param>
-        /// <returns>Returns the cross product of both.</returns>
-        public static JVector operator %(JVector value1, JVector value2)
-        {
-            var result = Cross(value1, value2);
-            return result;
-        }
-
-        /// <summary>
-        /// Calculates the dot product of two vectors.
-        /// </summary>
-        /// <param name="value1">The first vector.</param>
-        /// <param name="value2">The second vector.</param>
-        /// <returns>Returns the dot product of both.</returns>
-        public static float operator *(JVector value1, JVector value2)
-        {
-            return Dot(value1, value2);
         }
 
         /// <summary>
@@ -473,7 +343,10 @@ namespace Jitter.LinearMath
         /// <returns>Returns the scaled vector.</returns>
         public static JVector operator *(JVector value1, float value2)
         {
-            var result = Multiply(value1, value2);
+            JVector result;
+            result.X = value1.X * value2;
+            result.Y = value1.Y * value2;
+            result.Z = value1.Z * value2;
             return result;
         }
 
@@ -485,7 +358,7 @@ namespace Jitter.LinearMath
         /// <returns>Returns the scaled vector.</returns>
         public static JVector operator *(float value1, JVector value2)
         {
-            var result = Multiply(value2, value1);
+            var result = value2 * value1;
             return result;
         }
 
@@ -497,8 +370,11 @@ namespace Jitter.LinearMath
         /// <returns>The difference of both vectors.</returns>
         public static JVector operator -(JVector value1, JVector value2)
         {
-            var result = Subtract(value1, value2);
-            return result;
+            return new JVector(
+                value1.X - value2.X,
+                value1.Y - value2.Y,
+                value1.Z - value2.Z
+            );
         }
 
         /// <summary>
@@ -509,8 +385,11 @@ namespace Jitter.LinearMath
         /// <returns>The sum of both vectors.</returns>
         public static JVector operator +(JVector value1, JVector value2)
         {
-            var result = Add(value1, value2);
-            return result;
+            return new JVector(
+                value1.X + value2.X,
+                value1.Y + value2.Y,
+                value1.Z + value2.Z
+            );
         }
     }
 }

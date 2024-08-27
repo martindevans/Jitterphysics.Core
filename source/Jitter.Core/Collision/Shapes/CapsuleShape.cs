@@ -87,8 +87,9 @@ namespace Jitter.Collision.Shapes
 
             if (Math.Abs(direction.Y) > 0.0f)
             {
-                JVector.Normalize(ref direction, out var dir);
-                result = JVector.Multiply(dir, radius);
+                JVector dir;
+                dir = JVector.Normalize(direction);
+                result = dir * radius;
                 result.Y += Math.Sign(direction.Y) * 0.5f * length;              
             }
             else if (r > 0.0f)

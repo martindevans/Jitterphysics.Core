@@ -87,18 +87,18 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         public override void PrepareForIteration(float timestep)
         {
             JVector.Transform(ref localAnchor1, ref body1.orientation, out r1);
-            var p1 = JVector.Add(body1.position, r1);
+            var p1 = body1.position + r1;
 
-            var dp = JVector.Subtract(p1, anchor);
+            var dp = p1 - anchor;
             var deltaLength = dp.Length();
 
             var n = anchor - p1;
-            if (n.LengthSquared() != 0.0f) n.Normalize();
+            if (n.LengthSquared() != 0.0f) n = JVector.Normalize(n);
 
             jacobian[0] = -1.0f * n;
-            jacobian[1] = -1.0f * (r1 % n);
+            jacobian[1] = -1.0f * JVector.Cross(r1, n);
 
-            effectiveMass = body1.inverseMass + JVector.Transform(jacobian[1], body1.invInertiaWorld) * jacobian[1];
+            effectiveMass = body1.inverseMass + JVector.Dot(JVector.Transform(jacobian[1], body1.invInertiaWorld), jacobian[1]);
 
             softnessOverDt = softness / timestep;
             effectiveMass += softnessOverDt;
@@ -120,8 +120,8 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         public override void Iterate()
         {
             var jv =
-                body1.linearVelocity * jacobian[0] +
-                body1.angularVelocity * jacobian[1];
+                JVector.Dot(body1.linearVelocity, jacobian[0]) +
+                JVector.Dot(body1.angularVelocity, jacobian[1]);
 
             var softnessScalar = accumulatedImpulse * softnessOverDt;
 

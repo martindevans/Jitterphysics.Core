@@ -92,13 +92,13 @@ namespace Jitter.LinearMath
         /// <param name="result"></param>
         internal void InverseTransform(ref JVector position, ref JMatrix orientation)
         {
-            Max = JVector.Subtract(Max, position);
-            Min = JVector.Subtract(Min, position);
+            Max = Max - position;
+            Min = Min - position;
 
-            var center = JVector.Add(Max, Min);
+            var center = Max + Min;
             center.X *= 0.5f; center.Y *= 0.5f; center.Z *= 0.5f;
 
-            var halfExtents = JVector.Subtract(Max, Min);
+            var halfExtents = Max - Min;
             halfExtents.X *= 0.5f; halfExtents.Y *= 0.5f; halfExtents.Z *= 0.5f;
 
             JVector.TransposedTransform(ref center, ref orientation, out center);
@@ -106,8 +106,8 @@ namespace Jitter.LinearMath
             var abs = orientation.Absolute();
             JVector.TransposedTransform(ref halfExtents, ref abs, out halfExtents);
 
-            Max = JVector.Add(center, halfExtents);
-            Min = JVector.Subtract(center, halfExtents);
+            Max = center + halfExtents;
+            Min = center - halfExtents;
         }
 
         public void Transform(ref JMatrix orientation)

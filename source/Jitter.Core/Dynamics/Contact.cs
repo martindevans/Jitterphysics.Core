@@ -318,26 +318,26 @@ namespace Jitter.Dynamics
         {
             if (body1IsMassPoint)
             {
-                p1 = JVector.Add(realRelPos1, body1.position);
+                p1 = realRelPos1 + body1.position;
             }
             else
             {
                 JVector.Transform(ref realRelPos1, ref body1.orientation, out p1);
-                p1 = JVector.Add(p1, body1.position);
+                p1 = p1 + body1.position;
             }
 
             if (body2IsMassPoint)
             {
-                p2 = JVector.Add(realRelPos2, body2.position);
+                p2 = realRelPos2 + body2.position;
             }
             else
             {
                 JVector.Transform(ref realRelPos2, ref body2.orientation, out p2);
-                p2 = JVector.Add(p2, body2.position);
+                p2 = p2 + body2.position;
             }
 
 
-            var dist = JVector.Subtract(p1, p2);
+            var dist = p1 - p2;
             penetration = JVector.Dot(dist, normal);
         }
 
@@ -785,13 +785,13 @@ namespace Jitter.Dynamics
             float penetration, bool newContact, ContactSettings settings)
         {
             this.body1 = body1;  this.body2 = body2;
-            normal = n; normal.Normalize();
+            normal = JVector.Normalize(n);
             p1 = point1; p2 = point2;
 
             this.newContact = newContact;
 
-            relativePos1 = JVector.Subtract(p1, body1.position);
-            relativePos2 = JVector.Subtract(p2, body2.position);
+            relativePos1 = p1 - body1.position;
+            relativePos2 = p2 - body2.position;
             JVector.Transform(ref relativePos1, ref body1.invOrientation, out realRelPos1);
             JVector.Transform(ref relativePos2, ref body2.invOrientation, out realRelPos2);
 

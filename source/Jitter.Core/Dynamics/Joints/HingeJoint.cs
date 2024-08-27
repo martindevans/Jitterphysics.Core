@@ -48,8 +48,8 @@ namespace Jitter.Dynamics.Joints
 
             hingeAxis *= 0.5f;
 
-            var pos1 = position; pos1 = JVector.Add(pos1, hingeAxis);
-            var pos2 = position; pos2 = JVector.Subtract(pos2, hingeAxis);
+            var pos1 = position; pos1 = pos1 + hingeAxis;
+            var pos2 = position; pos2 = pos2 - hingeAxis;
 
             worldPointConstraint[0] = new PointOnPoint(body1,body2,pos1);
             worldPointConstraint[1] = new PointOnPoint(body1,body2,pos2);

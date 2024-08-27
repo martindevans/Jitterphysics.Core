@@ -582,7 +582,7 @@ namespace Jitter
                 }
                 else
                 {
-                    var diff = JVector.Subtract(c.p1, c.p2);
+                    var diff = c.p1 - c.p2;
                     var distance = JVector.Dot(diff, c.normal);
 
                     diff = diff - distance * c.normal;
@@ -673,20 +673,21 @@ namespace Jitter
             {
                 if (!body.isStatic && body.IsActive)
                 {
-                    var temp = JVector.Multiply(body.force, body.inverseMass * timestep);
-                    body.linearVelocity = JVector.Add(temp, body.linearVelocity);
+                    float scaleFactor = body.inverseMass * timestep;
+                    var temp = body.force * scaleFactor;
+                    body.linearVelocity = temp + body.linearVelocity;
 
                     if (!body.isParticle)
                     {
-                        temp = JVector.Multiply(body.torque, timestep);
+                        temp = body.torque * timestep;
                         JVector.Transform(ref temp, ref body.invInertiaWorld, out temp);
-                        body.angularVelocity = JVector.Add(temp, body.angularVelocity);
+                        body.angularVelocity = temp + body.angularVelocity;
                     }
 
                     if (body.affectedByGravity)
                     {
-                        temp = JVector.Multiply(gravity, timestep);
-                        body.linearVelocity = JVector.Add(body.linearVelocity, temp);
+                        temp = gravity * timestep;
+                        body.linearVelocity = body.linearVelocity + temp;
                     }
                 }
 
@@ -700,8 +701,8 @@ namespace Jitter
         {
             var body = obj as RigidBody;
 
-            var temp = JVector.Multiply(body.linearVelocity, timestep);
-            body.position = JVector.Add(temp, body.position);
+            var temp = body.linearVelocity * timestep;
+            body.position = temp + body.position;
 
             if (!body.isParticle)
             {
@@ -714,12 +715,14 @@ namespace Jitter
                 {
                     // use Taylor's expansions of sync function
                     // axis = body.angularVelocity * (0.5f * timestep - (timestep * timestep * timestep) * (0.020833333333f) * angle * angle);
-                    axis = JVector.Multiply(body.angularVelocity, 0.5f * timestep - timestep * timestep * timestep * 0.020833333333f * angle * angle);
+                    float scaleFactor = 0.5f * timestep - timestep * timestep * timestep * 0.020833333333f * angle * angle;
+                    axis = body.angularVelocity * scaleFactor;
                 }
                 else
                 {
                     // sync(fAngle) = sin(c*fAngle)/t
-                    axis = JVector.Multiply(body.angularVelocity, (float)Math.Sin(0.5f * angle * timestep) / angle);
+                    float scaleFactor = (float)Math.Sin(0.5f * angle * timestep) / angle;
+                    axis = body.angularVelocity * scaleFactor;
                 }
 
                 var dorn = new System.Numerics.Quaternion(axis.X, axis.Y, axis.Z, (float)Math.Cos(angle * timestep * 0.5f));
@@ -732,10 +735,10 @@ namespace Jitter
             }
 
             if ((body.Damping & RigidBody.DampingType.Linear) != 0)
-                body.linearVelocity = JVector.Multiply(body.linearVelocity, currentLinearDampFactor);
+                body.linearVelocity = body.linearVelocity * currentLinearDampFactor;
 
             if ((body.Damping & RigidBody.DampingType.Angular) != 0)
-                body.angularVelocity = JVector.Multiply(body.angularVelocity, currentAngularDampFactor);
+                body.angularVelocity = body.angularVelocity * currentAngularDampFactor;
 
             body.Update();
 
@@ -779,7 +782,7 @@ namespace Jitter
 
             if (arbiter.body1 == body1)
             {
-                JVector.Negate(ref normal, out normal);
+                normal = -normal;
                 contact = arbiter.AddContact(point1, point2, normal, penetration, contactSettings);
             }
             else

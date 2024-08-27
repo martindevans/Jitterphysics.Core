@@ -105,26 +105,26 @@ namespace Jitter.Collision
             // Get the center of shape1 in world coordinates -> v01
             support1.SupportCenter(out var v01);
             JVector.Transform(ref v01, ref orientation1, out v01);
-            v01 = JVector.Add(position1, v01);
+            v01 = position1 + v01;
 
             // Get the center of shape2 in world coordinates -> v02
             support2.SupportCenter(out var v02);
             JVector.Transform(ref v02, ref orientation2, out v02);
-            v02 = JVector.Add(position2, v02);
+            v02 = position2 + v02;
 
             // v0 is the center of the minkowski difference
-            var v0 = JVector.Subtract(v02, v01);
+            var v0 = v02 - v01;
 
             // Avoid case where centers overlap -- any direction is fine in this case
             if (v0.IsNearlyZero()) v0 = new JVector(0.00001f, 0, 0);
 
             // v1 = support in direction of origin
             mn = v0;
-            JVector.Negate(ref v0, out normal);
+            normal = -v0;
 
             SupportMapTransformed(support1, ref orientation1, ref position1, ref mn, out var v11);
             SupportMapTransformed(support2, ref orientation2, ref position2, ref normal, out var v12);
-            var v1 = JVector.Subtract(v12, v11);
+            var v1 = v12 - v11;
 
             if (JVector.Dot(v1, normal) <= 0.0f) return false;
 
@@ -133,15 +133,15 @@ namespace Jitter.Collision
 
             if (normal.IsNearlyZero())
             {
-                normal = JVector.Subtract(v1, v0);
+                normal = v1 - v0;
 
-                normal.Normalize();
+                normal = JVector.Normalize(normal);
 
                 point = v11;
-                point = JVector.Add(point, v12);
-                point = JVector.Multiply(point, 0.5f);
+                point = point + v12;
+                point = point * 0.5f;
 
-                temp1 = JVector.Subtract(v12, v11);
+                temp1 = v12 - v11;
                 penetration = JVector.Dot(temp1, normal);
 
                 //point = v11;
@@ -149,16 +149,16 @@ namespace Jitter.Collision
                 return true;
             }
 
-            JVector.Negate(ref normal, out mn);
+            mn = -normal;
             SupportMapTransformed(support1, ref orientation1, ref position1, ref mn, out var v21);
             SupportMapTransformed(support2, ref orientation2, ref position2, ref normal, out var v22);
-            var v2 = JVector.Subtract(v22, v21);
+            var v2 = v22 - v21;
 
             if (JVector.Dot(v2, normal) <= 0.0f) return false;
 
             // Determine whether origin is on + or - side of plane (v1,v0,v2)
-            temp1 = JVector.Subtract(v1, v0);
-            var temp2 = JVector.Subtract(v2, v0);
+            temp1 = v1 - v0;
+            var temp2 = v2 - v0;
             normal = JVector.Cross(temp1, temp2);
 
             var dist = JVector.Dot(normal, v0);
@@ -169,7 +169,7 @@ namespace Jitter.Collision
                 (v1, v2) = (v2, v1);
                 (v11, v21) = (v21, v11);
                 (v12, v22) = (v22, v12);
-                JVector.Negate(ref normal, out normal);
+                normal = -normal;
             }
 
 
@@ -186,10 +186,10 @@ namespace Jitter.Collision
 
                 // Obtain the support point in a direction perpendicular to the existing plane
                 // Note: This point is guaranteed to lie off the plane
-                JVector.Negate(ref normal, out mn);
+                mn = -normal;
                 SupportMapTransformed(support1, ref orientation1, ref position1, ref mn, out var v31);
                 SupportMapTransformed(support2, ref orientation2, ref position2, ref normal, out var v32);
-                var v3 = JVector.Subtract(v32, v31);
+                var v3 = v32 - v31;
 
                 if (JVector.Dot(v3, normal) <= 0.0f)
                 {
@@ -203,8 +203,8 @@ namespace Jitter.Collision
                     v2 = v3;
                     v21 = v31;
                     v22 = v32;
-                    temp1 = JVector.Subtract(v1, v0);
-                    temp2 = JVector.Subtract(v3, v0);
+                    temp1 = v1 - v0;
+                    temp2 = v3 - v0;
                     normal = JVector.Cross(temp1, temp2);
                     continue;
                 }
@@ -216,8 +216,8 @@ namespace Jitter.Collision
                     v1 = v3;
                     v11 = v31;
                     v12 = v32;
-                    temp1 = JVector.Subtract(v3, v0);
-                    temp2 = JVector.Subtract(v2, v0);
+                    temp1 = v3 - v0;
+                    temp2 = v2 - v0;
                     normal = JVector.Cross(temp1, temp2);
                     continue;
                 }
@@ -229,14 +229,14 @@ namespace Jitter.Collision
                     phase2++;
 
                     // Compute normal of the wedge face
-                    temp1 = JVector.Subtract(v2, v1);
-                    temp2 = JVector.Subtract(v3, v1);
+                    temp1 = v2 - v1;
+                    temp2 = v3 - v1;
                     normal = JVector.Cross(temp1, temp2);
 
                     // Can this happen???  Can it be handled more cleanly?
                     if (normal.IsNearlyZero()) return true;
 
-                    normal.Normalize();
+                    normal = JVector.Normalize(normal);
 
                     // Compute distance from origin to wedge face
                     var d = JVector.Dot(normal, v1);
@@ -250,12 +250,12 @@ namespace Jitter.Collision
                     }
 
                     // Find the support point in the direction of the wedge face
-                    JVector.Negate(ref normal, out mn);
+                    mn = -normal;
                     SupportMapTransformed(support1, ref orientation1, ref position1, ref mn, out var v41);
                     SupportMapTransformed(support2, ref orientation2, ref position2, ref normal, out var v42);
-                    var v4 = JVector.Subtract(v42, v41);
+                    var v4 = v42 - v41;
 
-                    temp1 = JVector.Subtract(v4, v3);
+                    temp1 = v4 - v3;
                     var delta = JVector.Dot(temp1, normal);
                     penetration = JVector.Dot(v4, normal);
 
@@ -291,24 +291,25 @@ namespace Jitter.Collision
 
                             var inv = 1.0f / sum;
 
-                            point = JVector.Multiply(v01, b0);
-                            temp1 = JVector.Multiply(v11, b1);
-                            point = JVector.Add(point, temp1);
-                            temp1 = JVector.Multiply(v21, b2);
-                            point = JVector.Add(point, temp1);
-                            temp1 = JVector.Multiply(v31, b3);
-                            point = JVector.Add(point, temp1);
+                            point = v01 * b0;
+                            temp1 = v11 * b1;
+                            point = point + temp1;
+                            temp1 = v21 * b2;
+                            point = point + temp1;
+                            temp1 = v31 * b3;
+                            point = point + temp1;
 
-                            temp2 = JVector.Multiply(v02, b0);
-                            point = JVector.Add(temp2, point);
-                            temp1 = JVector.Multiply(v12, b1);
-                            point = JVector.Add(point, temp1);
-                            temp1 = JVector.Multiply(v22, b2);
-                            point = JVector.Add(point, temp1);
-                            temp1 = JVector.Multiply(v32, b3);
-                            point = JVector.Add(point, temp1);
+                            temp2 = v02 * b0;
+                            point = temp2 + point;
+                            temp1 = v12 * b1;
+                            point = point + temp1;
+                            temp1 = v22 * b2;
+                            point = point + temp1;
+                            temp1 = v32 * b3;
+                            point = point + temp1;
 
-                            point = JVector.Multiply(point, inv * 0.5f);
+                            float scaleFactor = inv * 0.5f;
+                            point = point * scaleFactor;
 
                         }
 

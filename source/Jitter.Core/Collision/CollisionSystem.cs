@@ -188,7 +188,7 @@ namespace Jitter.Collision
 
                         if (delta.LengthSquared() < (body1.sweptDirection - body2.sweptDirection).LengthSquared())
                         {
-                            penetration = delta * normal;
+                            penetration = JVector.Dot(delta, normal);
 
                             if (penetration < 0.0f)
                             {
@@ -249,7 +249,7 @@ namespace Jitter.Collision
 
                                 if (delta.LengthSquared() < (body1.sweptDirection - body2.sweptDirection).LengthSquared())
                                 {
-                                    penetration = delta * normal;
+                                    penetration = JVector.Dot(delta, normal);
 
                                     if (penetration < 0.0f)
                                     {
@@ -316,7 +316,7 @@ namespace Jitter.Collision
 
                             if (delta.LengthSquared() < (body1.sweptDirection - body2.sweptDirection).LengthSquared())
                             {
-                                penetration = delta * normal;
+                                penetration = JVector.Dot(delta, normal);
 
                                 if (penetration < 0.0f)
                                 {
@@ -335,22 +335,23 @@ namespace Jitter.Collision
             Shape shape1, Shape shape2, ref JVector point, ref JVector normal,
             out JVector point1, out JVector point2)
         {
-            JVector.Negate(ref normal, out var mn);
+            JVector mn;
+            mn = -normal;
 
             SupportMapping(body1, shape1, ref mn, out var sA);
             SupportMapping(body2, shape2, ref normal, out var sB);
 
-            sA = JVector.Subtract(sA, point);
-            sB = JVector.Subtract(sB, point);
+            sA = sA - point;
+            sB = sB - point;
 
             var dot1 = JVector.Dot(sA, normal);
             var dot2 = JVector.Dot(sB, normal);
 
-            sA = JVector.Multiply(normal, dot1);
-            sB = JVector.Multiply(normal, dot2);
+            sA = normal * dot1;
+            sB = normal * dot2;
 
-            point1 = JVector.Add(point, sA);
-            point2 = JVector.Add(point, sB);
+            point1 = point + sA;
+            point2 = point + sB;
         }
 
         private void SupportMapping(RigidBody body, Shape workingShape, ref JVector direction, out JVector result)
@@ -358,7 +359,7 @@ namespace Jitter.Collision
             JVector.Transform(ref direction, ref body.invOrientation, out result);
             workingShape.SupportMapping(ref result, out result);
             JVector.Transform(ref result, ref body.orientation, out result);
-            result = JVector.Add(result, body.position);
+            result = result + body.position;
         }
 
         /// <summary>

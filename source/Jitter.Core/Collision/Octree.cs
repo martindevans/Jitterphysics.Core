@@ -277,8 +277,8 @@ namespace Jitter.Collision
         /// <param name="result"></param>
         private void CreateAABox(ref JBBox aabb, EChild child,out JBBox result)
         {
-            var dims = JVector.Subtract(aabb.Max, aabb.Min);
-            dims = JVector.Multiply(dims, 0.5f);
+            var dims = aabb.Max - aabb.Min;
+            dims = dims * 0.5f;
 
             var offset = JVector.Zero;
 
@@ -300,16 +300,16 @@ namespace Jitter.Collision
 
             result = new JBBox();
             result.Min = new JVector(offset.X * dims.X, offset.Y * dims.Y, offset.Z * dims.Z);
-            result.Min = JVector.Add(result.Min, aabb.Min);
+            result.Min = result.Min + aabb.Min;
 
-            result.Max = JVector.Add(result.Min, dims);
+            result.Max = result.Min + dims;
 
             // expand it just a tiny bit just to be safe!
             var extra = 0.00001f;
 
-            var temp = JVector.Multiply(dims, extra);
-            result.Min = JVector.Subtract(result.Min, temp);
-            result.Max = JVector.Add(result.Max, temp);
+            var temp = dims * extra;
+            result.Min = result.Min - temp;
+            result.Max = result.Max + temp;
         }
 
         private void GatherTriangles(int nodeIndex, ref List<int> tris)

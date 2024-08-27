@@ -116,7 +116,8 @@ namespace Jitter.Collision.Shapes
         {
             potentialTriangles.Clear();
 
-            JVector.Normalize(ref rayDelta, out var expDelta);
+            JVector expDelta;
+            expDelta = JVector.Normalize(rayDelta);
             expDelta = rayDelta + expDelta * sphericalExpansion;
 
             octree.GetTrianglesIntersectingRay(potentialTriangles, rayOrigin, expDelta);
@@ -135,7 +136,8 @@ namespace Jitter.Collision.Shapes
         /// <param name="result">The result.</param>
         public override void SupportMapping(ref JVector direction, out JVector result)
         {
-            JVector.Normalize(ref direction, out var exp);
+            JVector exp;
+            exp = JVector.Normalize(direction);
             exp *= sphericalExpansion;
 
             var min = JVector.Dot(vecs[0], direction);
@@ -193,18 +195,22 @@ namespace Jitter.Collision.Shapes
             vecs[2] = octree.GetVertex(octree.tris[potentialTriangles[index]].I2);
 
             var sum = vecs[0];
-            sum = JVector.Add(sum, vecs[1]);
-            sum = JVector.Add(sum, vecs[2]);
-            sum = JVector.Multiply(sum, 1.0f / 3.0f);
+            JVector value2 = vecs[1];
+            sum = sum + value2;
+            JVector value3 = vecs[2];
+            sum = sum + value3;
+            sum = sum * (1.0f / 3.0f);
 
       
             geomCen = sum;
 
-            sum = JVector.Subtract(vecs[1], vecs[0]);
-            normal = JVector.Subtract(vecs[2], vecs[0]);
+            JVector value4 = vecs[0];
+            sum = vecs[1] - value4;
+            JVector value5 = vecs[0];
+            normal = vecs[2] - value5;
             normal = JVector.Cross(sum, normal);
 
-            if (flipNormal) normal.Negate();
+            if (flipNormal) normal = -normal;
         }
 
         private JVector normal = JVector.Up;
