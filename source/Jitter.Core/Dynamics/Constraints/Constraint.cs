@@ -22,20 +22,6 @@ using System.Threading;
 
 namespace Jitter.Dynamics.Constraints
 {
-
-    public interface IConstraint
-    {
-        void PrepareForIteration(float timestep);
-        void Iterate();
-
-        RigidBody Body1 { get; }
-
-        /// <summary>
-        /// Gets the second body. Can be null.
-        /// </summary>
-        RigidBody Body2 { get; }
-    }
-
     /// <summary>
     /// A constraints forces a body to behave in a specific way.
     /// </summary>

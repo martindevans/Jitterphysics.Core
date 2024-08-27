@@ -32,8 +32,8 @@ namespace Jitter.Collision
     /// </summary>
     public class CollisionSystemSAP : CollisionSystem
     {
-        private List<RigidBody> bodyList = new();
-        private List<RigidBody> active = new();
+        private readonly List<RigidBody> bodyList = new();
+        private readonly List<RigidBody> active = new();
 
         private class RigidBodyXCompare : IComparer<RigidBody>
         {
@@ -93,11 +93,11 @@ namespace Jitter.Collision
 
             {
                 for (var i = 0; i < bodyList.Count; i++)
-                    AddToActive(bodyList[i], false);
+                    AddToActive(bodyList[i]);
             }
         }
 
-        private void AddToActive(RigidBody body, bool addToList)
+        private void AddToActive(RigidBody body)
         {
             var xmin = body.BoundingBox.Min.X;
             var n = active.Count;
@@ -184,7 +184,7 @@ namespace Jitter.Collision
             fraction = float.MaxValue;
             normal = default;
 
-            if (!body.BoundingBox.RayIntersect(ref rayOrigin, ref rayDirection)) return false;
+            if (!body.BoundingBox.RayIntersect(rayOrigin, rayDirection)) return false;
 
             if (body.Shape is Multishape)
             {
@@ -203,14 +203,14 @@ namespace Jitter.Collision
                 {
                     ms.SetCurrentShape(i);
 
-                    if (GJKCollide.Raycast(ms, ref body.orientation, ref body.invOrientation, ref body.position,
+                    if (GJKCollide.Raycast(ms, ref body.orientation, ref body.position,
                         ref rayOrigin, ref rayDirection, out var tempFraction, out var tempNormal))
                     {
                         if (tempFraction < fraction)
                         {
-                            if (useTriangleMeshNormal && ms is TriangleMeshShape)
+                            if (useTriangleMeshNormal && ms is TriangleMeshShape shape)
                             {
-                                (ms as TriangleMeshShape).CollisionNormal(out tempNormal);
+                                shape.CollisionNormal(out tempNormal);
                                 tempNormal = JVectorExtensions.Transform(tempNormal, body.orientation);
                                 tempNormal = -tempNormal;
                             }
@@ -227,7 +227,7 @@ namespace Jitter.Collision
             }
             else
             {
-                return GJKCollide.Raycast(body.Shape, ref body.orientation, ref body.invOrientation, ref body.position,
+                return GJKCollide.Raycast(body.Shape, ref body.orientation, ref body.position,
                     ref rayOrigin, ref rayDirection, out fraction, out normal);
             }
 

@@ -101,8 +101,11 @@ namespace Jitter.Collision
             /// </summary>
             /// <param name="obj">The object to check against.</param>
             /// <returns>Returns true if they are equal, otherwise false.</returns>
-            public override bool Equals(object obj)
+            public readonly override bool Equals(object? obj)
             {
+                if (obj == null)
+                    return false;
+
                 var other = (OverlapPair)obj;
                 return other.Entity1.Equals(Entity1) && other.Entity2.Equals(Entity2) ||
                        other.Entity1.Equals(Entity2) && other.Entity2.Equals(Entity1);
@@ -113,22 +116,22 @@ namespace Jitter.Collision
             /// The hashcode is the same if an BodyPair contains the same bodies.
             /// </summary>
             /// <returns></returns>
-            public override int GetHashCode()
+            public readonly override int GetHashCode()
             {
-                return Entity1.GetHashCode() + Entity2.GetHashCode();
+                return HashCode.Combine(Entity1, Entity2);
             }
         }
 
         // not needed anymore
         private readonly List<RigidBody> bodyList = new();
 
-        private List<SweepPoint> axis1 = new();
-        private List<SweepPoint> axis2 = new();
-        private List<SweepPoint> axis3 = new();
+        private readonly List<SweepPoint> axis1 = new();
+        private readonly List<SweepPoint> axis2 = new();
+        private readonly List<SweepPoint> axis3 = new();
 
-        private HashSet<OverlapPair> fullOverlaps = new();
+        private readonly HashSet<OverlapPair> fullOverlaps = new();
 
-        Action<object> sortCallback;
+        private Action<object> sortCallback;
 
         public CollisionSystemPersistentSAP()
         {
@@ -145,7 +148,7 @@ namespace Jitter.Collision
             else return 0;
         }
 
-        List<RigidBody> activeList = new();
+        private List<RigidBody> activeList = new();
 
         private void DirtySortAxis(List<SweepPoint> axis)
         {
@@ -206,7 +209,7 @@ namespace Jitter.Collision
             }
         }
 
-        int addCounter;
+        private int addCounter;
         public override void AddEntity(RigidBody body)
         {
             bodyList.Add(body);
@@ -218,32 +221,61 @@ namespace Jitter.Collision
             addCounter++;
         }
 
-        Stack<OverlapPair> depricated = new();
+        private readonly Stack<OverlapPair> deprecated = new();
+
         public override bool RemoveEntity(RigidBody body)
         {
-            int count;
-
-            count = 0;
+            var count = 0;
             for (var i = 0; i < axis1.Count; i++)
-            { if (axis1[i].Body == body) { count++; axis1.RemoveAt(i); if (count == 2) break; i--; } }
+            {
+                if (axis1[i].Body == body)
+                {
+                    count++;
+                    axis1.RemoveAt(i);
+                    if (count == 2)
+                        break;
+                    i--;
+                }
+            }
 
             count = 0;
             for (var i = 0; i < axis2.Count; i++)
-            { if (axis2[i].Body == body) { count++; axis2.RemoveAt(i); if (count == 2) break; i--; } }
+            {
+                if (axis2[i].Body == body)
+                {
+                    count++;
+                    axis2.RemoveAt(i);
+                    if (count == 2)
+                        break;
+                    i--;
+                }
+            }
 
             count = 0;
             for (var i = 0; i < axis3.Count; i++)
-            { if (axis3[i].Body == body) { count++; axis3.RemoveAt(i); if (count == 2) break; i--; } }
+            {
+                if (axis3[i].Body == body)
+                {
+                    count++;
+                    axis3.RemoveAt(i);
+                    if (count == 2)
+                        break;
+                    i--;
+                }
+            }
 
-            foreach (var pair in fullOverlaps) if (pair.Entity1 == body || pair.Entity2 == body) depricated.Push(pair);
-            while (depricated.Count > 0) fullOverlaps.Remove(depricated.Pop());
+            foreach (var pair in fullOverlaps)
+                if (pair.Entity1 == body || pair.Entity2 == body)
+                    deprecated.Push(pair);
+            while (deprecated.Count > 0)
+                fullOverlaps.Remove(deprecated.Pop());
 
             bodyList.Remove(body);
 
             return true;
         }
 
-        bool swapOrder;
+        private bool swapOrder;
 
         /// <summary>
         /// Tells the collisionsystem to check all bodies for collisions. Hook into the
@@ -407,13 +439,11 @@ namespace Jitter.Collision
             foreach (var e in bodyList)
             {
                 {
-                    var b = e as RigidBody;
-
-                    if (Raycast(b, rayOrigin, rayDirection, out var tempNormal, out var tempFraction))
+                    if (Raycast(e, rayOrigin, rayDirection, out var tempNormal, out var tempFraction))
                     {
-                        if (tempFraction < fraction && (raycast == null || raycast(b, tempNormal, tempFraction)))
+                        if (tempFraction < fraction && (raycast == null || raycast(e, tempNormal, tempFraction)))
                         {
-                            body = b;
+                            body = e;
                             normal = tempNormal;
                             fraction = tempFraction;
                             result = true;
@@ -436,7 +466,7 @@ namespace Jitter.Collision
             fraction = float.MaxValue;
             normal = default;
 
-            if (!body.BoundingBox.RayIntersect(ref rayOrigin, ref rayDirection)) return false;
+            if (!body.BoundingBox.RayIntersect(rayOrigin, rayDirection)) return false;
 
             if (body.Shape is Multishape)
             {
@@ -455,7 +485,7 @@ namespace Jitter.Collision
                 {
                     ms.SetCurrentShape(i);
 
-                    if (GJKCollide.Raycast(ms, ref body.orientation, ref body.invOrientation, ref body.position,
+                    if (GJKCollide.Raycast(ms, ref body.orientation, ref body.position,
                         ref rayOrigin, ref rayDirection, out var tempFraction, out var tempNormal))
                     {
                         if (tempFraction < fraction)
@@ -479,7 +509,7 @@ namespace Jitter.Collision
             }
             else
             {
-                return GJKCollide.Raycast(body.Shape, ref body.orientation, ref body.invOrientation, ref body.position,
+                return GJKCollide.Raycast(body.Shape, ref body.orientation, ref body.position,
                     ref rayOrigin, ref rayDirection, out fraction, out normal);
             }
 

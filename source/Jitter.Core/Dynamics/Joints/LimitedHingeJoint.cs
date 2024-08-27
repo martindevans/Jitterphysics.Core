@@ -13,8 +13,8 @@ namespace Jitter.Dynamics.Joints
     {
 
 
-        private PointOnPoint[] worldPointConstraint;
-        private PointPointDistance distance;
+        private readonly PointOnPoint[] worldPointConstraint;
+        private readonly PointPointDistance distance;
 
         public PointOnPoint PointConstraint1 => worldPointConstraint[0];
         public PointOnPoint PointConstraint2 => worldPointConstraint[1];

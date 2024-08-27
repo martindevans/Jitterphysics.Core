@@ -84,12 +84,12 @@ namespace Jitter.Dynamics.Constraints.SingleBody
             set => biasFactor = value;
         }
 
-        float effectiveMass;
-        float accumulatedImpulse;
-        float bias;
-        float softnessOverDt;
+        private float effectiveMass;
+        private float accumulatedImpulse;
+        private float bias;
+        private float softnessOverDt;
 
-        Vector3[] jacobian = new Vector3[2];
+        private Vector3[] jacobian = new Vector3[2];
 
         /// <summary>
         /// Called once before iteration starts.

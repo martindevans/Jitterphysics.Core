@@ -278,7 +278,6 @@ namespace Jitter.Collision
         /// </summary>
         /// <param name="support">The supportmap implementation representing the shape.</param>
         /// <param name="orientation">The orientation of the shape.</param>
-        /// <param name="invOrientation">The inverse orientation of the shape.</param>
         /// <param name="position">The position of the shape.</param>
         /// <param name="origin">The origin of the ray.</param>
         /// <param name="direction">The direction of the ray.</param>
@@ -286,7 +285,7 @@ namespace Jitter.Collision
         /// ray the collision occured. The hitPoint is calculated by: origin+friction*direction.</param>
         /// <param name="normal">The normal from the ray collision.</param>
         /// <returns>Returns true if the ray hit the shape, false otherwise.</returns>
-        public static bool Raycast(ISupportMappable support, ref JMatrix orientation, ref JMatrix invOrientation,
+        public static bool Raycast(ISupportMappable support, ref JMatrix orientation, 
             ref Vector3 position,ref Vector3 origin,ref Vector3 direction, out float fraction, out Vector3 normal)
         {
             var simplexSolver = simplexSolverPool.GetNew();

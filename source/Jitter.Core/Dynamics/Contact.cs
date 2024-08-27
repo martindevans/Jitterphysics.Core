@@ -19,6 +19,7 @@
 
 using System;
 using System.Numerics;
+using Jitter.Dynamics.Constraints;
 using Jitter.LinearMath;
 
 namespace Jitter.Dynamics

@@ -28,9 +28,9 @@ namespace Jitter.Collision.Shapes
     /// </summary>
     public class ConvexHullShape : BaseShape
     {
-        List<Vector3> vertices;
+        private List<Vector3> vertices;
 
-        Vector3 shifted;
+        private Vector3 shifted;
 
         /// <summary>
         /// Constructor of ConvexHullShape class.

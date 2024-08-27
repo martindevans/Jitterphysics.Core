@@ -311,7 +311,7 @@ namespace Jitter.Dynamics
         public void SetMassProperties()
         {
             inertia = Shape.inertia;
-            JMatrix.Inverse(ref inertia, out invInertia);
+            invInertia = inertia.Inverse();
             inverseMass = 1.0f / Shape.mass;
             useShapeMassProperties = true;
         }
@@ -331,7 +331,8 @@ namespace Jitter.Dynamics
                 if (!isParticle)
                 {
                     invInertia = inertia;
-                    JMatrix.Inverse(ref inertia, out this.inertia);
+                    this.inertia = inertia.Inverse();
+                    this.inertia = inertia.Inverse();
                 }
                 inverseMass = mass;
             }
@@ -340,7 +341,7 @@ namespace Jitter.Dynamics
                 if (!isParticle)
                 {
                     this.inertia = inertia;
-                    JMatrix.Inverse(ref inertia, out invInertia);
+                    invInertia = inertia.Inverse();
                 }
                 inverseMass = 1.0f / mass;
             }
@@ -482,7 +483,7 @@ namespace Jitter.Dynamics
                 if (!isParticle)
                 {
                     JMatrix.Multiply(ref Shape.inertia, value / Shape.mass, out inertia);
-                    JMatrix.Inverse(ref inertia, out invInertia);
+                    invInertia = inertia.Inverse();
                 }
 
                 inverseMass = 1.0f / value;

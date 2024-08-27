@@ -175,8 +175,7 @@ namespace Jitter.Collision
                 rootNodeBox.Max = Vector3.Max(rootNodeBox.Max, triBoxes[i].Max);
             }
 
-            var buildNodes = new List<BuildNode>();
-            buildNodes.Add(new());
+            var buildNodes = new List<BuildNode> { new() };
             buildNodes[0].box = rootNodeBox;
 
             var children = new JBBox[8];
@@ -403,11 +402,11 @@ namespace Jitter.Collision
             {
                 var nodeIndex = nodeStack[curStackIndex];
                 curStackIndex++;
-                if (nodes[nodeIndex].box.SegmentIntersect(ref rayOrigin, ref rayDelta))
+                if (nodes[nodeIndex].box.SegmentIntersect(rayOrigin, rayDelta))
                 {
                     for (var i = 0; i < nodes[nodeIndex].triIndices.Length; ++i)
                     {
-                        if (triBoxes[nodes[nodeIndex].triIndices[i]].SegmentIntersect(ref rayOrigin, ref rayDelta))
+                        if (triBoxes[nodes[nodeIndex].triIndices[i]].SegmentIntersect(rayOrigin, rayDelta))
                         {
                             triangles.Add(nodes[nodeIndex].triIndices[i]);
                             triCount++;

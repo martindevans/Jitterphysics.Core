@@ -26,11 +26,11 @@ namespace Jitter.Dynamics.Joints
         : Joint
     {
         // form prismatic joint
-        FixedAngle fixedAngle;
-        PointOnLine pointOnLine;
+        private FixedAngle fixedAngle;
+        private PointOnLine pointOnLine;
 
-        PointPointDistance minDistance;
-        PointPointDistance maxDistance;
+        private PointPointDistance minDistance;
+        private PointPointDistance maxDistance;
 
         public PointPointDistance MaximumDistanceConstraint => maxDistance;
         public PointPointDistance MinimumDistanceConstraint => minDistance;
@@ -72,14 +72,7 @@ namespace Jitter.Dynamics.Joints
             pointOnLine = new(body1, body2, pointOnBody1, pointOnBody2);
         }
 
-
-        public PrismaticJoint(World world, RigidBody body1, RigidBody body2, Vector3 pointOnBody1, Vector3 pointOnBody2, float maximumDistance, float minimumDistance)
-            : base(world)
-        {
-            fixedAngle = new(body1, body2);
-            pointOnLine = new(body1, body2, pointOnBody1, pointOnBody2);
-        }
-
+        /// <inheritdoc />
         public override void Activate()
         {
             if (maxDistance != null) World.AddConstraint(maxDistance);
@@ -89,6 +82,7 @@ namespace Jitter.Dynamics.Joints
             World.AddConstraint(pointOnLine);
         }
 
+        /// <inheritdoc />
         public override void Deactivate()
         {
             if (maxDistance != null) World.RemoveConstraint(maxDistance);

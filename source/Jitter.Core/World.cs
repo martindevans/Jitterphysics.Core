@@ -168,9 +168,6 @@ namespace Jitter
         /// </summary>
         public ReadOnlyCollection<CollisionIsland> Islands => islands;
 
-        private Action<object> arbiterCallback;
-        private Action<object> integrateCallback;
-
         private CollisionDetectedHandler collisionDetectionHandler;
 
         /// <summary>
@@ -182,12 +179,6 @@ namespace Jitter
         /// </param>
         public World(CollisionSystem collision)
         {
-            if (collision == null)
-                throw new ArgumentNullException(nameof(collision), "The CollisionSystem can't be null.");
-
-            arbiterCallback = ArbiterCallback;
-            integrateCallback = IntegrateCallback;
-
             CollisionSystem = collision;
 
             collisionDetectionHandler = CollisionDetected;
@@ -654,7 +645,7 @@ namespace Jitter
         {
             for (var i = 0; i < islands.Count; i++)
                 if (islands[i].IsActive())
-                    arbiterCallback(islands[i]);
+                    ArbiterCallback(islands[i]);
         }
 
         private void IntegrateForces()
@@ -744,7 +735,7 @@ namespace Jitter
                 foreach (var body in rigidBodies)
                 {
                     if (body.isStatic || !body.IsActive) continue;
-                    integrateCallback(body);
+                    IntegrateCallback(body);
                 }
             }
         }

@@ -140,7 +140,7 @@ namespace Jitter.Collision
         {
             fraction = float.MaxValue; normal = default;
 
-            if (!body.BoundingBox.RayIntersect(ref rayOrigin, ref rayDirection)) return false;
+            if (!body.BoundingBox.RayIntersect(rayOrigin, rayDirection)) return false;
 
             if (body.Shape is Multishape)
             {
@@ -159,7 +159,7 @@ namespace Jitter.Collision
                 {
                     ms.SetCurrentShape(i);
 
-                    if (GJKCollide.Raycast(ms, ref body.orientation, ref body.invOrientation, ref body.position,
+                    if (GJKCollide.Raycast(ms, ref body.orientation, ref body.position,
                         ref rayOrigin, ref rayDirection, out var tempFraction, out var tempNormal))
                     {
                         if (tempFraction < fraction)
@@ -183,7 +183,7 @@ namespace Jitter.Collision
             }
             else
             {
-                return GJKCollide.Raycast(body.Shape, ref body.orientation, ref body.invOrientation, ref body.position,
+                return GJKCollide.Raycast(body.Shape, ref body.orientation, ref body.position,
                     ref rayOrigin, ref rayDirection, out fraction, out normal);
             }
 

@@ -29,7 +29,7 @@ namespace Jitter.Collision.Shapes
     /// </summary>
     public class ConeShape : BaseShape
     {
-        float height,radius;
+        private float height,radius;
 
         /// <summary>
         /// The height of the cone.
@@ -62,7 +62,7 @@ namespace Jitter.Collision.Shapes
             base.UpdateShape();
         }
 
-        float sina;
+        private float sina;
 
         /// <summary>
         /// 

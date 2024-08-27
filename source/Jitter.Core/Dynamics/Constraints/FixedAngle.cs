@@ -103,9 +103,9 @@ namespace Jitter.Dynamics.Constraints
             set => biasFactor = value;
         }
 
-        JMatrix effectiveMass;
-        Vector3 bias;
-        float softnessOverDt;
+        private JMatrix effectiveMass;
+        private Vector3 bias;
+        private float softnessOverDt;
         
         /// <summary>
         /// Called once before iteration starts.
@@ -121,7 +121,7 @@ namespace Jitter.Dynamics.Constraints
             effectiveMass.M22 += softnessOverDt;
             effectiveMass.M33 += softnessOverDt;
 
-            JMatrix.Inverse(ref effectiveMass, out effectiveMass);
+            effectiveMass = effectiveMass.Inverse();
 
             JMatrix.Multiply(ref initialOrientation1, ref initialOrientation2, out var orientationDifference);
             JMatrix.Transpose(ref orientationDifference, out orientationDifference);

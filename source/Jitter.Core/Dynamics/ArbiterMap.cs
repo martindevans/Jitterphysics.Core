@@ -60,7 +60,7 @@ namespace Jitter.Dynamics
         /// </summary>
         /// <param name="obj">The object to check against.</param>
         /// <returns>Returns true if they are equal, otherwise false.</returns>
-        public override bool Equals(object obj)
+        public readonly override bool Equals(object obj)
         {
             var other = (ArbiterKey)obj;
             return other.body1.Equals(body1) && other.body2.Equals(body2) ||
@@ -72,7 +72,7 @@ namespace Jitter.Dynamics
         /// The hashcode is the same if an ArbiterKey contains the same bodies.
         /// </summary>
         /// <returns></returns>
-        public override int GetHashCode()
+        public readonly override int GetHashCode()
         {
             return body1.GetHashCode() + body2.GetHashCode();
         }

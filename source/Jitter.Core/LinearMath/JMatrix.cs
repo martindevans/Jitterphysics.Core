@@ -94,7 +94,7 @@ namespace Jitter.LinearMath
             };
         }
 
-        public Quaternion ToQuaternion()
+        public readonly Quaternion ToQuaternion()
         {
             var matrix = this;
             var result = new Quaternion();
@@ -351,76 +351,41 @@ namespace Jitter.LinearMath
             result.M33 = matrix1.M33 + matrix2.M33;
         }
 
-        /// <summary>
-        /// Calculates the inverse of a give matrix.
-        /// </summary>
-        /// <param name="matrix">The matrix to invert.</param>
-        /// <returns>The inverted JMatrix.</returns>
-        public static JMatrix Inverse(JMatrix matrix)
+        public readonly float Determinant()
         {
-            Inverse(ref matrix, out var result);
-            return result;
-        }
-
-        public float Determinant()
-        {
-            return M11 * M22 * M33 + M12 * M23 * M31 + M13 * M21 * M32 -
-                   M31 * M22 * M13 - M32 * M23 * M11 - M33 * M21 * M12;
-        }
-
-        public static void Invert(ref JMatrix matrix, out JMatrix result)
-        {
-            var determinantInverse = 1 / matrix.Determinant();
-            var m11 = (matrix.M22 * matrix.M33 - matrix.M23 * matrix.M32) * determinantInverse;
-            var m12 = (matrix.M13 * matrix.M32 - matrix.M33 * matrix.M12) * determinantInverse;
-            var m13 = (matrix.M12 * matrix.M23 - matrix.M22 * matrix.M13) * determinantInverse;
-
-            var m21 = (matrix.M23 * matrix.M31 - matrix.M21 * matrix.M33) * determinantInverse;
-            var m22 = (matrix.M11 * matrix.M33 - matrix.M13 * matrix.M31) * determinantInverse;
-            var m23 = (matrix.M13 * matrix.M21 - matrix.M11 * matrix.M23) * determinantInverse;
-
-            var m31 = (matrix.M21 * matrix.M32 - matrix.M22 * matrix.M31) * determinantInverse;
-            var m32 = (matrix.M12 * matrix.M31 - matrix.M11 * matrix.M32) * determinantInverse;
-            var m33 = (matrix.M11 * matrix.M22 - matrix.M12 * matrix.M21) * determinantInverse;
-
-            result.M11 = m11;
-            result.M12 = m12;
-            result.M13 = m13;
-
-            result.M21 = m21;
-            result.M22 = m22;
-            result.M23 = m23;
-
-            result.M31 = m31;
-            result.M32 = m32;
-            result.M33 = m33;
+            return M11 * M22 * M33
+                 + M12 * M23 * M31
+                 + M13 * M21 * M32
+                 - M31 * M22 * M13
+                 - M32 * M23 * M11
+                 - M33 * M21 * M12;
         }
 
         /// <summary>
-        /// Calculates the inverse of a give matrix.
+        /// Calculates the inverse of this matrix
         /// </summary>
-        /// <param name="matrix">The matrix to invert.</param>
-        /// <param name="result">The inverted JMatrix.</param>
-        public static void Inverse(ref JMatrix matrix, out JMatrix result)
+        public readonly JMatrix Inverse()
         {
-            var det = matrix.M11 * matrix.M22 * matrix.M33 -
-                      matrix.M11 * matrix.M23 * matrix.M32 -
-                      matrix.M12 * matrix.M21 * matrix.M33 +
-                      matrix.M12 * matrix.M23 * matrix.M31 +
-                      matrix.M13 * matrix.M21 * matrix.M32 -
-                      matrix.M13 * matrix.M22 * matrix.M31;
+            JMatrix result;
 
-            var num11 = matrix.M22 * matrix.M33 - matrix.M23 * matrix.M32;
-            var num12 = matrix.M13 * matrix.M32 - matrix.M12 * matrix.M33;
-            var num13 = matrix.M12 * matrix.M23 - matrix.M22 * matrix.M13;
+            var det = M11 * M22 * M33 -
+                      M11 * M23 * M32 -
+                      M12 * M21 * M33 +
+                      M12 * M23 * M31 +
+                      M13 * M21 * M32 -
+                      M13 * M22 * M31;
 
-            var num21 = matrix.M23 * matrix.M31 - matrix.M33 * matrix.M21;
-            var num22 = matrix.M11 * matrix.M33 - matrix.M31 * matrix.M13;
-            var num23 = matrix.M13 * matrix.M21 - matrix.M23 * matrix.M11;
+            var num11 = M22 * M33 - M23 * M32;
+            var num12 = M13 * M32 - M12 * M33;
+            var num13 = M12 * M23 - M22 * M13;
 
-            var num31 = matrix.M21 * matrix.M32 - matrix.M31 * matrix.M22;
-            var num32 = matrix.M12 * matrix.M31 - matrix.M32 * matrix.M11;
-            var num33 = matrix.M11 * matrix.M22 - matrix.M21 * matrix.M12;
+            var num21 = M23 * M31 - M33 * M21;
+            var num22 = M11 * M33 - M31 * M13;
+            var num23 = M13 * M21 - M23 * M11;
+
+            var num31 = M21 * M32 - M31 * M22;
+            var num32 = M12 * M31 - M32 * M11;
+            var num33 = M11 * M22 - M21 * M12;
 
             result.M11 = num11 / det;
             result.M12 = num12 / det;
@@ -431,6 +396,7 @@ namespace Jitter.LinearMath
             result.M31 = num31 / det;
             result.M32 = num32 / det;
             result.M33 = num33 / det;
+            return result;
         }
 
         /// <summary>
@@ -469,7 +435,6 @@ namespace Jitter.LinearMath
         /// Creates a JMatrix representing an orientation from a quaternion.
         /// </summary>
         /// <param name="quaternion">The quaternion the matrix should be created from.</param>
-        /// <param name="result">JMatrix representing an orientation.</param>
         public static JMatrix CreateFromQuaternion(Quaternion quaternion)
         {
             JMatrix result;
@@ -538,7 +503,11 @@ namespace Jitter.LinearMath
         }
 
 
-        public float Trace()
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public readonly float Trace()
         {
             return M11 + M22 + M33;
         }
@@ -574,9 +543,9 @@ namespace Jitter.LinearMath
         /// </summary>
         /// <param name="axis">The axis.</param>
         /// <param name="angle">The angle.</param>
-        /// <param name="result">The resulting rotation matrix</param>
-        public static void CreateFromAxisAngle(ref Vector3 axis, float angle, out JMatrix result)
+        public static JMatrix CreateFromAxisAngle(Vector3 axis, float angle)
         {
+            JMatrix result;
             var x = axis.X;
             var y = axis.Y;
             var z = axis.Z;
@@ -597,17 +566,6 @@ namespace Jitter.LinearMath
             result.M31 = num7 - num * num7 + num2 * y;
             result.M32 = num6 - num * num6 - num2 * x;
             result.M33 = num9 + num * (1f - num9);
-        }
-
-        /// <summary>
-        /// Creates a matrix which rotates around the given axis by the given angle.
-        /// </summary>
-        /// <param name="axis">The axis.</param>
-        /// <param name="angle">The angle.</param>
-        /// <returns>The resulting rotation matrix</returns>
-        public static JMatrix CreateFromAxisAngle(Vector3 axis, float angle)
-        {
-            CreateFromAxisAngle(ref axis, angle, out var result);
             return result;
         }
     }

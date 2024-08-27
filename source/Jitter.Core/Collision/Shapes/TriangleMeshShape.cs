@@ -29,8 +29,8 @@ namespace Jitter.Collision.Shapes
     /// </summary>
     public class TriangleMeshShape : Multishape
     {
-        private List<int> potentialTriangles = new();
-        private Octree octree;
+        private readonly List<int> potentialTriangles = new();
+        private readonly Octree octree;
 
         private float sphericalExpansion = 0.05f;
 
@@ -128,7 +128,7 @@ namespace Jitter.Collision.Shapes
             return potentialTriangles.Count;
         }
 
-        Vector3[] vecs = new Vector3[3];
+        private Vector3[] vecs = new Vector3[3];
 
         /// <summary>
         /// SupportMapping. Finds the point in the shape furthest away from the given direction.

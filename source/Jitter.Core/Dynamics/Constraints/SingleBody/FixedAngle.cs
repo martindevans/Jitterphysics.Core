@@ -93,9 +93,9 @@ namespace Jitter.Dynamics.Constraints.SingleBody
             set => orientation = value;
         }
 
-        JMatrix effectiveMass;
-        Vector3 bias;
-        float softnessOverDt;
+        private JMatrix effectiveMass;
+        private Vector3 bias;
+        private float softnessOverDt;
 
         /// <summary>
         /// Called once before iteration starts.
@@ -111,10 +111,8 @@ namespace Jitter.Dynamics.Constraints.SingleBody
             effectiveMass.M22 += softnessOverDt;
             effectiveMass.M33 += softnessOverDt;
 
-            JMatrix.Inverse(ref effectiveMass, out effectiveMass);
-
+            effectiveMass = effectiveMass.Inverse();
             var q = JMatrix.Transpose(orientation) * body1.orientation;
-            Vector3 axis;
 
             var x = q.M32 - q.M23;
             var y = q.M13 - q.M31;
@@ -124,7 +122,7 @@ namespace Jitter.Dynamics.Constraints.SingleBody
             var t = q.M11 + q.M22 + q.M33;
 
             var angle = (float)Math.Atan2(r, t - 1);
-            axis = new Vector3(x, y, z) * angle;
+            var axis = new Vector3(x, y, z) * angle;
 
             if (r != 0.0f) axis *= (1.0f / r);
 

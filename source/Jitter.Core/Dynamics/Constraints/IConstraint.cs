@@ -17,7 +17,7 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-namespace Jitter.Dynamics
+namespace Jitter.Dynamics.Constraints
 {
     public interface IConstraint
     {

@@ -143,8 +143,6 @@ namespace Jitter.Collision
             }
         }
 
-        private ResourcePool<List<int>> potentialTriangleLists = new();
-
         private void DetectRigidRigid(RigidBody body1, RigidBody body2)
         {
             var b1IsMulti = body1.Shape is Multishape;
@@ -420,8 +418,7 @@ namespace Jitter.Collision
                                             ref Vector3 point1, ref Vector3 point2,
                                             ref Vector3 normal, float penetration)
         {
-            if (CollisionDetected != null)
-                CollisionDetected(body1, body2, point1, point2, normal, penetration);
+            CollisionDetected?.Invoke(body1, body2, point1, point2, normal, penetration);
         }
 
         /// <summary>

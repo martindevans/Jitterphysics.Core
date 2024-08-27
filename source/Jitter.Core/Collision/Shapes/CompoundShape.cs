@@ -52,7 +52,7 @@ namespace Jitter.Collision.Shapes
             /// </summary>
             public Vector3 Position
             {
-                get => position;
+                readonly get => position;
                 set
                 {
                     position = value;
@@ -60,19 +60,19 @@ namespace Jitter.Collision.Shapes
                 }
             }
 
-            public JBBox BoundingBox => boundingBox;
+            public readonly JBBox BoundingBox => boundingBox;
 
             /// <summary>
             /// The inverse orientation of the 'sub' shape.
             /// </summary>
-            public JMatrix InverseOrientation => invOrientation;
+            public readonly JMatrix InverseOrientation => invOrientation;
 
             /// <summary>
             /// The orienation of the 'sub' shape.
             /// </summary>
             public JMatrix Orientation
             {
-                get => orientation;
+                readonly get => orientation;
                 set { orientation = value; JMatrix.Transpose(ref orientation, out invOrientation); UpdateBoundingBox(); }
             }
 
@@ -108,7 +108,7 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         public TransformedShape[] Shapes => shapes;
 
-        Vector3 shifted;
+        private Vector3 shifted;
         public Vector3 Shift => -1.0f * shifted;
 
         private JBBox mInternalBBox;
@@ -272,8 +272,8 @@ namespace Jitter.Collision.Shapes
             return box;
         }
 
-        int currentShape;
-        List<int> currentSubShapes = new();
+        private int currentShape;
+        private List<int> currentSubShapes = new();
 
         /// <summary>
         /// Sets the current shape. First <see cref="CompoundShape.Prepare"/> has to be called.
@@ -317,8 +317,8 @@ namespace Jitter.Collision.Shapes
         {
             var box = JBBox.SmallBox;
 
-            box.AddPoint(ref rayOrigin);
-            box.AddPoint(ref rayEnd);
+            box.AddPoint(rayOrigin);
+            box.AddPoint(rayEnd);
 
             return Prepare(ref box);
         }

@@ -62,7 +62,7 @@ namespace Jitter.Collision.Shapes
 
         public bool IsClone => isClone;
 
-        Stack<Multishape> workingCloneStack = new();
+        private Stack<Multishape> workingCloneStack = new();
         public Multishape RequestWorkingClone()
         {
             Debug.Assert(workingCloneStack.Count<10, "Unusual size of the workingCloneStack. Forgot to call ReturnWorkingClone?");

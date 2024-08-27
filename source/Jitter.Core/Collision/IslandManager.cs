@@ -15,7 +15,7 @@ namespace Jitter.Collision
     /// static bodies dont have any connections. Think of the islands as a graph:
     /// nodes are the bodies, and edges are the connections
     /// </summary>
-    class IslandManager : ReadOnlyCollection<CollisionIsland>
+    internal class IslandManager : ReadOnlyCollection<CollisionIsland>
     {
 
         public static ResourcePool<CollisionIsland> Pool = new();
@@ -232,11 +232,11 @@ namespace Jitter.Collision
         }
 
 
-        private Queue<RigidBody> leftSearchQueue = new();
-        private Queue<RigidBody> rightSearchQueue = new();
+        private readonly Queue<RigidBody> leftSearchQueue = new();
+        private readonly Queue<RigidBody> rightSearchQueue = new();
 
-        private List<RigidBody> visitedBodiesLeft = new();
-        private List<RigidBody> visitedBodiesRight = new();
+        private readonly List<RigidBody> visitedBodiesLeft = new();
+        private readonly List<RigidBody> visitedBodiesRight = new();
 
         private void SplitIslands(RigidBody body0, RigidBody body1)
         {

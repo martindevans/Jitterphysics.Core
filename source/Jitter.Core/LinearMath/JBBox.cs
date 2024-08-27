@@ -91,7 +91,6 @@ namespace Jitter.LinearMath
         /// </summary>
         /// <param name="position"></param>
         /// <param name="orientation"></param>
-        /// <param name="result"></param>
         internal void InverseTransform(ref Vector3 position, ref JMatrix orientation)
         {
             Max -= position;
@@ -131,7 +130,7 @@ namespace Jitter.LinearMath
         /// a point.
         /// </summary>
         /// <returns>The ContainmentType of the point.</returns>
-        private bool Intersect1D(float start, float dir, float min, float max, ref float enter,ref float exit)
+        private readonly bool Intersect1D(float start, float dir, float min, float max, ref float enter,ref float exit)
         {
             if (dir * dir < JMath.Epsilon * JMath.Epsilon) return start >= min && start <= max;
 
@@ -152,7 +151,7 @@ namespace Jitter.LinearMath
         }
 
 
-        public bool SegmentIntersect(ref Vector3 origin,ref Vector3 direction)
+        public readonly bool SegmentIntersect(Vector3 origin, Vector3 direction)
         {
             float enter = 0.0f, exit = 1.0f;
 
@@ -168,7 +167,7 @@ namespace Jitter.LinearMath
             return true;
         }
 
-        public bool RayIntersect(ref Vector3 origin, ref Vector3 direction)
+        public readonly bool RayIntersect(Vector3 origin, Vector3 direction)
         {
             float enter = 0.0f, exit = float.MaxValue;
 
@@ -184,33 +183,13 @@ namespace Jitter.LinearMath
             return true;
         }
 
-        public bool SegmentIntersect(Vector3 origin, Vector3 direction)
-        {
-            return SegmentIntersect(ref origin, ref direction);
-        }
-
-        public bool RayIntersect(Vector3 origin, Vector3 direction)
-        {
-            return RayIntersect(ref origin, ref direction);
-        }
-
-        /// <summary>
-        /// Checks wether a point is within a box or not.
-        /// </summary>
-        /// <param name="point"></param>
-        /// <returns></returns>
-        public ContainmentType Contains(Vector3 point)
-        {
-            return Contains(ref point);
-        }
-
         /// <summary>
         /// Checks whether a point is inside, outside or intersecting
         /// a point.
         /// </summary>
         /// <param name="point">A point in space.</param>
         /// <returns>The ContainmentType of the point.</returns>
-        public ContainmentType Contains(ref Vector3 point)
+        public readonly ContainmentType Contains(Vector3 point)
         {
             return Min.X <= point.X && point.X <= Max.X &&
                    Min.Y <= point.Y && point.Y <= Max.Y &&
@@ -221,7 +200,7 @@ namespace Jitter.LinearMath
         /// Retrieves the 8 corners of the box.
         /// </summary>
         /// <returns>An array of 8 Vector3 entries.</returns>
-        public void GetCorners(Vector3[] corners)
+        public readonly void GetCorners(Vector3[] corners)
         {
             corners[0] = new(Min.X, Max.Y, Max.Z);
             corners[1] = new(Max.X, Max.Y, Max.Z);
@@ -233,13 +212,11 @@ namespace Jitter.LinearMath
             corners[7] = new(Min.X, Min.Y, Min.Z);
         }
 
-
+        /// <summary>
+        /// Expand this box to include the given point
+        /// </summary>
+        /// <param name="point"></param>
         public void AddPoint(Vector3 point)
-        {
-            AddPoint(ref point);
-        }
-
-        public void AddPoint(ref Vector3 point)
         {
             Max = Vector3.Max(Max, point);
             Min = Vector3.Min(Min, point);
@@ -270,7 +247,7 @@ namespace Jitter.LinearMath
         /// </summary>
         /// <param name="box">The other bounding box to check.</param>
         /// <returns>The ContainmentType of the box.</returns>
-        public ContainmentType Contains(JBBox box)
+        public readonly ContainmentType Contains(JBBox box)
         {
             return Contains(ref box);
         }
@@ -281,7 +258,7 @@ namespace Jitter.LinearMath
         /// </summary>
         /// <param name="box">The other bounding box to check.</param>
         /// <returns>The ContainmentType of the box.</returns>
-        public ContainmentType Contains(ref JBBox box)
+        public readonly ContainmentType Contains(ref JBBox box)
         {
             var result = ContainmentType.Disjoint;
             if (Max.X >= box.Min.X && Min.X <= box.Max.X && Max.Y >= box.Min.Y && Min.Y <= box.Max.Y && Max.Z >= box.Min.Z && Min.Z <= box.Max.Z)
@@ -318,9 +295,9 @@ namespace Jitter.LinearMath
             result.Max = vector;
         }
 
-        public Vector3 Center => (Min + Max)* (1.0f /2.0f);
+        public readonly Vector3 Center => (Min + Max) * 0.5f;
 
-        internal float Perimeter =>
+        internal readonly float Perimeter =>
             2.0f * ((Max.X - Min.X) * (Max.Y - Min.Y) +
                     (Max.X - Min.X) * (Max.Z - Min.Z) +
                     (Max.Z - Min.Z) * (Max.Y - Min.Y));

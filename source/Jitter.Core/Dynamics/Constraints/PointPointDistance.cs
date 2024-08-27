@@ -110,14 +110,14 @@ namespace Jitter.Dynamics.Constraints
             set => biasFactor = value;
         }
 
-        float effectiveMass;
-        float accumulatedImpulse;
-        float bias;
-        float softnessOverDt;
-        
-        Vector3[] jacobian = new Vector3[4];
+        private float effectiveMass;
+        private float accumulatedImpulse;
+        private float bias;
+        private float softnessOverDt;
 
-        bool skipConstraint;
+        private Vector3[] jacobian = new Vector3[4];
+
+        private bool skipConstraint;
 
         /// <summary>
         /// Called once before iteration starts.

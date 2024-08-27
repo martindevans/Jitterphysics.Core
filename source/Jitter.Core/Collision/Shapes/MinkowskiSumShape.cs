@@ -25,8 +25,8 @@ namespace Jitter.Collision.Shapes
 {
     public class MinkowskiSumShape : BaseShape
     {
-        Vector3 shifted;
-        List<BaseShape> shapes = new();
+        private Vector3 shifted;
+        private List<BaseShape> shapes = new();
 
         public MinkowskiSumShape(IEnumerable<BaseShape> shapes)
         {
