@@ -19,15 +19,14 @@
 
 using System;
 using System.Numerics;
-using Jitter.LinearMath;
 
 namespace Jitter.Collision.Shapes
 {
 
     /// <summary>
-    /// A <see cref="Shape"/> representing a cylinder.
+    /// A <see cref="BaseShape"/> representing a cylinder.
     /// </summary>
-    public class CylinderShape : Shape
+    public class CylinderShape : BaseShape
     {
         private float height, radius;
 

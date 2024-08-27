@@ -48,7 +48,7 @@ namespace Jitter.Dynamics.Constraints.SingleBody
             : base(body, null)
         {
             if (lineDirection.LengthSquared() == 0.0f)
-                throw new ArgumentException("Line direction can't be zero", "lineDirection");
+                throw new ArgumentException("Line direction can't be zero", nameof(lineDirection));
 
             localAnchor1 = localAnchor;
             anchor = body.position + JVectorExtensions.Transform(localAnchor, body.orientation);

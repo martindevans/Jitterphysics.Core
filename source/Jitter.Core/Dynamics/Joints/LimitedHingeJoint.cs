@@ -43,8 +43,8 @@ namespace Jitter.Dynamics.Joints
             var pos1 = position; pos1 += hingeAxis;
             var pos2 = position; pos2 -= hingeAxis;
 
-            worldPointConstraint[0] = new PointOnPoint(body1, body2, pos1);
-            worldPointConstraint[1] = new PointOnPoint(body1, body2, pos2);
+            worldPointConstraint[0] = new(body1, body2, pos1);
+            worldPointConstraint[1] = new(body1, body2, pos2);
 
 
             // Now the limit, one max distance constraint
@@ -83,10 +83,11 @@ namespace Jitter.Dynamics.Joints
             var relPos0c = hingePos + hingeRelAnchorPos0;
             var relPos1c = hingePos + hingeRelAnchorPos1;
 
-            distance = new PointPointDistance(body1, body2, relPos0c, relPos1c);
-            distance.Distance = allowedDistance;
-            distance.Behavior = PointPointDistance.DistanceBehavior.LimitMaximumDistance;
-
+            distance = new(body1, body2, relPos0c, relPos1c)
+            {
+                Distance = allowedDistance,
+                Behavior = PointPointDistance.DistanceBehavior.LimitMaximumDistance,
+            };
         }
 
 

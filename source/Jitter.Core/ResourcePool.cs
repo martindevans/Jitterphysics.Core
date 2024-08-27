@@ -30,7 +30,7 @@ namespace Jitter
     /// have a parameterless constructor.</typeparam>
     public class ResourcePool<T>
     {
-        private readonly Stack<T> stack = new Stack<T>();
+        private readonly Stack<T> stack = new();
 
         /// <summary>
         /// Creates a new instance of the ResourcePool class.
@@ -88,7 +88,7 @@ namespace Jitter
     /// have a parameterless constructor.  Do not specify [].</typeparam>
     public class ArrayResourcePool<T>
     {
-        private readonly Stack<T[]> stack = new Stack<T[]>();
+        private readonly Stack<T[]> stack = new();
 
         /// <summary>
         /// The length of each array object to be created in the pool.

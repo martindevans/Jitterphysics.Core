@@ -30,9 +30,10 @@ namespace Jitter.Collision
     /// O(n^2) Broadphase detection. Every body is checked against each other body.
     /// This is pretty fast for scene containing just a few(~30) bodies.
     /// </summary>
-    public class CollisionSystemBrute : CollisionSystem
+    public class CollisionSystemBrute
+        : CollisionSystem
     {
-        private List<IBroadphaseEntity> bodyList = new List<IBroadphaseEntity>();
+        private readonly List<RigidBody> bodyList = new();
 
         /// <summary>
         /// Remove a body from the collision system. Removing a body from the world
@@ -40,7 +41,7 @@ namespace Jitter.Collision
         /// </summary>
         /// <param name="body">The body to remove.</param>
         /// <returns>Returns true if the body was successfully removed, otherwise false.</returns>
-        public override bool RemoveEntity(IBroadphaseEntity body)
+        public override bool RemoveEntity(RigidBody body)
         {
             // just keep our internal list in sync
             return bodyList.Remove(body);
@@ -51,10 +52,10 @@ namespace Jitter.Collision
         /// does automatically add it to the collision system.
         /// </summary>
         /// <param name="body">The body to remove.</param>
-        public override void AddEntity(IBroadphaseEntity body)
+        public override void AddEntity(RigidBody body)
         {
             if (bodyList.Contains(body))
-                throw new ArgumentException("The body was already added to the collision system.", "body");
+                throw new ArgumentException("The body was already added to the collision system.", nameof(body));
 
             // just keep our internal list in sync
             bodyList.Add(body);

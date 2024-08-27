@@ -104,8 +104,8 @@ namespace Jitter.Collision
         private class BuildNode
         {
             public int childType; // will default to MMM (usually ECHild but can also be -1)
-            public List<int> nodeIndices = new List<int>();
-            public List<int> triIndices = new List<int>();
+            public List<int> nodeIndices = new();
+            public List<int> triIndices = new();
             public JBBox box;
         }
 
@@ -158,8 +158,8 @@ namespace Jitter.Collision
             triBoxes = new JBBox[tris.Length];
 
             // create an infinite size root box
-            rootNodeBox = new JBBox(new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                                           new Vector3(float.NegativeInfinity, float.NegativeInfinity, float.NegativeInfinity));
+            rootNodeBox = new(new(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+                                           new(float.NegativeInfinity, float.NegativeInfinity, float.NegativeInfinity));
 
 
             for (var i = 0; i < tris.Length; i++)
@@ -176,7 +176,7 @@ namespace Jitter.Collision
             }
 
             var buildNodes = new List<BuildNode>();
-            buildNodes.Add(new BuildNode());
+            buildNodes.Add(new());
             buildNodes[0].box = rootNodeBox;
 
             var children = new JBBox[8];
@@ -222,9 +222,11 @@ namespace Jitter.Collision
                         {
                             // nope create child
                             var parentNode = buildNodes[nodeIndex];
-                            var newNode = new BuildNode();
-                            newNode.childType = childCon;
-                            newNode.box = children[childCon];
+                            var newNode = new BuildNode
+                            {
+                                childType = childCon,
+                                box = children[childCon],
+                            };
                             buildNodes.Add(newNode);
 
                             nodeIndex = buildNodes.Count - 1;
@@ -242,7 +244,7 @@ namespace Jitter.Collision
 
             // now convert to the tighter Node from BuildNodes
             nodes = new Node[buildNodes.Count];
-            nodeStackPool = new ArrayResourcePool<ushort>(buildNodes.Count);
+            nodeStackPool = new(buildNodes.Count);
             //nodeStack = new UInt16[buildNodes.Count];
             for (var i = 0; i < nodes.Length; i++)
             {
@@ -284,22 +286,24 @@ namespace Jitter.Collision
 
             switch (child)
             {
-                case EChild.PPP: offset = new Vector3(1, 1, 1); break;
-                case EChild.PPM: offset = new Vector3(1, 1, 0); break;
-                case EChild.PMP: offset = new Vector3(1, 0, 1); break;
-                case EChild.PMM: offset = new Vector3(1, 0, 0); break;
-                case EChild.MPP: offset = new Vector3(0, 1, 1); break;
-                case EChild.MPM: offset = new Vector3(0, 1, 0); break;
-                case EChild.MMP: offset = new Vector3(0, 0, 1); break;
-                case EChild.MMM: offset = new Vector3(0, 0, 0); break;
+                case EChild.PPP: offset = new(1, 1, 1); break;
+                case EChild.PPM: offset = new(1, 1, 0); break;
+                case EChild.PMP: offset = new(1, 0, 1); break;
+                case EChild.PMM: offset = new(1, 0, 0); break;
+                case EChild.MPP: offset = new(0, 1, 1); break;
+                case EChild.MPM: offset = new(0, 1, 0); break;
+                case EChild.MMP: offset = new(0, 0, 1); break;
+                case EChild.MMM: offset = new(0, 0, 0); break;
 
                 default:
                     System.Diagnostics.Debug.WriteLine("Octree.CreateAABox  got impossible child");
                     break;
             }
 
-            result = new JBBox();
-            result.Min = new Vector3(offset.X * dims.X, offset.Y * dims.Y, offset.Z * dims.Z);
+            result = new()
+            {
+                Min = new(offset.X * dims.X, offset.Y * dims.Y, offset.Z * dims.Z),
+            };
             result.Min += aabb.Min;
 
             result.Max = result.Min + dims;

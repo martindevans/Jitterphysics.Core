@@ -26,7 +26,7 @@ namespace Jitter.Collision.Shapes
 {
 
     /// <summary>
-    /// A <see cref="Shape"/> representing a compoundShape consisting
+    /// A <see cref="BaseShape"/> representing a compoundShape consisting
     /// of several 'sub' shapes.
     /// </summary>
     public class CompoundShape : Multishape
@@ -37,7 +37,6 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         public struct TransformedShape
         {
-            private Shape shape;
             internal Vector3 position;
             internal JMatrix orientation;
             internal JMatrix invOrientation;
@@ -46,15 +45,20 @@ namespace Jitter.Collision.Shapes
             /// <summary>
             /// The 'sub' shape.
             /// </summary>
-            public Shape Shape { get => shape;
-                set => shape = value;
-            }
+            public BaseShape Shape { get; set; }
 
             /// <summary>
             /// The position of a 'sub' shape
             /// </summary>
-            public Vector3 Position { get => position;
-                set { position = value; UpdateBoundingBox(); } }
+            public Vector3 Position
+            {
+                get => position;
+                set
+                {
+                    position = value;
+                    UpdateBoundingBox();
+                }
+            }
 
             public JBBox BoundingBox => boundingBox;
 
@@ -86,13 +90,13 @@ namespace Jitter.Collision.Shapes
             /// <param name="shape">The shape.</param>
             /// <param name="orientation">The orientation this shape should have.</param>
             /// <param name="position">The position this shape should have.</param>
-            public TransformedShape(Shape shape, JMatrix orientation, Vector3 position)
+            public TransformedShape(BaseShape shape, JMatrix orientation, Vector3 position)
             {
                 this.position = position;
                 this.orientation = orientation;
                 JMatrix.Transpose(ref orientation, out invOrientation);
-                this.shape = shape;
-                boundingBox = new JBBox();
+                this.Shape = shape;
+                boundingBox = new();
                 UpdateBoundingBox();
             }
         }
@@ -214,8 +218,10 @@ namespace Jitter.Collision.Shapes
 
         protected override Multishape CreateWorkingClone()
         {
-            var clone = new CompoundShape();
-            clone.shapes = shapes;
+            var clone = new CompoundShape
+            {
+                shapes = shapes,
+            };
             return clone;
         }
 
@@ -267,7 +273,7 @@ namespace Jitter.Collision.Shapes
         }
 
         int currentShape;
-        List<int> currentSubShapes = new List<int>();
+        List<int> currentSubShapes = new();
 
         /// <summary>
         /// Sets the current shape. First <see cref="CompoundShape.Prepare"/> has to be called.
@@ -327,8 +333,8 @@ namespace Jitter.Collision.Shapes
 
         protected void UpdateInternalBoundingBox()
         {
-            mInternalBBox.Min = new Vector3(float.MaxValue);
-            mInternalBBox.Max = new Vector3(float.MinValue);
+            mInternalBBox.Min = new(float.MaxValue);
+            mInternalBBox.Max = new(float.MinValue);
 
             for (var i = 0; i < shapes.Length; i++)
             {

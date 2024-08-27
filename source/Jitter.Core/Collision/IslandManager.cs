@@ -18,7 +18,7 @@ namespace Jitter.Collision
     class IslandManager : ReadOnlyCollection<CollisionIsland>
     {
 
-        public static ResourcePool<CollisionIsland> Pool = new ResourcePool<CollisionIsland>();
+        public static ResourcePool<CollisionIsland> Pool = new();
 
         private List<CollisionIsland> islands;
 
@@ -37,8 +37,8 @@ namespace Jitter.Collision
 
             if (arbiter.body1.island != null)
                 arbiter.body1.island.arbiter.Add(arbiter);
-            else if (arbiter.body2.island != null)
-                arbiter.body2.island.arbiter.Add(arbiter);
+            else
+                arbiter.body2.island?.arbiter.Add(arbiter);
         }
 
         public void ArbiterRemoved(Arbiter arbiter)
@@ -48,8 +48,8 @@ namespace Jitter.Collision
 
             if (arbiter.body1.island != null)
                 arbiter.body1.island.arbiter.Remove(arbiter);
-            else if (arbiter.body2.island != null)
-                arbiter.body2.island.arbiter.Remove(arbiter);
+            else
+                arbiter.body2.island?.arbiter.Remove(arbiter);
 
             RemoveConnection(arbiter.body1, arbiter.body2);
         }
@@ -59,11 +59,11 @@ namespace Jitter.Collision
             AddConnection(constraint.body1, constraint.body2);
 
             constraint.body1.constraints.Add(constraint);
-            if (constraint.body2 != null) constraint.body2.constraints.Add(constraint);
+            constraint.body2?.constraints.Add(constraint);
 
             if (constraint.body1.island != null)
                 constraint.body1.island.constraints.Add(constraint);
-            else if (constraint.body2 != null && constraint.body2.island != null)
+            else if (constraint.body2 is { island: not null })
                 constraint.body2.island.constraints.Add(constraint);
         }
 
@@ -71,12 +71,11 @@ namespace Jitter.Collision
         {
             constraint.body1.constraints.Remove(constraint);
 
-            if (constraint.body2 != null)
-                constraint.body2.constraints.Remove(constraint);
+            constraint.body2?.constraints.Remove(constraint);
 
             if (constraint.body1.island != null)
                 constraint.body1.island.constraints.Remove(constraint);
-            else if (constraint.body2 != null && constraint.body2.island != null)
+            else if (constraint.body2 is { island: not null })
                 constraint.body2.island.constraints.Remove(constraint);
 
             RemoveConnection(constraint.body1, constraint.body2);
@@ -105,9 +104,9 @@ namespace Jitter.Collision
             body.island = null;
         }
 
-        private Stack<RigidBody> rmStackRb = new Stack<RigidBody>();
-        private Stack<Arbiter> rmStackArb = new Stack<Arbiter>();
-        private Stack<Constraint> rmStackCstr = new Stack<Constraint>();
+        private Stack<RigidBody> rmStackRb = new();
+        private Stack<Arbiter> rmStackArb = new();
+        private Stack<Constraint> rmStackCstr = new();
 
         public void RemoveBody(RigidBody body)
         {
@@ -233,11 +232,11 @@ namespace Jitter.Collision
         }
 
 
-        private Queue<RigidBody> leftSearchQueue = new Queue<RigidBody>();
-        private Queue<RigidBody> rightSearchQueue = new Queue<RigidBody>();
+        private Queue<RigidBody> leftSearchQueue = new();
+        private Queue<RigidBody> rightSearchQueue = new();
 
-        private List<RigidBody> visitedBodiesLeft = new List<RigidBody>();
-        private List<RigidBody> visitedBodiesRight = new List<RigidBody>();
+        private List<RigidBody> visitedBodiesLeft = new();
+        private List<RigidBody> visitedBodiesRight = new();
 
         private void SplitIslands(RigidBody body0, RigidBody body1)
         {

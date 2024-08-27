@@ -18,7 +18,6 @@
 */
 
 using System.Numerics;
-using Jitter.LinearMath;
 using Jitter.Dynamics.Constraints;
 
 namespace Jitter.Dynamics.Joints
@@ -42,39 +41,43 @@ namespace Jitter.Dynamics.Joints
         public PrismaticJoint(World world, RigidBody body1, RigidBody body2)
             : base(world)
         {
-            fixedAngle = new FixedAngle(body1, body2);
-            pointOnLine = new PointOnLine(body1, body2, body1.position, body2.position);
+            fixedAngle = new(body1, body2);
+            pointOnLine = new(body1, body2, body1.position, body2.position);
         }
 
         public PrismaticJoint(World world, RigidBody body1, RigidBody body2,float minimumDistance, float maximumDistance)
             : base(world)
         {
-            fixedAngle = new FixedAngle(body1, body2);
-            pointOnLine = new PointOnLine(body1, body2, body1.position, body2.position);
+            fixedAngle = new(body1, body2);
+            pointOnLine = new(body1, body2, body1.position, body2.position);
 
-            minDistance = new PointPointDistance(body1, body2, body1.position, body2.position);
-            minDistance.Behavior = PointPointDistance.DistanceBehavior.LimitMinimumDistance;
-            minDistance.Distance = minimumDistance;
+            minDistance = new(body1, body2, body1.position, body2.position)
+            {
+                Behavior = PointPointDistance.DistanceBehavior.LimitMinimumDistance,
+                Distance = minimumDistance,
+            };
 
-            maxDistance = new PointPointDistance(body1, body2, body1.position, body2.position);
-            maxDistance.Behavior = PointPointDistance.DistanceBehavior.LimitMaximumDistance;
-            maxDistance.Distance = maximumDistance;
+            maxDistance = new(body1, body2, body1.position, body2.position)
+            {
+                Behavior = PointPointDistance.DistanceBehavior.LimitMaximumDistance,
+                Distance = maximumDistance,
+            };
         }
 
 
         public PrismaticJoint(World world, RigidBody body1, RigidBody body2, Vector3 pointOnBody1,Vector3 pointOnBody2)
             : base(world)
         {
-            fixedAngle = new FixedAngle(body1, body2);
-            pointOnLine = new PointOnLine(body1, body2, pointOnBody1, pointOnBody2);
+            fixedAngle = new(body1, body2);
+            pointOnLine = new(body1, body2, pointOnBody1, pointOnBody2);
         }
 
 
         public PrismaticJoint(World world, RigidBody body1, RigidBody body2, Vector3 pointOnBody1, Vector3 pointOnBody2, float maximumDistance, float minimumDistance)
             : base(world)
         {
-            fixedAngle = new FixedAngle(body1, body2);
-            pointOnLine = new PointOnLine(body1, body2, pointOnBody1, pointOnBody2);
+            fixedAngle = new(body1, body2);
+            pointOnLine = new(body1, body2, pointOnBody1, pointOnBody2);
         }
 
         public override void Activate()

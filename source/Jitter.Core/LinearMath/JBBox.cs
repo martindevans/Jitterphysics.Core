@@ -69,10 +69,10 @@ namespace Jitter.LinearMath
 
         static JBBox()
         {
-            LargeBox.Min = new Vector3(float.MinValue);
-            LargeBox.Max = new Vector3(float.MaxValue);
-            SmallBox.Min = new Vector3(float.MaxValue);
-            SmallBox.Max = new Vector3(float.MinValue);
+            LargeBox.Min = new(float.MinValue);
+            LargeBox.Max = new(float.MaxValue);
+            SmallBox.Min = new(float.MaxValue);
+            SmallBox.Max = new(float.MinValue);
         }
 
         /// <summary>
@@ -131,20 +131,23 @@ namespace Jitter.LinearMath
         /// a point.
         /// </summary>
         /// <returns>The ContainmentType of the point.</returns>
-        private bool Intersect1D(float start, float dir, float min, float max,
-                                 ref float enter,ref float exit)
+        private bool Intersect1D(float start, float dir, float min, float max, ref float enter,ref float exit)
         {
             if (dir * dir < JMath.Epsilon * JMath.Epsilon) return start >= min && start <= max;
 
             var t0 = (min - start) / dir;
             var t1 = (max - start) / dir;
 
-            if (t0 > t1) { var tmp = t0; t0 = t1; t1 = tmp; }
+            if (t0 > t1)
+                (t0, t1) = (t1, t0);
 
-            if (t0 > exit || t1 < enter) return false;
+            if (t0 > exit || t1 < enter)
+                return false;
 
-            if (t0 > enter) enter = t0;
-            if (t1 < exit) exit = t1;
+            if (t0 > enter)
+                enter = t0;
+            if (t1 < exit)
+                exit = t1;
             return true;
         }
 
@@ -220,14 +223,14 @@ namespace Jitter.LinearMath
         /// <returns>An array of 8 Vector3 entries.</returns>
         public void GetCorners(Vector3[] corners)
         {
-            corners[0] = new Vector3(Min.X, Max.Y, Max.Z);
-            corners[1] = new Vector3(Max.X, Max.Y, Max.Z);
-            corners[2] = new Vector3(Max.X, Min.Y, Max.Z);
-            corners[3] = new Vector3(Min.X, Min.Y, Max.Z);
-            corners[4] = new Vector3(Min.X, Max.Y, Min.Z);
-            corners[5] = new Vector3(Max.X, Max.Y, Min.Z);
-            corners[6] = new Vector3(Max.X, Min.Y, Min.Z);
-            corners[7] = new Vector3(Min.X, Min.Y, Min.Z);
+            corners[0] = new(Min.X, Max.Y, Max.Z);
+            corners[1] = new(Max.X, Max.Y, Max.Z);
+            corners[2] = new(Max.X, Min.Y, Max.Z);
+            corners[3] = new(Min.X, Min.Y, Max.Z);
+            corners[4] = new(Min.X, Max.Y, Min.Z);
+            corners[5] = new(Max.X, Max.Y, Min.Z);
+            corners[6] = new(Max.X, Min.Y, Min.Z);
+            corners[7] = new(Min.X, Min.Y, Min.Z);
         }
 
 
@@ -258,7 +261,7 @@ namespace Jitter.LinearMath
                 vector3 = Vector3.Min(vector3, points[i]);
                 vector2 = Vector3.Max(vector2, points[i]);
             }
-            return new JBBox(vector3, vector2);
+            return new(vector3, vector2);
         }
 
         /// <summary>

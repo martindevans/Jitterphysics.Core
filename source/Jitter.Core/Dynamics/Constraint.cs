@@ -73,8 +73,8 @@ namespace Jitter.Dynamics.Constraints
             // if the user set orientations all
             // inverse orientations etc. get also
             // recalculated.
-            if (body1 != null) body1.Update();
-            if (body2 != null) body2.Update();
+            body1?.Update();
+            body2?.Update();
         }
 
         /// <summary>

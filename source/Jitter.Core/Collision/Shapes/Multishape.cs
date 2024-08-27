@@ -29,7 +29,7 @@ namespace Jitter.Collision.Shapes
     /// <summary>
     /// Represents a variable form of a shape.
     /// </summary>
-    public abstract class Multishape : Shape
+    public abstract class Multishape : BaseShape
     {
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace Jitter.Collision.Shapes
 
         public bool IsClone => isClone;
 
-        Stack<Multishape> workingCloneStack = new Stack<Multishape>();
+        Stack<Multishape> workingCloneStack = new();
         public Multishape RequestWorkingClone()
         {
             Debug.Assert(workingCloneStack.Count<10, "Unusual size of the workingCloneStack. Forgot to call ReturnWorkingClone?");

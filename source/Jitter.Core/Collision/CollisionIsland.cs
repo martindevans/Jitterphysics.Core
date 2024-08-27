@@ -31,9 +31,9 @@ namespace Jitter.Collision
 
         internal IslandManager islandManager;
 
-        internal readonly HashSet<RigidBody> bodies = new HashSet<RigidBody>();
-        internal readonly HashSet<Arbiter> arbiter = new HashSet<Arbiter>();
-        internal readonly HashSet<Constraint> constraints = new HashSet<Constraint>();
+        internal readonly HashSet<RigidBody> bodies = new();
+        internal readonly HashSet<Arbiter> arbiter = new();
+        internal readonly HashSet<Constraint> constraints = new();
 
         /// <summary>
         /// Gets a read only list of <see cref="RigidBody"/> which are in contact with each other.

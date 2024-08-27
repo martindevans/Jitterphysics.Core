@@ -34,11 +34,12 @@ namespace Jitter.Collision.Shapes
     /// <summary>
     /// Represents the collision part of the RigidBody. A shape is mainly definied through it's supportmap.
     /// Shapes represent convex objects. Inherited classes have to overwrite the supportmap function.
-    /// To implement you own shape: derive a class from <see cref="Shape"/>, implement the support map function
+    /// To implement you own shape: derive a class from <see cref="BaseShape"/>, implement the support map function
     /// and call 'UpdateShape' within the constructor. GeometricCenter, Mass, BoundingBox and Inertia is calculated numerically
     /// based on your SupportMap implementation.
     /// </summary>
-    public abstract class Shape : ISupportMappable
+    public abstract class BaseShape
+        : ISupportMappable
     {
 
         // internal values so we can access them fast  without calling properties.
@@ -56,7 +57,7 @@ namespace Jitter.Collision.Shapes
         /// <summary>
         /// Creates a new instance of a shape.
         /// </summary>
-        public Shape()
+        protected BaseShape()
         {
         }
 
@@ -84,18 +85,13 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         protected void RaiseShapeUpdated()
         {
-            if (ShapeUpdated != null) ShapeUpdated();
+            ShapeUpdated?.Invoke();
         }
 
         /// <summary>
         /// The untransformed axis aligned bounding box of the shape.
         /// </summary>
         public JBBox BoundingBox => boundingBox;
-
-        /// <summary>
-        /// Allows to set a user defined value to the shape.
-        /// </summary>
-        public object Tag { get; set; }
 
         private struct ClipTriangle
         {
@@ -123,14 +119,14 @@ namespace Jitter.Collision.Shapes
 
             var v = new Vector3[] // 6 Array
 		    {
-			    new Vector3( -1,  0,  0 ),
-			    new Vector3(  1,  0,  0 ),
+			    new( -1,  0,  0 ),
+			    new(  1,  0,  0 ),
 
-			    new Vector3(  0, -1,  0 ),
-			    new Vector3(  0,  1,  0 ),
+			    new(  0, -1,  0 ),
+			    new(  0,  1,  0 ),
 
-			    new Vector3(  0,  0, -1 ),
-			    new Vector3(  0,  0,  1 ),
+			    new(  0,  0, -1 ),
+			    new(  0,  0,  1 ),
 		    };
 
             var kTriangleVerts = new int[8, 3] // 8 x 3 Array
@@ -148,11 +144,13 @@ namespace Jitter.Collision.Shapes
 
             for (var i = 0; i < 8; i++)
             {
-                var tri = new ClipTriangle();
-                tri.n1 = v[kTriangleVerts[i, 0]];
-                tri.n2 = v[kTriangleVerts[i, 1]];
-                tri.n3 = v[kTriangleVerts[i, 2]];
-                tri.generation = 0;
+                var tri = new ClipTriangle
+                {
+                    n1 = v[kTriangleVerts[i, 0]],
+                    n2 = v[kTriangleVerts[i, 1]],
+                    n3 = v[kTriangleVerts[i, 2]],
+                    generation = 0,
+                };
                 activeTriList.Push(tri);
             }
 
@@ -242,23 +240,23 @@ namespace Jitter.Collision.Shapes
             vec = SupportMapping(vec);
             box.Max.X = orientation.M11 * vec.X + orientation.M21 * vec.Y + orientation.M31 * vec.Z;
 
-            vec = new Vector3(orientation.M12, orientation.M22, orientation.M32);
+            vec = new(orientation.M12, orientation.M22, orientation.M32);
             vec = SupportMapping(vec);
             box.Max.Y = orientation.M12 * vec.X + orientation.M22 * vec.Y + orientation.M32 * vec.Z;
 
-            vec = new Vector3(orientation.M13, orientation.M23, orientation.M33);
+            vec = new(orientation.M13, orientation.M23, orientation.M33);
             vec = SupportMapping(vec);
             box.Max.Z = orientation.M13 * vec.X + orientation.M23 * vec.Y + orientation.M33 * vec.Z;
 
-            vec = new Vector3(-orientation.M11, -orientation.M21, -orientation.M31);
+            vec = new(-orientation.M11, -orientation.M21, -orientation.M31);
             vec = SupportMapping(vec);
             box.Min.X = orientation.M11 * vec.X + orientation.M21 * vec.Y + orientation.M31 * vec.Z;
 
-            vec = new Vector3(-orientation.M12, -orientation.M22, -orientation.M32);
+            vec = new(-orientation.M12, -orientation.M22, -orientation.M32);
             vec = SupportMapping(vec);
             box.Min.Y = orientation.M12 * vec.X + orientation.M22 * vec.Y + orientation.M32 * vec.Z;
 
-            vec = new Vector3(-orientation.M13, -orientation.M23, -orientation.M33);
+            vec = new(-orientation.M13, -orientation.M23, -orientation.M33);
             vec = SupportMapping(vec);
             box.Min.Z = orientation.M13 * vec.X + orientation.M23 * vec.Y + orientation.M33 * vec.Z;
             return box;
@@ -285,12 +283,12 @@ namespace Jitter.Collision.Shapes
         /// <param name="centerOfMass"></param>
         /// <param name="inertia">Returns the inertia relative to the center of mass, not to the origin</param>
         /// <returns></returns>
-        public static float CalculateMassInertia(Shape shape, out Vector3 centerOfMass, out JMatrix inertia)
+        public static float CalculateMassInertia(BaseShape shape, out Vector3 centerOfMass, out JMatrix inertia)
         {
             var mass = 0.0f;
             centerOfMass = default; inertia = default;
 
-            if (shape is Multishape) throw new ArgumentException("Can't calculate inertia of multishapes.", "shape");
+            if (shape is Multishape) throw new ArgumentException("Can't calculate inertia of multishapes.", nameof(shape));
 
             // build a triangle hull around the shape
             var hullTriangles = new List<Vector3>();

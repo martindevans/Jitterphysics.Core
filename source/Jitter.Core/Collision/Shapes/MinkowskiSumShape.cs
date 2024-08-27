@@ -20,42 +20,41 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Jitter.LinearMath;
 
 namespace Jitter.Collision.Shapes
 {
-    public class MinkowskiSumShape : Shape
+    public class MinkowskiSumShape : BaseShape
     {
         Vector3 shifted;
-        List<Shape> shapes = new List<Shape>();
+        List<BaseShape> shapes = new();
 
-        public MinkowskiSumShape(IEnumerable<Shape> shapes)
+        public MinkowskiSumShape(IEnumerable<BaseShape> shapes)
         {
             AddShapes(shapes);
         }
 
-        public void AddShapes(IEnumerable<Shape> shapes)
+        public void AddShapes(IEnumerable<BaseShape> shapes)
         {
             foreach (var shape in shapes)
             {
-                if (shape is Multishape) throw new Exception("Multishapes not supported by MinkowskiSumShape.");
+                if (shape is Multishape) throw new("Multishapes not supported by MinkowskiSumShape.");
                 this.shapes.Add(shape);
             }
 
             UpdateShape();
         }
 
-        public void AddShape(Shape shape)
+        public void AddShape(BaseShape shape)
         {
-            if (shape is Multishape) throw new Exception("Multishapes not supported by MinkowskiSumShape.");
+            if (shape is Multishape) throw new("Multishapes not supported by MinkowskiSumShape.");
             shapes.Add(shape);
 
             UpdateShape();
         }
 
-        public bool Remove(Shape shape)
+        public bool Remove(BaseShape shape)
         {
-            if (shapes.Count == 1) throw new Exception("There must be at least one shape.");
+            if (shapes.Count == 1) throw new("There must be at least one shape.");
             var result = shapes.Remove(shape);
             UpdateShape();
             return result;
@@ -68,7 +67,7 @@ namespace Jitter.Collision.Shapes
 
         public override void CalculateMassInertia()
         {
-            mass = Shape.CalculateMassInertia(this, out shifted, out inertia);
+            mass = BaseShape.CalculateMassInertia(this, out shifted, out inertia);
         }
 
         public override Vector3 SupportMapping(Vector3 direction)

@@ -18,7 +18,6 @@
 */
 
 using System.Numerics;
-using Jitter.LinearMath;
 using Jitter.Dynamics.Constraints;
 
 namespace Jitter.Dynamics.Joints
@@ -52,8 +51,8 @@ namespace Jitter.Dynamics.Joints
             var pos1 = position; pos1 += hingeAxis;
             var pos2 = position; pos2 -= hingeAxis;
 
-            worldPointConstraint[0] = new PointOnPoint(body1,body2,pos1);
-            worldPointConstraint[1] = new PointOnPoint(body1,body2,pos2);
+            worldPointConstraint[0] = new(body1,body2,pos1);
+            worldPointConstraint[1] = new(body1,body2,pos2);
         }
 
         public PointOnPoint PointOnPointConstraint1 => worldPointConstraint[0];

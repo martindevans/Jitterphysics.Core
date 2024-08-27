@@ -35,11 +35,11 @@ namespace Jitter.Collision
 
         private class SweepPoint
         {
-            public IBroadphaseEntity Body;
+            public RigidBody Body;
             public bool Begin;
             public int Axis;
 
-            public SweepPoint(IBroadphaseEntity body, bool begin, int axis)
+            public SweepPoint(RigidBody body, bool begin, int axis)
             {
                 Body = body;
                 Begin = begin;
@@ -71,14 +71,14 @@ namespace Jitter.Collision
         private struct OverlapPair
         {
             // internal values for faster access within the engine
-            public IBroadphaseEntity Entity1, Entity2;
+            public RigidBody Entity1, Entity2;
 
             /// <summary>
             /// Initializes a new instance of the BodyPair class.
             /// </summary>
             /// <param name="entity1"></param>
             /// <param name="entity2"></param>
-            public OverlapPair(IBroadphaseEntity entity1, IBroadphaseEntity entity2)
+            public OverlapPair(RigidBody entity1, RigidBody entity2)
             {
                 Entity1 = entity1;
                 Entity2 = entity2;
@@ -90,7 +90,7 @@ namespace Jitter.Collision
             /// </summary>
             /// <param name="entity1">The first body.</param>
             /// <param name="entity2">The second body.</param>
-            internal void SetBodies(IBroadphaseEntity entity1, IBroadphaseEntity entity2)
+            internal void SetBodies(RigidBody entity1, RigidBody entity2)
             {
                 Entity1 = entity1;
                 Entity2 = entity2;
@@ -120,13 +120,13 @@ namespace Jitter.Collision
         }
 
         // not needed anymore
-        private List<IBroadphaseEntity> bodyList = new List<IBroadphaseEntity>();
+        private readonly List<RigidBody> bodyList = new();
 
-        private List<SweepPoint> axis1 = new List<SweepPoint>();
-        private List<SweepPoint> axis2 = new List<SweepPoint>();
-        private List<SweepPoint> axis3 = new List<SweepPoint>();
+        private List<SweepPoint> axis1 = new();
+        private List<SweepPoint> axis2 = new();
+        private List<SweepPoint> axis3 = new();
 
-        private HashSet<OverlapPair> fullOverlaps = new HashSet<OverlapPair>();
+        private HashSet<OverlapPair> fullOverlaps = new();
 
         Action<object> sortCallback;
 
@@ -145,7 +145,7 @@ namespace Jitter.Collision
             else return 0;
         }
 
-        List<IBroadphaseEntity> activeList = new List<IBroadphaseEntity>();
+        List<RigidBody> activeList = new();
 
         private void DirtySortAxis(List<SweepPoint> axis)
         {
@@ -161,7 +161,7 @@ namespace Jitter.Collision
                     foreach (var body in activeList)
                     {
                         if (CheckBoundingBoxes(body,keyelement.Body)) 
-                            fullOverlaps.Add(new OverlapPair(body, keyelement.Body));
+                            fullOverlaps.Add(new(body, keyelement.Body));
                     }
 
                     activeList.Add(keyelement.Body);
@@ -190,13 +190,13 @@ namespace Jitter.Collision
                     {
                         if (CheckBoundingBoxes(swapper.Body, keyelement.Body))
                         {
-                            lock (fullOverlaps) fullOverlaps.Add(new OverlapPair(swapper.Body, keyelement.Body));
+                            lock (fullOverlaps) fullOverlaps.Add(new(swapper.Body, keyelement.Body));
                         }
                     }
 
                     if (!keyelement.Begin && swapper.Begin)
                     {
-                        lock (fullOverlaps) fullOverlaps.Remove(new OverlapPair(swapper.Body, keyelement.Body));
+                        lock (fullOverlaps) fullOverlaps.Remove(new(swapper.Body, keyelement.Body));
                     }
 
                     axis[i + 1] = swapper;
@@ -207,19 +207,19 @@ namespace Jitter.Collision
         }
 
         int addCounter;
-        public override void AddEntity(IBroadphaseEntity body)
+        public override void AddEntity(RigidBody body)
         {
             bodyList.Add(body);
 
-            axis1.Add(new SweepPoint(body, true, 0)); axis1.Add(new SweepPoint(body, false, 0));
-            axis2.Add(new SweepPoint(body, true, 1)); axis2.Add(new SweepPoint(body, false, 1));
-            axis3.Add(new SweepPoint(body, true, 2)); axis3.Add(new SweepPoint(body, false, 2));
+            axis1.Add(new(body, true, 0)); axis1.Add(new(body, false, 0));
+            axis2.Add(new(body, true, 1)); axis2.Add(new(body, false, 1));
+            axis3.Add(new(body, true, 2)); axis3.Add(new(body, false, 2));
 
             addCounter++;
         }
 
-        Stack<OverlapPair> depricated = new Stack<OverlapPair>();
-        public override bool RemoveEntity(IBroadphaseEntity body)
+        Stack<OverlapPair> depricated = new();
+        public override bool RemoveEntity(RigidBody body)
         {
             int count;
 
@@ -250,7 +250,6 @@ namespace Jitter.Collision
         /// <see cref="CollisionSystem.PassedBroadphase"/>
         /// and <see cref="CollisionSystem.CollisionDetected"/> events to get the results.
         /// </summary>
-        /// <param name="multiThreaded">If true internal multithreading is used.</param>
         public override void Detect()
         {
             if (addCounter > AddedObjectsBruteForceIsUsed)

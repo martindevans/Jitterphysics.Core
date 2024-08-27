@@ -25,9 +25,9 @@ namespace Jitter.Collision.Shapes
 {
 
     /// <summary>
-    /// A <see cref="Shape"/> representing a sphere.
+    /// A <see cref="BaseShape"/> representing a sphere.
     /// </summary>
-    public class SphereShape : Shape
+    public class SphereShape : BaseShape
     {
         private float radius = 1.0f;
 

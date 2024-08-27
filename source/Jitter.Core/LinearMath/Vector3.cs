@@ -17,7 +17,6 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-using System;
 using System.Numerics;
 
 namespace Jitter.LinearMath
@@ -27,12 +26,12 @@ namespace Jitter.LinearMath
         /// <summary>
         /// A vector with components (0,0,0);
         /// </summary>
-        public static readonly Vector3 Zero = new Vector3(0);
+        public static readonly Vector3 Zero = new(0);
 
         /// <summary>
         /// A vector with components (1,0,0);
         /// </summary>
-        public static readonly Vector3 Left = new Vector3(1, 0, 0);
+        public static readonly Vector3 Left = new(1, 0, 0);
 
         /// <summary>
         /// A vector with components (-1,0,0);
@@ -42,7 +41,7 @@ namespace Jitter.LinearMath
         /// <summary>
         /// A vector with components (0,1,0);
         /// </summary>
-        public static readonly Vector3 Up = new Vector3(0, 1, 0);
+        public static readonly Vector3 Up = new(0, 1, 0);
 
         /// <summary>
         /// A vector with components (0,-1,0);
@@ -52,7 +51,7 @@ namespace Jitter.LinearMath
         /// <summary>
         /// A vector with components (0,0,1);
         /// </summary>
-        public static readonly Vector3 Backward = new Vector3(0, 0, 1);
+        public static readonly Vector3 Backward = new(0, 0, 1);
         /// <summary>
         /// A vector with components (0,0,-1);
         /// </summary>
@@ -61,7 +60,7 @@ namespace Jitter.LinearMath
         /// <summary>
         /// A vector with components (1,1,1);
         /// </summary>
-        public static readonly Vector3 One = new Vector3(1);
+        public static readonly Vector3 One = new(1);
 
         private const float ZeroEpsilonSq = JMath.Epsilon * JMath.Epsilon;
 
@@ -86,7 +85,7 @@ namespace Jitter.LinearMath
             var num1 = position.X * matrix.M12 + position.Y * matrix.M22 + position.Z * matrix.M32;
             var num2 = position.X * matrix.M13 + position.Y * matrix.M23 + position.Z * matrix.M33;
 
-            return new Vector3
+            return new()
             {
                 X = num0,
                 Y = num1,
@@ -100,7 +99,7 @@ namespace Jitter.LinearMath
             var num1 = position.X * matrix.M21 + position.Y * matrix.M22 + position.Z * matrix.M23;
             var num2 = position.X * matrix.M31 + position.Y * matrix.M32 + position.Z * matrix.M33;
 
-            return new Vector3
+            return new()
             {
                 X = num0,
                 Y = num1,

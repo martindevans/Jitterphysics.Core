@@ -19,7 +19,6 @@
 
 using System.Collections.Generic;
 using System.Numerics;
-using Jitter.LinearMath;
 
 namespace Jitter.Collision.Shapes
 {
@@ -27,7 +26,7 @@ namespace Jitter.Collision.Shapes
     /// <summary>
     /// ConvexHullShape class.
     /// </summary>
-    public class ConvexHullShape : Shape
+    public class ConvexHullShape : BaseShape
     {
         List<Vector3> vertices;
 
@@ -48,7 +47,7 @@ namespace Jitter.Collision.Shapes
 
         public override void CalculateMassInertia()
         {
-            mass = Shape.CalculateMassInertia(this, out shifted, out inertia);
+            mass = BaseShape.CalculateMassInertia(this, out shifted, out inertia);
         }
 
         /// <summary>

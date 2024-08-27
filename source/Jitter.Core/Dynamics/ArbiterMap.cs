@@ -97,18 +97,17 @@ namespace Jitter.Dynamics
     /// </summary>
     public class ArbiterMap : IEnumerable
     {
-        private Dictionary<ArbiterKey, Arbiter> dictionary =
-            new Dictionary<ArbiterKey, Arbiter>(2048, arbiterKeyComparer);
+        private Dictionary<ArbiterKey, Arbiter> dictionary = new(2048, arbiterKeyComparer);
 
         private ArbiterKey lookUpKey;
-        private static ArbiterKeyComparer arbiterKeyComparer = new ArbiterKeyComparer();
+        private static ArbiterKeyComparer arbiterKeyComparer = new();
 
         /// <summary>
         /// Initializes a new instance of the ArbiterMap class.
         /// </summary>
         public ArbiterMap()
         {
-            lookUpKey = new ArbiterKey(null,null);
+            lookUpKey = new(null,null);
         }
 
         /// <summary>

@@ -18,7 +18,6 @@
 */
 
 using System.Collections.Generic;
-using Jitter.LinearMath;
 using System.Diagnostics;
 using System.Numerics;
 
@@ -110,7 +109,7 @@ namespace Jitter.Dynamics
 
         /// <summary>
         /// </summary>
-        public static ResourcePool<Arbiter> Pool = new ResourcePool<Arbiter>();
+        public static ResourcePool<Arbiter> Pool = new();
 
         // internal values for faster access within the engine
         internal RigidBody body1, body2;
@@ -122,7 +121,7 @@ namespace Jitter.Dynamics
         /// <param name="body2"></param>
         public Arbiter(RigidBody body1, RigidBody body2)
         {
-            contactList = new ContactList();
+            contactList = new();
             this.body1 = body1;
             this.body2 = body2;
         }
@@ -132,7 +131,7 @@ namespace Jitter.Dynamics
         /// </summary>
         public Arbiter()
         {
-            contactList = new ContactList();
+            contactList = new();
         }
 
         /// <summary>

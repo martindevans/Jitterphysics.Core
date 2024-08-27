@@ -117,7 +117,7 @@ namespace Jitter.Collision
             var v0 = v02 - v01;
 
             // Avoid case where centers overlap -- any direction is fine in this case
-            if (v0.IsNearlyZero()) v0 = new Vector3(0.00001f, 0, 0);
+            if (v0.IsNearlyZero()) v0 = new(0.00001f, 0, 0);
 
             // v1 = support in direction of origin
             mn = v0;

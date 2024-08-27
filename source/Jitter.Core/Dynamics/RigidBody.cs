@@ -17,6 +17,8 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -28,8 +30,6 @@ using Jitter.Dynamics.Constraints;
 
 namespace Jitter.Dynamics
 {
-
-
     public enum RigidBodyIndex
     {
         RigidBody1, RigidBody2
@@ -38,15 +38,15 @@ namespace Jitter.Dynamics
     /// <summary>
     /// The RigidBody class.
     /// </summary>
-    public class RigidBody
-        : IBroadphaseEntity, IDebugDrawable, IEquatable<RigidBody>, IComparable<RigidBody>
+    public sealed class RigidBody
+        : IDebugDrawable, IEquatable<RigidBody>, IComparable<RigidBody>
     {
         [Flags]
         public enum DampingType
         {
-            None = 0x00,
-            Angular = 0x01,
-            Linear = 0x02
+            None = 0,
+            Angular = 1,
+            Linear = 2
         }
 
         internal JMatrix inertia;
@@ -59,8 +59,6 @@ namespace Jitter.Dynamics
         internal Vector3 linearVelocity;
         internal Vector3 angularVelocity;
 
-        internal Material material;
-
         internal JBBox boundingBox;
 
         internal float inactiveTime;
@@ -69,31 +67,26 @@ namespace Jitter.Dynamics
         internal bool isStatic;
         internal bool affectedByGravity = true;
 
-        internal CollisionIsland island;
+        internal CollisionIsland? island;
         internal float inverseMass;
 
         internal Vector3 force, torque;
 
-        private int hashCode;
-
-        internal int internalIndex = 0;
-
         private ShapeUpdatedHandler updatedHandler;
 
-        internal List<RigidBody> connections = new List<RigidBody>();
-
-        internal HashSet<Arbiter> arbiters = new HashSet<Arbiter>();
-        internal HashSet<Constraint> constraints = new HashSet<Constraint>();
+        internal readonly List<RigidBody> connections = new();
+        internal readonly HashSet<Arbiter> arbiters = new();
+        internal readonly HashSet<Constraint> constraints = new();
 
         internal int marker = 0;
 
 
-        public RigidBody(Shape shape)
-            : this(shape, new Material(), false)
+        public RigidBody(BaseShape shape)
+            : this(shape, new(), false)
         {
         }
 
-        internal bool isParticle;
+        private bool isParticle;
 
         /// <summary>
         /// If true, the body as no angular movement.
@@ -129,22 +122,12 @@ namespace Jitter.Dynamics
         /// Initializes a new instance of the RigidBody class.
         /// </summary>
         /// <param name="shape">The shape of the body.</param>
-        public RigidBody(Shape shape, Material material)
-            :this(shape,material,false)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the RigidBody class.
-        /// </summary>
-        /// <param name="shape">The shape of the body.</param>
+        /// <param name="material"></param>
         /// <param name="isParticle">If set to true the body doesn't rotate. 
         /// Also contacts are only solved for the linear motion part.</param>
-        public RigidBody(Shape shape, Material material, bool isParticle)
+        public RigidBody(BaseShape shape, Material material, bool isParticle = false)
         {
             instance = Interlocked.Increment(ref instanceCount);
-            hashCode = CalculateHash(instance);
-
             Shape = shape;
             orientation = JMatrix.Identity;
 
@@ -162,7 +145,7 @@ namespace Jitter.Dynamics
                 inverseMass = 1.0f;
             }
 
-            this.material = material;
+            this.Material = material;
 
             AllowDeactivation = true;
             EnableSpeculativeContacts = false;
@@ -180,7 +163,7 @@ namespace Jitter.Dynamics
         /// <returns>The hashcode.</returns>
         public override int GetHashCode()
         {
-            return hashCode;
+            return HashCode.Combine(instance, 1234);
         }
 
         public IReadOnlyCollection<Arbiter> Arbiters => arbiters;
@@ -201,22 +184,12 @@ namespace Jitter.Dynamics
 
 
         private static int instanceCount;
-        private int instance;
-
-        private int CalculateHash(int a)
-        {
-            a = a ^ 61 ^ (a >> 16);
-            a += (a << 3);
-            a ^= (a >> 4);
-            a *= 0x27d4eb2d;
-            a ^= (a >> 15);
-            return a;
-        }
+        private readonly int instance;
 
         /// <summary>
         /// Gets the current collision island the body is in.
         /// </summary>
-        public CollisionIsland CollisionIsland => island;
+        public CollisionIsland? CollisionIsland => island;
 
         /// <summary>
         /// If set to false the velocity is set to zero,
@@ -384,20 +357,16 @@ namespace Jitter.Dynamics
         }
 
         /// <summary>
-        /// Allows to set a user defined value to the body.
-        /// </summary>
-        public object Tag { get; set; }
-
-        /// <summary>
         /// The shape the body is using.
         /// </summary>
-        public Shape Shape 
+        public BaseShape Shape 
         {
             get => shape;
             set 
             {
                 // deregister update event
-                if(shape != null) shape.ShapeUpdated -= updatedHandler;
+                if (shape != null)
+                    shape.ShapeUpdated -= updatedHandler;
 
                 // register new event
                 shape = value; 
@@ -405,17 +374,11 @@ namespace Jitter.Dynamics
             } 
         }
 
-        private Shape shape;
+        private BaseShape shape;
 
-        private DampingType damping = DampingType.Angular | DampingType.Linear;
+        public DampingType Damping { get; set; } = DampingType.Angular | DampingType.Linear;
 
-        public DampingType Damping { get => damping;
-            set => damping = value;
-        }
-
-        public Material Material { get => material;
-            set => material = value;
-        }
+        public Material Material { get; set; }
 
         /// <summary>
         /// The inertia currently used for this body.
@@ -484,8 +447,7 @@ namespace Jitter.Dynamics
             {
                 if (value && !isStatic)
                 {
-                    if(island != null)
-                    island.islandManager.MakeBodyStatic(this);
+                    island?.islandManager.MakeBodyStatic(this);
 
                     angularVelocity = default;
                     linearVelocity = default;
@@ -494,7 +456,9 @@ namespace Jitter.Dynamics
             }
         }
 
-        public bool AffectedByGravity { get => affectedByGravity;
+        public bool AffectedByGravity
+        {
+            get => affectedByGravity;
             set => affectedByGravity = value;
         }
 
@@ -564,7 +528,7 @@ namespace Jitter.Dynamics
         /// Recalculates the axis aligned bounding box and the inertia
         /// values in world space.
         /// </summary>
-        public virtual void Update()
+        public void Update()
         {
             if (isParticle)
             {
@@ -594,31 +558,17 @@ namespace Jitter.Dynamics
             }
         }
 
-        public bool Equals(RigidBody other)
+        /// <inheritdoc />
+        public bool Equals(RigidBody? other)
         {
-            return other.instance == instance;
+            return other?.instance == instance;
         }
 
-        public int CompareTo(RigidBody other)
+        /// <inheritdoc/>
+        public int CompareTo(RigidBody? other)
         {
-            if (other.instance < instance) return -1;
-            else if (other.instance > instance) return 1;
-            else return 0;
+            return other?.instance.CompareTo(instance) ?? 1;
         }
-
-        public int BroadphaseTag { get; set; }
-
-
-        public virtual void PreStep(float timestep)
-        {
-            //
-        }
-
-        public virtual void PostStep(float timestep)
-        {
-            //
-        }
-
 
         public bool IsStaticOrInactive => !isActive || isStatic;
 
@@ -633,25 +583,25 @@ namespace Jitter.Dynamics
             }
         }
 
-        private List<Vector3> hullPoints = new List<Vector3>();
+        private readonly List<Vector3> hullPoints = new();
 
         private void UpdateHullData()
         {
             hullPoints.Clear();
 
-            if(enableDebugDraw) shape.MakeHull(hullPoints, 3);
+            if (enableDebugDraw)
+                shape.MakeHull(hullPoints, 3);
         }
 
 
+        /// <inheritdoc />
         public void DebugDraw(IDebugDrawer drawer)
         {
-            Vector3 pos1,pos2,pos3;
-
             for(var i = 0;i<hullPoints.Count;i+=3)
             {
-                pos1 = hullPoints[i + 0];
-                pos2 = hullPoints[i + 1];
-                pos3 = hullPoints[i + 2];
+                var pos1 = hullPoints[i + 0];
+                var pos2 = hullPoints[i + 1];
+                var pos3 = hullPoints[i + 2];
 
                 pos1 = JVectorExtensions.Transform(pos1, orientation);
                 pos1 += position;

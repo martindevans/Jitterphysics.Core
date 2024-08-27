@@ -25,9 +25,9 @@ namespace Jitter.Collision.Shapes
 {
 
     /// <summary>
-    /// A <see cref="Shape"/> representing a cone.
+    /// A <see cref="BaseShape"/> representing a cone.
     /// </summary>
-    public class ConeShape : Shape
+    public class ConeShape : BaseShape
     {
         float height,radius;
 

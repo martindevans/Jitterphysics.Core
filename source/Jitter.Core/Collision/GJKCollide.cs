@@ -30,7 +30,7 @@ namespace Jitter.Collision
     {
         private const int MaxIterations = 15;
 
-        private static ResourcePool<VoronoiSimplexSolver> simplexSolverPool = new ResourcePool<VoronoiSimplexSolver>();
+        private static ResourcePool<VoronoiSimplexSolver> simplexSolverPool = new();
 
         private static void SupportMapTransformed(ISupportMappable support, ref JMatrix orientation, ref Vector3 position, ref Vector3 direction, out Vector3 result)
         {
@@ -414,7 +414,7 @@ namespace Jitter.Collision
             //MASK for m_usedVertices
             //stores the simplex vertex-usage, using the MASK, 
             // if m_usedVertices & MASK then the related vertex is used
-            private UsageBitfield _usedVertices = new UsageBitfield();
+            private UsageBitfield _usedVertices = new();
             private float[] _barycentricCoords = new float[4];
             private bool _degenerate;
 
@@ -480,12 +480,12 @@ namespace Jitter.Collision
             private Vector3 _lastW;
             private bool _cachedValidClosest;
 
-            private SubSimplexClosestResult _cachedBC = new SubSimplexClosestResult();
+            private SubSimplexClosestResult _cachedBC = new();
 
             // Note that this assumes ray-casts and point-casts will always be called from the
             // same thread which I assume is true from the _cachedBC member
             // If this needs to made multi-threaded a resource pool will be needed
-            private SubSimplexClosestResult tempResult = new SubSimplexClosestResult();
+            private SubSimplexClosestResult tempResult = new();
 
             private bool _needsUpdate;
 
@@ -498,7 +498,7 @@ namespace Jitter.Collision
                 _cachedValidClosest = false;
                 _numVertices = 0;
                 _needsUpdate = true;
-                _lastW = new Vector3(1e30f, 1e30f, 1e30f);
+                _lastW = new(1e30f, 1e30f, 1e30f);
                 _cachedBC.Reset();
             }
 
@@ -665,7 +665,7 @@ namespace Jitter.Collision
                             break;
                         case 3:
                             //closest point origin from triangle
-                            p = new Vector3();
+                            p = new();
                             a = _simplexVectorW[0];
                             b = _simplexVectorW[1];
                             c = _simplexVectorW[2];
@@ -687,7 +687,7 @@ namespace Jitter.Collision
                             _cachedValidClosest = _cachedBC.IsValid;
                             break;
                         case 4:
-                            p = new Vector3();
+                            p = new();
                             a = _simplexVectorW[0];
                             b = _simplexVectorW[1];
                             c = _simplexVectorW[2];

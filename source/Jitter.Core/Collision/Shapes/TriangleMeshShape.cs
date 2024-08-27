@@ -25,11 +25,11 @@ namespace Jitter.Collision.Shapes
 {
 
     /// <summary>
-    /// A <see cref="Shape"/> representing a triangleMesh.
+    /// A <see cref="BaseShape"/> representing a triangleMesh.
     /// </summary>
     public class TriangleMeshShape : Multishape
     {
-        private List<int> potentialTriangles = new List<int>();
+        private List<int> potentialTriangles = new();
         private Octree octree;
 
         private float sphericalExpansion = 0.05f;
@@ -60,8 +60,10 @@ namespace Jitter.Collision.Shapes
  
         protected override Multishape CreateWorkingClone()
         {
-            var clone = new TriangleMeshShape(octree);
-            clone.sphericalExpansion = sphericalExpansion;
+            var clone = new TriangleMeshShape(octree)
+            {
+                sphericalExpansion = sphericalExpansion,
+            };
             return clone;
         }
 

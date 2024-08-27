@@ -36,8 +36,15 @@ namespace Jitter
     /// </summary>
     public class World
     {
+        /// <summary>
+        /// Callback on every world step
+        /// </summary>
+        /// <param name="timestep"></param>
         public delegate void WorldStep(float timestep);
 
+        /// <summary>
+        /// Container for all events happening in a single world
+        /// </summary>
         public class WorldEvents
         {
             // Post&Prestep
@@ -128,15 +135,15 @@ namespace Jitter
         private int smallIterations = 4;
         private float timestep;
 
-        private readonly IslandManager islands = new IslandManager();
+        private readonly IslandManager islands = new();
 
-        private readonly HashSet<RigidBody> rigidBodies = new HashSet<RigidBody>();
+        private readonly HashSet<RigidBody> rigidBodies = new();
         public IReadOnlyCollection<RigidBody> RigidBodies => rigidBodies;
 
-        private readonly HashSet<Constraint> constraints = new HashSet<Constraint>();
+        private readonly HashSet<Constraint> constraints = new();
         public IReadOnlyCollection<Constraint> Constraints => constraints;
 
-        private readonly WorldEvents events = new WorldEvents();
+        private readonly WorldEvents events = new();
         public WorldEvents Events => events;
 
         /// <summary>
@@ -147,12 +154,12 @@ namespace Jitter
 
         private readonly ArbiterMap arbiterMap;
 
-        private readonly Queue<Arbiter> removedArbiterQueue = new Queue<Arbiter>();
-        private readonly Queue<Arbiter> addedArbiterQueue = new Queue<Arbiter>();
+        private readonly Queue<Arbiter> removedArbiterQueue = new();
+        private readonly Queue<Arbiter> addedArbiterQueue = new();
 
-        private Vector3 gravity = new Vector3(0, 0, 0);
+        private Vector3 gravity = new(0, 0, 0);
 
-        private readonly ContactSettings contactSettings = new ContactSettings();
+        private readonly ContactSettings contactSettings = new();
         public ContactSettings ContactSettings => contactSettings;
 
         /// <summary>
@@ -176,7 +183,7 @@ namespace Jitter
         public World(CollisionSystem collision)
         {
             if (collision == null)
-                throw new ArgumentNullException("The CollisionSystem can't be null.", "collision");
+                throw new ArgumentNullException(nameof(collision), "The CollisionSystem can't be null.");
 
             arbiterCallback = ArbiterCallback;
             integrateCallback = IntegrateCallback;
@@ -187,7 +194,7 @@ namespace Jitter
 
             CollisionSystem.CollisionDetected += collisionDetectionHandler;
 
-            arbiterMap = new ArbiterMap();
+            arbiterMap = new();
 
             AllowDeactivation = true;
         }
@@ -271,7 +278,7 @@ namespace Jitter
         public bool AllowDeactivation { get; set; }
 
         /// <summary>
-        /// Every computation <see cref="Step"/> the angular and linear velocity 
+        /// Every computation <see cref="Step(float)"/> the angular and linear velocity 
         /// of a <see cref="RigidBody"/> gets multiplied by this value.
         /// </summary>
         /// <param name="angularDamping">The factor multiplied with the angular velocity.
@@ -281,10 +288,10 @@ namespace Jitter
         public void SetDampingFactors(float angularDamping, float linearDamping)
         {
             if (angularDamping < 0.0f || angularDamping > 1.0f)
-                throw new ArgumentException("Angular damping factor has to be between 0.0 and 1.0", "angularDamping");
+                throw new ArgumentException("Angular damping factor has to be between 0.0 and 1.0", nameof(angularDamping));
 
             if (linearDamping < 0.0f || linearDamping > 1.0f)
-                throw new ArgumentException("Linear damping factor has to be between 0.0 and 1.0", "linearDamping");
+                throw new ArgumentException("Linear damping factor has to be between 0.0 and 1.0", nameof(linearDamping));
 
             this.angularDamping = angularDamping;
             this.linearDamping = linearDamping;
@@ -307,13 +314,13 @@ namespace Jitter
         public void SetInactivityThreshold(float angularVelocity, float linearVelocity, float time)
         {
             if (angularVelocity < 0.0f) throw new ArgumentException("Angular velocity threshold has to " +
-                 "be larger than zero", "angularVelocity");
+                 "be larger than zero", nameof(angularVelocity));
 
             if (linearVelocity < 0.0f) throw new ArgumentException("Linear velocity threshold has to " +
-                "be larger than zero", "linearVelocity");
+                "be larger than zero", nameof(linearVelocity));
 
             if (time < 0.0f) throw new ArgumentException("Deactivation time threshold has to " +
-                "be larger than zero", "time");
+                "be larger than zero", nameof(time));
 
             inactiveAngularThresholdSq = angularVelocity * angularVelocity;
             inactiveLinearThresholdSq = linearVelocity * linearVelocity;
@@ -332,10 +339,10 @@ namespace Jitter
         public void SetIterations(int iterations, int smallIterations)
         {
             if (iterations < 1) throw new ArgumentException("The number of collision " +
-                 "iterations has to be larger than zero", "iterations");
+                 "iterations has to be larger than zero", nameof(iterations));
 
             if (smallIterations < 1) throw new ArgumentException("The number of collision " +
-                "iterations has to be larger than zero", "smallIterations");
+                "iterations has to be larger than zero", nameof(smallIterations));
 
             contactIterations = iterations;
             this.smallIterations = smallIterations;
@@ -432,7 +439,7 @@ namespace Jitter
         private float currentLinearDampFactor = 1.0f;
         private float currentAngularDampFactor = 1.0f;
 
-        private readonly Stopwatch sw = new Stopwatch();
+        private readonly Stopwatch sw = new();
 
         public enum DebugType
         {
@@ -464,7 +471,7 @@ namespace Jitter
             if (timestep == 0.0f) return;
 
             // throw exception if the timestep is smaller zero.
-            if (timestep < 0.0f) throw new ArgumentException("The timestep can't be negative.", "timestep");
+            if (timestep < 0.0f) throw new ArgumentException("The timestep can't be negative.", nameof(timestep));
 
             // Calculate this
             currentAngularDampFactor = (float)Math.Pow(angularDamping, timestep);
@@ -472,8 +479,6 @@ namespace Jitter
 
             sw.Reset(); sw.Start();
             events.RaiseWorldPreStep(timestep);
-            foreach (var body in rigidBodies) body.PreStep(timestep);
-
             sw.Stop(); debugTimes[(int)DebugType.PreStep] = sw.Elapsed.TotalMilliseconds;
 
             sw.Reset(); sw.Start();
@@ -506,7 +511,7 @@ namespace Jitter
             sw.Stop(); debugTimes[(int)DebugType.IntegrateForces] = sw.Elapsed.TotalMilliseconds;
 
             sw.Reset(); sw.Start();
-            HandleArbiter(contactIterations);
+            HandleArbiter();
             sw.Stop(); debugTimes[(int)DebugType.HandleArbiter] = sw.Elapsed.TotalMilliseconds;
 
             sw.Reset(); sw.Start();
@@ -514,7 +519,6 @@ namespace Jitter
             sw.Stop(); debugTimes[(int)DebugType.Integrate] = sw.Elapsed.TotalMilliseconds;
 
             sw.Reset(); sw.Start();
-            foreach (var body in rigidBodies) body.PostStep(timestep);
             events.RaiseWorldPostStep(timestep);
             sw.Stop(); debugTimes[(int)DebugType.PostStep] = sw.Elapsed.TotalMilliseconds;
         }
@@ -591,7 +595,7 @@ namespace Jitter
             }
         }
 
-        private readonly Stack<Arbiter> removedArbiterStack = new Stack<Arbiter>();
+        private readonly Stack<Arbiter> removedArbiterStack = new();
 
         private void UpdateContacts()
         {
@@ -646,7 +650,7 @@ namespace Jitter
             }
         }
 
-        private void HandleArbiter(int iterations)
+        private void HandleArbiter()
         {
             for (var i = 0; i < islands.Count; i++)
                 if (islands[i].IsActive())
@@ -663,7 +667,7 @@ namespace Jitter
                     var temp = body.force * scaleFactor;
                     body.linearVelocity = temp + body.linearVelocity;
 
-                    if (!body.isParticle)
+                    if (!body.IsParticle)
                     {
                         temp = body.torque * timestep;
                         temp = JVectorExtensions.Transform(temp, body.invInertiaWorld);
@@ -690,7 +694,7 @@ namespace Jitter
             var temp = body.linearVelocity * timestep;
             body.position = temp + body.position;
 
-            if (!body.isParticle)
+            if (!body.IsParticle)
             {
 
                 //exponential map
@@ -756,7 +760,7 @@ namespace Jitter
                 {
                     arbiter = Arbiter.Pool.GetNew();
                     arbiter.body1 = body1; arbiter.body2 = body2;
-                    arbiterMap.Add(new ArbiterKey(body1, body2), arbiter);
+                    arbiterMap.Add(new(body1, body2), arbiter);
 
                     addedArbiterQueue.Enqueue(arbiter);
 

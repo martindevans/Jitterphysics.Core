@@ -82,7 +82,7 @@ namespace Jitter.Dynamics
         /// <summary>
         /// A contact resource pool.
         /// </summary>
-        public static readonly ResourcePool<Contact> Pool = new ResourcePool<Contact>();
+        public static readonly ResourcePool<Contact> Pool = new();
 
         private float lastTimeStep = float.PositiveInfinity;
 
@@ -751,8 +751,8 @@ namespace Jitter.Dynamics
             initialPen = penetration;
             this.penetration = penetration;
 
-            body1IsMassPoint = body1.isParticle;
-            body2IsMassPoint = body2.isParticle;
+            body1IsMassPoint = body1.IsParticle;
+            body2IsMassPoint = body2.IsParticle;
 
             // Material Properties
             if (newContact)
@@ -768,19 +768,19 @@ namespace Jitter.Dynamics
                 switch (settings.MaterialCoefficientMixing)
                 {
                     case ContactSettings.MaterialCoefficientMixingType.TakeMaximum:
-                        StaticFriction = Math.Max(body1.material.StaticFriction, body2.material.StaticFriction);
-                        DynamicFriction = Math.Max(body1.material.KineticFriction, body2.material.KineticFriction);
-                        Restitution = Math.Max(body1.material.Restitution, body2.material.Restitution);
+                        StaticFriction = Math.Max(body1.Material.StaticFriction, body2.Material.StaticFriction);
+                        DynamicFriction = Math.Max(body1.Material.KineticFriction, body2.Material.KineticFriction);
+                        Restitution = Math.Max(body1.Material.Restitution, body2.Material.Restitution);
                         break;
                     case ContactSettings.MaterialCoefficientMixingType.TakeMinimum:
-                        StaticFriction = Math.Min(body1.material.StaticFriction, body2.material.StaticFriction);
-                        DynamicFriction = Math.Min(body1.material.KineticFriction, body2.material.KineticFriction);
-                        Restitution = Math.Min(body1.material.Restitution, body2.material.Restitution);
+                        StaticFriction = Math.Min(body1.Material.StaticFriction, body2.Material.StaticFriction);
+                        DynamicFriction = Math.Min(body1.Material.KineticFriction, body2.Material.KineticFriction);
+                        Restitution = Math.Min(body1.Material.Restitution, body2.Material.Restitution);
                         break;
                     case ContactSettings.MaterialCoefficientMixingType.UseAverage:
-                        StaticFriction = (body1.material.StaticFriction + body2.material.StaticFriction) / 2.0f;
-                        DynamicFriction = (body1.material.KineticFriction + body2.material.KineticFriction) / 2.0f;
-                        Restitution = (body1.material.Restitution + body2.material.Restitution) / 2.0f;
+                        StaticFriction = (body1.Material.StaticFriction + body2.Material.StaticFriction) / 2.0f;
+                        DynamicFriction = (body1.Material.KineticFriction + body2.Material.KineticFriction) / 2.0f;
+                        Restitution = (body1.Material.Restitution + body2.Material.Restitution) / 2.0f;
                         break;
                 }
 

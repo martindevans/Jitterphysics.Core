@@ -18,7 +18,6 @@
 */
 
 using System.Numerics;
-using Jitter.LinearMath;
 
 namespace Jitter
 {

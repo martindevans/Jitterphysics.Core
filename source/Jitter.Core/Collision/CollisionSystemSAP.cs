@@ -32,19 +32,19 @@ namespace Jitter.Collision
     /// </summary>
     public class CollisionSystemSAP : CollisionSystem
     {
-        private List<IBroadphaseEntity> bodyList = new List<IBroadphaseEntity>();
-        private List<IBroadphaseEntity> active = new List<IBroadphaseEntity>();
+        private List<RigidBody> bodyList = new();
+        private List<RigidBody> active = new();
 
-        private class IBroadphaseEntityXCompare : IComparer<IBroadphaseEntity>
+        private class RigidBodyXCompare : IComparer<RigidBody>
         {
-            public int Compare(IBroadphaseEntity body1, IBroadphaseEntity body2)
+            public int Compare(RigidBody body1, RigidBody body2)
             {
                 var f = body1.BoundingBox.Min.X - body2.BoundingBox.Min.X;
                 return f < 0 ? -1 : f > 0 ? 1 : 0;
             }
         }
 
-        private IBroadphaseEntityXCompare xComparer;
+        private RigidBodyXCompare xComparer;
 
         private bool swapOrder;
 
@@ -53,7 +53,7 @@ namespace Jitter.Collision
         /// </summary>
         public CollisionSystemSAP()
         {
-            xComparer = new IBroadphaseEntityXCompare();
+            xComparer = new();
         }
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace Jitter.Collision
         /// </summary>
         /// <param name="body">The body to remove.</param>
         /// <returns>Returns true if the body was successfully removed, otherwise false.</returns>
-        public override bool RemoveEntity(IBroadphaseEntity body)
+        public override bool RemoveEntity(RigidBody body)
         {
             return bodyList.Remove(body);
         }
@@ -72,10 +72,10 @@ namespace Jitter.Collision
         /// does automatically add it to the collision system.
         /// </summary>
         /// <param name="body">The body to remove.</param>
-        public override void AddEntity(IBroadphaseEntity body)
+        public override void AddEntity(RigidBody body)
         {
             if (bodyList.Contains(body))
-                throw new ArgumentException("The body was already added to the collision system.", "body");
+                throw new ArgumentException("The body was already added to the collision system.", nameof(body));
 
             bodyList.Add(body);
         }
@@ -97,7 +97,7 @@ namespace Jitter.Collision
             }
         }
 
-        private void AddToActive(IBroadphaseEntity body, bool addToList)
+        private void AddToActive(RigidBody body, bool addToList)
         {
             var xmin = body.BoundingBox.Min.X;
             var n = active.Count;

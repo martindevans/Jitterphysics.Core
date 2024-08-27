@@ -24,10 +24,10 @@ using Jitter.LinearMath;
 namespace Jitter.Collision.Shapes
 {
     /// <summary>
-    /// A <see cref="Shape"/> representing a box.
+    /// A <see cref="BaseShape"/> representing a box.
     /// </summary>
     public class BoxShape
-        : Shape
+        : BaseShape
     {
         private Vector3 size;
 

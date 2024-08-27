@@ -70,7 +70,7 @@ namespace Jitter.LinearMath
         /// <summary>
         /// Identity matrix.
         /// </summary>
-        public static readonly JMatrix Identity = new JMatrix
+        public static readonly JMatrix Identity = new()
         {
             M11 = 1.0f,
             M22 = 1.0f,
@@ -80,7 +80,7 @@ namespace Jitter.LinearMath
         /// <returns>The absolute matrix.</returns>
         public JMatrix Absolute()
         {
-            return new JMatrix
+            return new()
             {
                 M11 = Math.Abs(M11),
                 M12 = Math.Abs(M12),
