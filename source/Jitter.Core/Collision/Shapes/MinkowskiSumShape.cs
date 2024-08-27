@@ -19,13 +19,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Jitter.LinearMath;
 
 namespace Jitter.Collision.Shapes
 {
     public class MinkowskiSumShape : Shape
     {
-        JVector shifted;
+        Vector3 shifted;
         List<Shape> shapes = new List<Shape>();
 
         public MinkowskiSumShape(IEnumerable<Shape> shapes)
@@ -60,7 +61,7 @@ namespace Jitter.Collision.Shapes
             return result;
         }
 
-        public JVector Shift()
+        public Vector3 Shift()
         {
             return -1 * shifted;
         }
@@ -70,17 +71,18 @@ namespace Jitter.Collision.Shapes
             mass = Shape.CalculateMassInertia(this, out shifted, out inertia);
         }
 
-        public override void SupportMapping(ref JVector direction, out JVector result)
+        public override Vector3 SupportMapping(Vector3 direction)
         {
-            JVector temp1, temp2 = default;
+            Vector3 temp1, temp2 = default;
 
             for (var i = 0; i < shapes.Count; i++)
             {
-                shapes[i].SupportMapping(ref direction, out temp1);
+                temp1 = shapes[i].SupportMapping(direction);
                 temp2 = temp1 + temp2;
             }
 
-            result = temp2 - shifted;
+            var result = temp2 - shifted;
+            return result;
         }
 
     }

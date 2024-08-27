@@ -18,31 +18,37 @@
 */
 
 using System;
+using System.Numerics;
 using Jitter.LinearMath;
 
 namespace Jitter.Collision.Shapes
 {
-
     /// <summary>
     /// A <see cref="Shape"/> representing a box.
     /// </summary>
-    public class BoxShape : Shape
+    public class BoxShape
+        : Shape
     {
-        private JVector size = default;
+        private Vector3 size;
 
         /// <summary>
         /// The sidelength of the box.
         /// </summary>
-        public JVector Size { 
+        public Vector3 Size
+        { 
             get => size;
-            set { size = value; UpdateShape(); }
+            set
+            {
+                size = value;
+                UpdateShape(); 
+            }
         }
         
         /// <summary>
         /// Creates a new instance of the BoxShape class.
         /// </summary>
         /// <param name="size">The size of the box.</param>
-        public BoxShape(JVector size)
+        public BoxShape(Vector3 size)
         {
             this.size = size;
             UpdateShape();
@@ -62,7 +68,7 @@ namespace Jitter.Collision.Shapes
             UpdateShape();
         }
 
-        private JVector halfSize = default;
+        private Vector3 halfSize;
 
         /// <summary>
         /// This method uses the <see cref="ISupportMappable"/> implementation
@@ -81,14 +87,16 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         /// <param name="orientation">The orientation of the shape.</param>
         /// <param name="box">The axis aligned bounding box of the shape.</param>
-        public override void GetBoundingBox(ref JMatrix orientation, out JBBox box)
+        public override JBBox GetBoundingBox(JMatrix orientation)
         {
+            JBBox box;
             var abs = orientation.Absolute();
-            JVector temp;
+            Vector3 temp;
             temp = JVectorExtensions.Transform(halfSize, abs);
 
             box.Max = temp;
             box.Min = -temp;
+            return box;
         }
 
         /// <summary>
@@ -116,11 +124,13 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         /// <param name="direction">The direction.</param>
         /// <param name="result">The result.</param>
-        public override void SupportMapping(ref JVector direction, out JVector result)
+        public override Vector3 SupportMapping(Vector3 direction)
         {
+            Vector3 result;
             result.X = Math.Sign(direction.X) * halfSize.X;
             result.Y = Math.Sign(direction.Y) * halfSize.Y;
             result.Z = Math.Sign(direction.Z) * halfSize.Z;
+            return result;
         }
     }
 }

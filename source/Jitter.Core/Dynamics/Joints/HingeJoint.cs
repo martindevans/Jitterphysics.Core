@@ -17,6 +17,7 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
+using System.Numerics;
 using Jitter.LinearMath;
 using Jitter.Dynamics.Constraints;
 
@@ -42,14 +43,14 @@ namespace Jitter.Dynamics.Joints
         /// <param name="body2">The second body connected to the first one.</param>
         /// <param name="position">The position in world space where both bodies get connected.</param>
         /// <param name="hingeAxis">The axis if the hinge.</param>
-        public HingeJoint(World world, RigidBody body1, RigidBody body2, JVector position, JVector hingeAxis) : base(world)
+        public HingeJoint(World world, RigidBody body1, RigidBody body2, Vector3 position, Vector3 hingeAxis) : base(world)
         {
             worldPointConstraint = new PointOnPoint[2];
 
             hingeAxis *= 0.5f;
 
-            var pos1 = position; pos1 = pos1 + hingeAxis;
-            var pos2 = position; pos2 = pos2 - hingeAxis;
+            var pos1 = position; pos1 += hingeAxis;
+            var pos2 = position; pos2 -= hingeAxis;
 
             worldPointConstraint[0] = new PointOnPoint(body1,body2,pos1);
             worldPointConstraint[1] = new PointOnPoint(body1,body2,pos2);

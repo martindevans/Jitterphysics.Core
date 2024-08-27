@@ -18,6 +18,7 @@
 */
 
 using System;
+using System.Numerics;
 using Jitter.LinearMath;
 
 namespace Jitter.Dynamics.Constraints
@@ -61,7 +62,7 @@ namespace Jitter.Dynamics.Constraints
         private float biasFactor = 0.05f;
         private float softness;
 
-        private JVector accumulatedImpulse;
+        private Vector3 accumulatedImpulse;
 
         private JMatrix initialOrientation1, initialOrientation2;
 
@@ -79,7 +80,7 @@ namespace Jitter.Dynamics.Constraints
             //orientationDifference = JMatrix.Transpose(orientationDifference);
         }
 
-        public JVector AppliedImpulse => accumulatedImpulse;
+        public Vector3 AppliedImpulse => accumulatedImpulse;
 
         public JMatrix InitialOrientationBody1 { get => initialOrientation1;
             set => initialOrientation1 = value;
@@ -103,7 +104,7 @@ namespace Jitter.Dynamics.Constraints
         }
 
         JMatrix effectiveMass;
-        JVector bias;
+        Vector3 bias;
         float softnessOverDt;
         
         /// <summary>
@@ -126,7 +127,7 @@ namespace Jitter.Dynamics.Constraints
             JMatrix.Transpose(ref orientationDifference, out orientationDifference);
 
             var q = orientationDifference * body2.invOrientation * body1.orientation;
-            JVector axis;
+            Vector3 axis;
 
             var x = q.M32 - q.M23;
             var y = q.M13 - q.M31;
@@ -136,9 +137,9 @@ namespace Jitter.Dynamics.Constraints
             var t = q.M11 + q.M22 + q.M33;
 
             var angle = MathF.Atan2(r, t - 1);
-            axis = new JVector(x, y, z) * angle;
+            axis = new Vector3(x, y, z) * angle;
 
-            if (r != 0.0f) axis = axis * (1.0f / r);
+            if (r != 0.0f) axis *= (1.0f / r);
 
             bias = axis * biasFactor * (-1.0f / timestep);
 

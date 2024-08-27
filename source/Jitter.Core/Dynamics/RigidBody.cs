@@ -19,12 +19,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Threading;
 using Jitter.LinearMath;
 using Jitter.Collision.Shapes;
 using Jitter.Collision;
 using Jitter.Dynamics.Constraints;
-using Jitter.DataStructures;
 
 namespace Jitter.Dynamics
 {
@@ -38,10 +38,16 @@ namespace Jitter.Dynamics
     /// <summary>
     /// The RigidBody class.
     /// </summary>
-    public class RigidBody : IBroadphaseEntity, IDebugDrawable, IEquatable<RigidBody>, IComparable<RigidBody>
+    public class RigidBody
+        : IBroadphaseEntity, IDebugDrawable, IEquatable<RigidBody>, IComparable<RigidBody>
     {
         [Flags]
-        public enum DampingType { None = 0x00, Angular = 0x01, Linear = 0x02 }
+        public enum DampingType
+        {
+            None = 0x00,
+            Angular = 0x01,
+            Linear = 0x02
+        }
 
         internal JMatrix inertia;
         internal JMatrix invInertia;
@@ -49,9 +55,9 @@ namespace Jitter.Dynamics
         internal JMatrix invInertiaWorld;
         internal JMatrix orientation;
         internal JMatrix invOrientation;
-        internal JVector position;
-        internal JVector linearVelocity;
-        internal JVector angularVelocity;
+        internal Vector3 position;
+        internal Vector3 linearVelocity;
+        internal Vector3 angularVelocity;
 
         internal Material material;
 
@@ -66,7 +72,7 @@ namespace Jitter.Dynamics
         internal CollisionIsland island;
         internal float inverseMass;
 
-        internal JVector force, torque;
+        internal Vector3 force, torque;
 
         private int hashCode;
 
@@ -78,9 +84,6 @@ namespace Jitter.Dynamics
 
         internal HashSet<Arbiter> arbiters = new HashSet<Arbiter>();
         internal HashSet<Constraint> constraints = new HashSet<Constraint>();
-
-        private ReadOnlyHashset<Arbiter> readOnlyArbiters;
-        private ReadOnlyHashset<Constraint> readOnlyConstraints;
 
         internal int marker = 0;
 
@@ -108,8 +111,8 @@ namespace Jitter.Dynamics
                 }
                 else if (!isParticle && value)
                 {
-                    inertia = JMatrix.Zero;
-                    invInertia = invInertiaWorld = JMatrix.Zero;
+                    inertia = default;
+                    invInertia = invInertiaWorld = default;
                     invOrientation = orientation = JMatrix.Identity;
                     inverseMass = 1.0f;
 
@@ -139,9 +142,6 @@ namespace Jitter.Dynamics
         /// Also contacts are only solved for the linear motion part.</param>
         public RigidBody(Shape shape, Material material, bool isParticle)
         {
-            readOnlyArbiters = new ReadOnlyHashset<Arbiter>(arbiters);
-            readOnlyConstraints = new ReadOnlyHashset<Constraint>(constraints);
-
             instance = Interlocked.Increment(ref instanceCount);
             hashCode = CalculateHash(instance);
 
@@ -156,8 +156,8 @@ namespace Jitter.Dynamics
             }
             else
             {
-                inertia = JMatrix.Zero;
-                invInertia = invInertiaWorld = JMatrix.Zero;
+                inertia = default;
+                invInertia = invInertiaWorld = default;
                 invOrientation = orientation = JMatrix.Identity;
                 inverseMass = 1.0f;
             }
@@ -183,8 +183,8 @@ namespace Jitter.Dynamics
             return hashCode;
         }
 
-        public ReadOnlyHashset<Arbiter> Arbiters => readOnlyArbiters;
-        public ReadOnlyHashset<Constraint> Constraints => readOnlyConstraints;
+        public IReadOnlyCollection<Arbiter> Arbiters => arbiters;
+        public IReadOnlyCollection<Constraint> Constraints => constraints;
 
         /// <summary>
         /// If set to false the body will never be deactived by the
@@ -206,10 +206,10 @@ namespace Jitter.Dynamics
         private int CalculateHash(int a)
         {
             a = a ^ 61 ^ (a >> 16);
-            a = a + (a << 3);
-            a = a ^ (a >> 4);
-            a = a * 0x27d4eb2d;
-            a = a ^ (a >> 15);
+            a += (a << 3);
+            a ^= (a >> 4);
+            a *= 0x27d4eb2d;
+            a ^= (a >> 15);
             return a;
         }
 
@@ -249,13 +249,13 @@ namespace Jitter.Dynamics
         /// linear velocity.
         /// </summary>
         /// <param name="impulse">Impulse direction and magnitude.</param>
-        public void ApplyImpulse(JVector impulse)
+        public void ApplyImpulse(Vector3 impulse)
         {
             if (isStatic)
                 throw new InvalidOperationException("Can't apply an impulse to a static body.");
 
             var temp = impulse * inverseMass;
-            linearVelocity = linearVelocity + temp;
+            linearVelocity += temp;
         }
 
         /// <summary>
@@ -265,17 +265,17 @@ namespace Jitter.Dynamics
         /// <param name="impulse">Impulse direction and magnitude.</param>
         /// <param name="relativePosition">The position where the impulse gets applied
         /// in Body coordinate frame.</param>
-        public void ApplyImpulse(JVector impulse, JVector relativePosition)
+        public void ApplyImpulse(Vector3 impulse, Vector3 relativePosition)
         {
             if (isStatic)
                 throw new InvalidOperationException("Can't apply an impulse to a static body.");
 
             var temp = impulse * inverseMass;
-            linearVelocity = linearVelocity + temp;
+            linearVelocity += temp;
 
-            temp = JVector.Cross(relativePosition, impulse);
+            temp = Vector3.Cross(relativePosition, impulse);
             temp = JVectorExtensions.Transform(temp, invInertiaWorld);
-            angularVelocity = angularVelocity + temp;
+            angularVelocity += temp;
         }
 
         /// <summary>
@@ -285,7 +285,7 @@ namespace Jitter.Dynamics
         /// the timestep influences the energy added to the body.
         /// </summary>
         /// <param name="force">The force to add next <see cref="World.Step"/>.</param>
-        public void AddForce(JVector force)
+        public void AddForce(Vector3 force)
         {
             this.force = force + this.force;
         }
@@ -298,23 +298,23 @@ namespace Jitter.Dynamics
         /// </summary>
         /// <param name="force">The force to add next <see cref="World.Step"/>.</param>
         /// <param name="pos">The position where the force is applied.</param>
-        public void AddForce(JVector force, JVector pos)
+        public void AddForce(Vector3 force, Vector3 pos)
         {
-            this.force = this.force + force;
-            pos = pos - position;
-            pos = JVector.Cross(pos, force);
+            this.force += force;
+            pos -= position;
+            pos = Vector3.Cross(pos, force);
             torque = pos + torque;
         }
 
         /// <summary>
         /// Returns the torque which acts this timestep on the body.
         /// </summary>
-        public JVector Torque => torque;
+        public Vector3 Torque => torque;
 
         /// <summary>
         /// Returns the force which acts this timestep on the body.
         /// </summary>
-        public JVector Force { get => force;
+        public Vector3 Force { get => force;
             set => force = value;
         }
 
@@ -325,7 +325,7 @@ namespace Jitter.Dynamics
         /// the timestep influences the energy added to the body.
         /// </summary>
         /// <param name="torque">The torque to add next <see cref="World.Step"/>.</param>
-        public void AddTorque(JVector torque)
+        public void AddTorque(Vector3 torque)
         {
             this.torque = torque + this.torque;
         }
@@ -430,7 +430,7 @@ namespace Jitter.Dynamics
         /// <summary>
         /// The velocity of the body.
         /// </summary>
-        public JVector LinearVelocity
+        public Vector3 LinearVelocity
         {
             get => linearVelocity;
             set 
@@ -445,7 +445,7 @@ namespace Jitter.Dynamics
         /// <summary>
         /// The angular velocity of the body.
         /// </summary>
-        public JVector AngularVelocity
+        public Vector3 AngularVelocity
         {
             get => angularVelocity;
             set
@@ -459,7 +459,7 @@ namespace Jitter.Dynamics
         /// <summary>
         /// The current position of the body.
         /// </summary>
-        public JVector Position
+        public Vector3 Position
         {
             get => position;
             set { position = value ; Update(); }
@@ -526,7 +526,7 @@ namespace Jitter.Dynamics
         }
 
 
-        internal JVector sweptDirection = default;
+        internal Vector3 sweptDirection;
 
         public void SweptExpandBoundingBox(float timestep)
         {
@@ -568,12 +568,12 @@ namespace Jitter.Dynamics
         {
             if (isParticle)
             {
-                inertia = JMatrix.Zero;
-                invInertia = invInertiaWorld = JMatrix.Zero;
+                inertia = default;
+                invInertia = invInertiaWorld = default;
                 invOrientation = orientation = JMatrix.Identity;
                 boundingBox = shape.boundingBox;
-                boundingBox.Min = boundingBox.Min + position;
-                boundingBox.Max = boundingBox.Max + position;
+                boundingBox.Min += position;
+                boundingBox.Max += position;
 
                 angularVelocity = default;
             }
@@ -581,9 +581,9 @@ namespace Jitter.Dynamics
             {
                 // Given: Orientation, Inertia
                 JMatrix.Transpose(ref orientation, out invOrientation);
-                Shape.GetBoundingBox(ref orientation, out boundingBox);
-                boundingBox.Min = boundingBox.Min + position;
-                boundingBox.Max = boundingBox.Max + position;
+                boundingBox = Shape.GetBoundingBox(orientation);
+                boundingBox.Min += position;
+                boundingBox.Max += position;
 
 
                 if (!isStatic)
@@ -633,19 +633,19 @@ namespace Jitter.Dynamics
             }
         }
 
-        private List<JVector> hullPoints = new List<JVector>();
+        private List<Vector3> hullPoints = new List<Vector3>();
 
         private void UpdateHullData()
         {
             hullPoints.Clear();
 
-            if(enableDebugDraw) shape.MakeHull(ref hullPoints, 3);
+            if(enableDebugDraw) shape.MakeHull(hullPoints, 3);
         }
 
 
         public void DebugDraw(IDebugDrawer drawer)
         {
-            JVector pos1,pos2,pos3;
+            Vector3 pos1,pos2,pos3;
 
             for(var i = 0;i<hullPoints.Count;i+=3)
             {
@@ -654,13 +654,13 @@ namespace Jitter.Dynamics
                 pos3 = hullPoints[i + 2];
 
                 pos1 = JVectorExtensions.Transform(pos1, orientation);
-                pos1 = pos1 + position;
+                pos1 += position;
 
                 pos2 = JVectorExtensions.Transform(pos2, orientation);
-                pos2 = pos2 + position;
+                pos2 += position;
 
                 pos3 = JVectorExtensions.Transform(pos3, orientation);
-                pos3 = pos3 + position;
+                pos3 += position;
 
                 drawer.DrawTriangle(pos1, pos2, pos3);
             }

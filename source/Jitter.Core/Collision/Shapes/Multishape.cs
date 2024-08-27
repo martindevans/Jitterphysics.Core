@@ -19,6 +19,7 @@
 
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Numerics;
 using Jitter.LinearMath;
 
 namespace Jitter.Collision.Shapes
@@ -53,7 +54,7 @@ namespace Jitter.Collision.Shapes
         /// <param name="rayOrigin"></param>
         /// <param name="rayDelta"></param>
         /// <returns></returns>
-        public abstract int Prepare(ref JVector rayOrigin, ref JVector rayDelta);
+        public abstract int Prepare(ref Vector3 rayOrigin, ref Vector3 rayDelta);
 
         protected abstract Multishape CreateWorkingClone();
 
@@ -102,22 +103,24 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         /// <param name="orientation">The orientation of the shape.</param>
         /// <param name="box">The axis aligned bounding box of the shape.</param>
-        public override void GetBoundingBox(ref JMatrix orientation, out JBBox box)
+        public override JBBox GetBoundingBox(JMatrix orientation)
         {
             var helpBox = JBBox.LargeBox;
             var length = Prepare(ref helpBox);
 
-            box = JBBox.SmallBox;
+            var box = JBBox.SmallBox;
 
             for (var i = 0; i < length; i++)
             {
                 SetCurrentShape(i);
-                base.GetBoundingBox(ref orientation, out helpBox);
+                helpBox = base.GetBoundingBox(orientation);
                 JBBox.CreateMerged(ref box, ref helpBox, out box);
             }
+
+            return box;
         }
 
-        public override void MakeHull(ref List<JVector> triangleList, int generationThreshold)
+        public override void MakeHull(List<Vector3> triangleList, int generationThreshold)
         {
             //throw new NotImplementedException();
         }

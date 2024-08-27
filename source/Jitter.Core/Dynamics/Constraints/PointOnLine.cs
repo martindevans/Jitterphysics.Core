@@ -17,6 +17,7 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
+using System.Numerics;
 using Jitter.LinearMath;
 
 namespace Jitter.Dynamics.Constraints
@@ -32,10 +33,10 @@ namespace Jitter.Dynamics.Constraints
     /// </summary>
     public class PointOnLine : Constraint
     {
-        private JVector lineNormal;
+        private Vector3 lineNormal;
 
-        private JVector localAnchor1, localAnchor2;
-        private JVector r1, r2;
+        private Vector3 localAnchor1, localAnchor2;
+        private Vector3 r1, r2;
 
         private float biasFactor = 0.5f;
         private float softness;
@@ -50,7 +51,7 @@ namespace Jitter.Dynamics.Constraints
         /// <param name="lineDirection"></param>
         /// <param name="pointBody2"></param>
         public PointOnLine(RigidBody body1, RigidBody body2,
-            JVector lineStartPointBody1, JVector pointBody2) : base(body1,body2)
+            Vector3 lineStartPointBody1, Vector3 pointBody2) : base(body1,body2)
         {
 
             localAnchor1 = lineStartPointBody1 - body1.position;
@@ -59,7 +60,7 @@ namespace Jitter.Dynamics.Constraints
             localAnchor1 = JVectorExtensions.Transform(localAnchor1, body1.invOrientation);
             localAnchor2 = JVectorExtensions.Transform(localAnchor2, body2.invOrientation);
 
-            lineNormal = JVector.Normalize(lineStartPointBody1 - pointBody2);
+            lineNormal = Vector3.Normalize(lineStartPointBody1 - pointBody2);
         }
 
         public float AppliedImpulse => accumulatedImpulse;
@@ -83,7 +84,7 @@ namespace Jitter.Dynamics.Constraints
         float bias;
         float softnessOverDt;
 
-        JVector[] jacobian = new JVector[4];
+        Vector3[] jacobian = new Vector3[4];
 
         /// <summary>
         /// Called once before iteration starts.
@@ -94,34 +95,34 @@ namespace Jitter.Dynamics.Constraints
             r1 = JVectorExtensions.Transform(localAnchor1, body1.orientation);
             r2 = JVectorExtensions.Transform(localAnchor2, body2.orientation);
 
-            JVector dp;
+            Vector3 dp;
             var p1 = body1.position + r1;
             var p2 = body2.position + r2;
 
             dp = p2 - p1;
 
             var l = JVectorExtensions.Transform(lineNormal, body1.orientation);
-            l = JVector.Normalize(l);
+            l = Vector3.Normalize(l);
 
-            var t = JVector.Cross(p1 - p2, l);
-            if(t.LengthSquared() != 0.0f) t = JVector.Normalize(t);
-            t = JVector.Cross(t, l);
+            var t = Vector3.Cross(p1 - p2, l);
+            if(t.LengthSquared() != 0.0f) t = Vector3.Normalize(t);
+            t = Vector3.Cross(t, l);
 
             jacobian[0] = t;                      // linearVel Body1
-            jacobian[1] = JVector.Cross(r1 + p2 - p1, t);     // angularVel Body1
+            jacobian[1] = Vector3.Cross(r1 + p2 - p1, t);     // angularVel Body1
             jacobian[2] = -1.0f * t;              // linearVel Body2
-            jacobian[3] = -1.0f * JVector.Cross(r2, t);         // angularVel Body2
+            jacobian[3] = -1.0f * Vector3.Cross(r2, t);         // angularVel Body2
 
             effectiveMass = body1.inverseMass + body2.inverseMass
-                + JVector.Dot(JVectorExtensions.Transform(jacobian[1], body1.invInertiaWorld), jacobian[1])
-                                              + JVector.Dot(JVectorExtensions.Transform(jacobian[3], body2.invInertiaWorld), jacobian[3]);
+                + Vector3.Dot(JVectorExtensions.Transform(jacobian[1], body1.invInertiaWorld), jacobian[1])
+                                              + Vector3.Dot(JVectorExtensions.Transform(jacobian[3], body2.invInertiaWorld), jacobian[3]);
 
             softnessOverDt = softness / timestep;
             effectiveMass += softnessOverDt;
 
             if(effectiveMass != 0) effectiveMass = 1.0f / effectiveMass;
 
-            bias = -JVector.Cross(l, p2 - p1).Length() * biasFactor * (1.0f / timestep);
+            bias = -Vector3.Cross(l, p2 - p1).Length() * biasFactor * (1.0f / timestep);
 
             if (!body1.isStatic)
             {
@@ -142,10 +143,10 @@ namespace Jitter.Dynamics.Constraints
         public override void Iterate()
         {
             var jv =
-                JVector.Dot(body1.linearVelocity, jacobian[0]) +
-                JVector.Dot(body1.angularVelocity, jacobian[1]) +
-                JVector.Dot(body2.linearVelocity, jacobian[2]) +
-                JVector.Dot(body2.angularVelocity, jacobian[3]);
+                Vector3.Dot(body1.linearVelocity, jacobian[0]) +
+                Vector3.Dot(body1.angularVelocity, jacobian[1]) +
+                Vector3.Dot(body2.linearVelocity, jacobian[2]) +
+                Vector3.Dot(body2.angularVelocity, jacobian[3]);
 
             var softnessScalar = accumulatedImpulse * softnessOverDt;
 

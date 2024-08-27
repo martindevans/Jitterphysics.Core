@@ -23,6 +23,7 @@ using Jitter.Dynamics;
 using Jitter.LinearMath;
 using Jitter.Collision.Shapes;
 using System.Diagnostics;
+using System.Numerics;
 
 namespace Jitter.Collision
 {
@@ -48,7 +49,7 @@ namespace Jitter.Collision
     /// <seealso cref="CollisionSystem.Detect(bool)"/>
     /// <seealso cref="CollisionSystem.Detect(RigidBody,RigidBody)"/>
     public delegate void CollisionDetectedHandler(RigidBody body1,RigidBody body2, 
-                    JVector point1, JVector point2, JVector normal,float penetration);
+                    Vector3 point1, Vector3 point2, Vector3 normal,float penetration);
 
     /// <summary>
     /// A delegate to inform the user that a pair of bodies passed the broadsphase
@@ -69,7 +70,7 @@ namespace Jitter.Collision
     /// <returns>If false is returned the collision information is dropped. The CollisionDetectedHandler
     /// is never called.</returns>
     public delegate bool PassedNarrowphaseHandler(RigidBody body1,RigidBody body2, 
-                    ref JVector point, ref JVector normal,float penetration);
+                    ref Vector3 point, ref Vector3 normal,float penetration);
 
     /// <summary>
     /// A delegate for raycasting.
@@ -79,7 +80,7 @@ namespace Jitter.Collision
     /// <param name="fraction">The fraction which gives information where at the 
     /// ray the collision occured. The hitPoint is calculated by: rayStart+friction*direction.</param>
     /// <returns>If false is returned the collision information is dropped.</returns>
-    public delegate bool RaycastCallback(RigidBody body,JVector normal, float fraction);
+    public delegate bool RaycastCallback(RigidBody body,Vector3 normal, float fraction);
 
     /// <summary>
     /// CollisionSystem. Used by the world class to detect all collisions. 
@@ -167,7 +168,7 @@ namespace Jitter.Collision
             var speculative = speculativeContacts ||
                               body1.EnableSpeculativeContacts || body2.EnableSpeculativeContacts;
 
-            JVector point, normal;
+            Vector3 point, normal;
             float penetration;
 
             if (!b1IsMulti && !b2IsMulti)
@@ -188,7 +189,7 @@ namespace Jitter.Collision
 
                         if (delta.LengthSquared() < (body1.sweptDirection - body2.sweptDirection).LengthSquared())
                         {
-                            penetration = JVector.Dot(delta, normal);
+                            penetration = Vector3.Dot(delta, normal);
 
                             if (penetration < 0.0f)
                             {
@@ -249,7 +250,7 @@ namespace Jitter.Collision
 
                                 if (delta.LengthSquared() < (body1.sweptDirection - body2.sweptDirection).LengthSquared())
                                 {
-                                    penetration = JVector.Dot(delta, normal);
+                                    penetration = Vector3.Dot(delta, normal);
 
                                     if (penetration < 0.0f)
                                     {
@@ -316,7 +317,7 @@ namespace Jitter.Collision
 
                             if (delta.LengthSquared() < (body1.sweptDirection - body2.sweptDirection).LengthSquared())
                             {
-                                penetration = JVector.Dot(delta, normal);
+                                penetration = Vector3.Dot(delta, normal);
 
                                 if (penetration < 0.0f)
                                 {
@@ -332,20 +333,20 @@ namespace Jitter.Collision
         }
 
         private void FindSupportPoints(RigidBody body1, RigidBody body2,
-            Shape shape1, Shape shape2, ref JVector point, ref JVector normal,
-            out JVector point1, out JVector point2)
+            Shape shape1, Shape shape2, ref Vector3 point, ref Vector3 normal,
+            out Vector3 point1, out Vector3 point2)
         {
-            JVector mn;
+            Vector3 mn;
             mn = -normal;
 
             SupportMapping(body1, shape1, ref mn, out var sA);
             SupportMapping(body2, shape2, ref normal, out var sB);
 
-            sA = sA - point;
-            sB = sB - point;
+            sA -= point;
+            sB -= point;
 
-            var dot1 = JVector.Dot(sA, normal);
-            var dot2 = JVector.Dot(sB, normal);
+            var dot1 = Vector3.Dot(sA, normal);
+            var dot2 = Vector3.Dot(sB, normal);
 
             sA = normal * dot1;
             sB = normal * dot2;
@@ -354,12 +355,12 @@ namespace Jitter.Collision
             point2 = point + sB;
         }
 
-        private void SupportMapping(RigidBody body, Shape workingShape, ref JVector direction, out JVector result)
+        private void SupportMapping(RigidBody body, Shape workingShape, ref Vector3 direction, out Vector3 result)
         {
             result = JVectorExtensions.Transform(direction, body.invOrientation);
-            workingShape.SupportMapping(ref result, out result);
+            result = workingShape.SupportMapping(result);
             result = JVectorExtensions.Transform(result, body.orientation);
-            result = result + body.position;
+            result += body.position;
         }
 
         /// <summary>
@@ -368,14 +369,14 @@ namespace Jitter.Collision
         /// against rays (rays are of infinite length). They are checked against segments
         /// which start at rayOrigin and end in rayOrigin + rayDirection.
         /// </summary>
-        public abstract bool Raycast(JVector rayOrigin, JVector rayDirection, RaycastCallback raycast, out RigidBody body, out JVector normal,out float fraction);
+        public abstract bool Raycast(Vector3 rayOrigin, Vector3 rayDirection, RaycastCallback raycast, out RigidBody body, out Vector3 normal,out float fraction);
 
         /// <summary>
         /// Raycasts a single body. NOTE: For performance reasons terrain and trianglemeshshape aren't checked
         /// against rays (rays are of infinite length). They are checked against segments
         /// which start at rayOrigin and end in rayOrigin + rayDirection.
         /// </summary>
-        public abstract bool Raycast(RigidBody body, JVector rayOrigin, JVector rayDirection, out JVector normal, out float fraction);
+        public abstract bool Raycast(RigidBody body, Vector3 rayOrigin, Vector3 rayDirection, out Vector3 normal, out float fraction);
 
 
         /// <summary>
@@ -431,8 +432,8 @@ namespace Jitter.Collision
         /// <param name="normal">The normal pointing to body1.</param>
         /// <param name="penetration">The penetration depth.</param>
         protected void RaiseCollisionDetected(RigidBody body1, RigidBody body2,
-                                            ref JVector point1, ref JVector point2,
-                                            ref JVector normal, float penetration)
+                                            ref Vector3 point1, ref Vector3 point2,
+                                            ref Vector3 normal, float penetration)
         {
             if (CollisionDetected != null)
                 CollisionDetected(body1, body2, point1, point2, normal, penetration);

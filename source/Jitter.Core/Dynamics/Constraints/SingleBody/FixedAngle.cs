@@ -18,6 +18,7 @@
 */
 
 using System;
+using System.Numerics;
 using Jitter.LinearMath;
 
 namespace Jitter.Dynamics.Constraints.SingleBody
@@ -61,7 +62,7 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         private float softness;
 
         private JMatrix orientation;
-        private JVector accumulatedImpulse;
+        private Vector3 accumulatedImpulse;
 
         /// <summary>
         /// Constraints two bodies to always have the same relative
@@ -93,7 +94,7 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         }
 
         JMatrix effectiveMass;
-        JVector bias;
+        Vector3 bias;
         float softnessOverDt;
 
         /// <summary>
@@ -113,7 +114,7 @@ namespace Jitter.Dynamics.Constraints.SingleBody
             JMatrix.Inverse(ref effectiveMass, out effectiveMass);
 
             var q = JMatrix.Transpose(orientation) * body1.orientation;
-            JVector axis;
+            Vector3 axis;
 
             var x = q.M32 - q.M23;
             var y = q.M13 - q.M31;
@@ -123,9 +124,9 @@ namespace Jitter.Dynamics.Constraints.SingleBody
             var t = q.M11 + q.M22 + q.M33;
 
             var angle = (float)Math.Atan2(r, t - 1);
-            axis = new JVector(x, y, z) * angle;
+            axis = new Vector3(x, y, z) * angle;
 
-            if (r != 0.0f) axis = axis * (1.0f / r);
+            if (r != 0.0f) axis *= (1.0f / r);
 
             bias = axis * biasFactor * (-1.0f / timestep);
 

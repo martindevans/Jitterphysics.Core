@@ -17,12 +17,14 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
+using System.Numerics;
 using Jitter.LinearMath;
 using Jitter.Dynamics.Constraints;
 
 namespace Jitter.Dynamics.Joints
 {
-    public class PrismaticJoint : Joint
+    public class PrismaticJoint
+        : Joint
     {
         // form prismatic joint
         FixedAngle fixedAngle;
@@ -60,7 +62,7 @@ namespace Jitter.Dynamics.Joints
         }
 
 
-        public PrismaticJoint(World world, RigidBody body1, RigidBody body2, JVector pointOnBody1,JVector pointOnBody2)
+        public PrismaticJoint(World world, RigidBody body1, RigidBody body2, Vector3 pointOnBody1,Vector3 pointOnBody2)
             : base(world)
         {
             fixedAngle = new FixedAngle(body1, body2);
@@ -68,7 +70,7 @@ namespace Jitter.Dynamics.Joints
         }
 
 
-        public PrismaticJoint(World world, RigidBody body1, RigidBody body2, JVector pointOnBody1, JVector pointOnBody2, float maximumDistance, float minimumDistance)
+        public PrismaticJoint(World world, RigidBody body1, RigidBody body2, Vector3 pointOnBody1, Vector3 pointOnBody2, float maximumDistance, float minimumDistance)
             : base(world)
         {
             fixedAngle = new FixedAngle(body1, body2);

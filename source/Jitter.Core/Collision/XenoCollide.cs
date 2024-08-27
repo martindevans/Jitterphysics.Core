@@ -17,6 +17,7 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
+using System.Numerics;
 using Jitter.LinearMath;
 
 namespace Jitter.Collision
@@ -35,13 +36,13 @@ namespace Jitter.Collision
         /// </summary>
         /// <param name="direction">The direction.</param>
         /// <param name="result">The result.</param>
-        void SupportMapping(ref JVector direction, out JVector result);
+        Vector3 SupportMapping(Vector3 direction);
 
         /// <summary>
         /// The center of the SupportMap.
         /// </summary>
         /// <param name="center"></param>
-        void SupportCenter(out JVector center);
+        Vector3 SupportCenter();
     }
 
     /// <summary>
@@ -56,7 +57,7 @@ namespace Jitter.Collision
         private const int MaximumIterations = 34;
 
         private static void SupportMapTransformed(ISupportMappable support,
-            ref JMatrix orientation, ref JVector position, ref JVector direction, out JVector result)
+            ref JMatrix orientation, ref Vector3 position, ref Vector3 direction, out Vector3 result)
         {
             // THIS IS *THE* HIGH FREQUENCY CODE OF THE COLLLISION PART OF THE ENGINE
 
@@ -64,7 +65,7 @@ namespace Jitter.Collision
             result.Y = direction.X * orientation.M21 + direction.Y * orientation.M22 + direction.Z * orientation.M23;
             result.Z = direction.X * orientation.M31 + direction.Y * orientation.M32 + direction.Z * orientation.M33;
 
-            support.SupportMapping(ref result, out result);
+            result = support.SupportMapping(result);
 
             var x = result.X * orientation.M11 + result.Y * orientation.M21 + result.Z * orientation.M31;
             var y = result.X * orientation.M12 + result.Y * orientation.M22 + result.Z * orientation.M32;
@@ -89,26 +90,26 @@ namespace Jitter.Collision
         /// <param name="penetration">Estimated penetration depth of the collision.</param>
         /// <returns>Returns true if there is a collision, false otherwise.</returns>
         public static bool Detect(ISupportMappable support1, ISupportMappable support2, ref JMatrix orientation1,
-             ref JMatrix orientation2, ref JVector position1, ref JVector position2,
-             out JVector point, out JVector normal, out float penetration)
+             ref JMatrix orientation2, ref Vector3 position1, ref Vector3 position2,
+             out Vector3 point, out Vector3 normal, out float penetration)
         {
             // Used variables
-            JVector temp1;
-            JVector mn;
+            Vector3 temp1;
+            Vector3 mn;
 
             // Initialization of the output
             point = normal = default;
             penetration = 0.0f;
 
-            //JVector right = JVector.Right;
+            //Vector3 right = Vector3.Right;
 
             // Get the center of shape1 in world coordinates -> v01
-            support1.SupportCenter(out var v01);
+            var v01 = support1.SupportCenter();
             v01 = JVectorExtensions.Transform(v01, orientation1);
             v01 = position1 + v01;
 
             // Get the center of shape2 in world coordinates -> v02
-            support2.SupportCenter(out var v02);
+            var v02 = support2.SupportCenter();
             v02 = JVectorExtensions.Transform(v02, orientation2);
             v02 = position2 + v02;
 
@@ -116,7 +117,7 @@ namespace Jitter.Collision
             var v0 = v02 - v01;
 
             // Avoid case where centers overlap -- any direction is fine in this case
-            if (v0.IsNearlyZero()) v0 = new JVector(0.00001f, 0, 0);
+            if (v0.IsNearlyZero()) v0 = new Vector3(0.00001f, 0, 0);
 
             // v1 = support in direction of origin
             mn = v0;
@@ -126,23 +127,23 @@ namespace Jitter.Collision
             SupportMapTransformed(support2, ref orientation2, ref position2, ref normal, out var v12);
             var v1 = v12 - v11;
 
-            if (JVector.Dot(v1, normal) <= 0.0f) return false;
+            if (Vector3.Dot(v1, normal) <= 0.0f) return false;
 
             // v2 = support perpendicular to v1,v0
-            normal = JVector.Cross(v1, v0);
+            normal = Vector3.Cross(v1, v0);
 
             if (normal.IsNearlyZero())
             {
                 normal = v1 - v0;
 
-                normal = JVector.Normalize(normal);
+                normal = Vector3.Normalize(normal);
 
                 point = v11;
-                point = point + v12;
-                point = point * 0.5f;
+                point += v12;
+                point *= 0.5f;
 
                 temp1 = v12 - v11;
-                penetration = JVector.Dot(temp1, normal);
+                penetration = Vector3.Dot(temp1, normal);
 
                 //point = v11;
                 //point2 = v12;
@@ -154,14 +155,14 @@ namespace Jitter.Collision
             SupportMapTransformed(support2, ref orientation2, ref position2, ref normal, out var v22);
             var v2 = v22 - v21;
 
-            if (JVector.Dot(v2, normal) <= 0.0f) return false;
+            if (Vector3.Dot(v2, normal) <= 0.0f) return false;
 
             // Determine whether origin is on + or - side of plane (v1,v0,v2)
             temp1 = v1 - v0;
             var temp2 = v2 - v0;
-            normal = JVector.Cross(temp1, temp2);
+            normal = Vector3.Cross(temp1, temp2);
 
-            var dist = JVector.Dot(normal, v0);
+            var dist = Vector3.Dot(normal, v0);
 
             // If the origin is on the - side of the plane, reverse the direction of the plane
             if (dist > 0.0f)
@@ -191,34 +192,34 @@ namespace Jitter.Collision
                 SupportMapTransformed(support2, ref orientation2, ref position2, ref normal, out var v32);
                 var v3 = v32 - v31;
 
-                if (JVector.Dot(v3, normal) <= 0.0f)
+                if (Vector3.Dot(v3, normal) <= 0.0f)
                 {
                     return false;
                 }
 
                 // If origin is outside (v1,v0,v3), then eliminate v2 and loop
-                temp1 = JVector.Cross(v1, v3);
-                if (JVector.Dot(temp1, v0) < 0.0f)
+                temp1 = Vector3.Cross(v1, v3);
+                if (Vector3.Dot(temp1, v0) < 0.0f)
                 {
                     v2 = v3;
                     v21 = v31;
                     v22 = v32;
                     temp1 = v1 - v0;
                     temp2 = v3 - v0;
-                    normal = JVector.Cross(temp1, temp2);
+                    normal = Vector3.Cross(temp1, temp2);
                     continue;
                 }
 
                 // If origin is outside (v3,v0,v2), then eliminate v1 and loop
-                temp1 = JVector.Cross(v3, v2);
-                if (JVector.Dot(temp1, v0) < 0.0f)
+                temp1 = Vector3.Cross(v3, v2);
+                if (Vector3.Dot(temp1, v0) < 0.0f)
                 {
                     v1 = v3;
                     v11 = v31;
                     v12 = v32;
                     temp1 = v3 - v0;
                     temp2 = v2 - v0;
-                    normal = JVector.Cross(temp1, temp2);
+                    normal = Vector3.Cross(temp1, temp2);
                     continue;
                 }
 
@@ -231,15 +232,15 @@ namespace Jitter.Collision
                     // Compute normal of the wedge face
                     temp1 = v2 - v1;
                     temp2 = v3 - v1;
-                    normal = JVector.Cross(temp1, temp2);
+                    normal = Vector3.Cross(temp1, temp2);
 
                     // Can this happen???  Can it be handled more cleanly?
                     if (normal.IsNearlyZero()) return true;
 
-                    normal = JVector.Normalize(normal);
+                    normal = Vector3.Normalize(normal);
 
                     // Compute distance from origin to wedge face
-                    var d = JVector.Dot(normal, v1);
+                    var d = Vector3.Dot(normal, v1);
 
 
                     // If the origin is inside the wedge, we have a hit
@@ -256,8 +257,8 @@ namespace Jitter.Collision
                     var v4 = v42 - v41;
 
                     temp1 = v4 - v3;
-                    var delta = JVector.Dot(temp1, normal);
-                    penetration = JVector.Dot(v4, normal);
+                    var delta = Vector3.Dot(temp1, normal);
+                    penetration = Vector3.Dot(v4, normal);
 
                     // If the boundary is thin enough or the origin is outside the support plane for the newly discovered vertex, then we can terminate
                     if (delta <= CollideEpsilon || penetration <= 0.0f || phase2 > MaximumIterations)
@@ -265,26 +266,26 @@ namespace Jitter.Collision
 
                         if (hit)
                         {
-                            temp1 = JVector.Cross(v1, v2);
-                            var b0 = JVector.Dot(temp1, v3);
-                            temp1 = JVector.Cross(v3, v2);
-                            var b1 = JVector.Dot(temp1, v0);
-                            temp1 = JVector.Cross(v0, v1);
-                            var b2 = JVector.Dot(temp1, v3);
-                            temp1 = JVector.Cross(v2, v1);
-                            var b3 = JVector.Dot(temp1, v0);
+                            temp1 = Vector3.Cross(v1, v2);
+                            var b0 = Vector3.Dot(temp1, v3);
+                            temp1 = Vector3.Cross(v3, v2);
+                            var b1 = Vector3.Dot(temp1, v0);
+                            temp1 = Vector3.Cross(v0, v1);
+                            var b2 = Vector3.Dot(temp1, v3);
+                            temp1 = Vector3.Cross(v2, v1);
+                            var b3 = Vector3.Dot(temp1, v0);
 
                             var sum = b0 + b1 + b2 + b3;
 
                             if (sum <= 0)
                             {
                                 b0 = 0;
-                                temp1 = JVector.Cross(v2, v3);
-                                b1 = JVector.Dot(temp1, normal);
-                                temp1 = JVector.Cross(v3, v1);
-                                b2 = JVector.Dot(temp1, normal);
-                                temp1 = JVector.Cross(v1, v2);
-                                b3 = JVector.Dot(temp1, normal);
+                                temp1 = Vector3.Cross(v2, v3);
+                                b1 = Vector3.Dot(temp1, normal);
+                                temp1 = Vector3.Cross(v3, v1);
+                                b2 = Vector3.Dot(temp1, normal);
+                                temp1 = Vector3.Cross(v1, v2);
+                                b3 = Vector3.Dot(temp1, normal);
 
                                 sum = b1 + b2 + b3;
                             }
@@ -293,23 +294,23 @@ namespace Jitter.Collision
 
                             point = v01 * b0;
                             temp1 = v11 * b1;
-                            point = point + temp1;
+                            point += temp1;
                             temp1 = v21 * b2;
-                            point = point + temp1;
+                            point += temp1;
                             temp1 = v31 * b3;
-                            point = point + temp1;
+                            point += temp1;
 
                             temp2 = v02 * b0;
                             point = temp2 + point;
                             temp1 = v12 * b1;
-                            point = point + temp1;
+                            point += temp1;
                             temp1 = v22 * b2;
-                            point = point + temp1;
+                            point += temp1;
                             temp1 = v32 * b3;
-                            point = point + temp1;
+                            point += temp1;
 
-                            float scaleFactor = inv * 0.5f;
-                            point = point * scaleFactor;
+                            var scaleFactor = inv * 0.5f;
+                            point *= scaleFactor;
 
                         }
 
@@ -318,22 +319,22 @@ namespace Jitter.Collision
                     }
 
                     //// Compute the tetrahedron dividing face (v4,v0,v1)
-                    //JVector.Cross(ref v4, ref v1, out temp1);
-                    //float d1 = JVector.Dot(ref temp1, ref v0);
+                    //Vector3.Cross(ref v4, ref v1, out temp1);
+                    //float d1 = Vector3.Dot(ref temp1, ref v0);
 
 
                     //// Compute the tetrahedron dividing face (v4,v0,v2)
-                    //JVector.Cross(ref v4, ref v2, out temp1);
-                    //float d2 = JVector.Dot(ref temp1, ref v0);
+                    //Vector3.Cross(ref v4, ref v2, out temp1);
+                    //float d2 = Vector3.Dot(ref temp1, ref v0);
 
 
                     // Compute the tetrahedron dividing face (v4,v0,v3)
-                    temp1 = JVector.Cross(v4, v0);
-                    var dot = JVector.Dot(temp1, v1);
+                    temp1 = Vector3.Cross(v4, v0);
+                    var dot = Vector3.Dot(temp1, v1);
 
                     if (dot >= 0.0f)
                     {
-                        dot = JVector.Dot(temp1, v2);
+                        dot = Vector3.Dot(temp1, v2);
 
                         if (dot >= 0.0f)
                         {
@@ -352,7 +353,7 @@ namespace Jitter.Collision
                     }
                     else
                     {
-                        dot = JVector.Dot(temp1, v3);
+                        dot = Vector3.Dot(temp1, v3);
 
                         if (dot >= 0.0f)
                         {

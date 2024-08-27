@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using Jitter.LinearMath;
 using Jitter.Dynamics.Constraints;
 
@@ -29,7 +30,7 @@ namespace Jitter.Dynamics.Joints
         /// <param name="body2">The second body connected to the first one.</param>
         /// <param name="position">The position in world space where both bodies get connected.</param>
         /// <param name="hingeAxis">The axis if the hinge.</param>
-        public LimitedHingeJoint(World world, RigidBody body1, RigidBody body2, JVector position, JVector hingeAxis,
+        public LimitedHingeJoint(World world, RigidBody body1, RigidBody body2, Vector3 position, Vector3 hingeAxis,
             float hingeFwdAngle, float hingeBckAngle)
             : base(world)
         {
@@ -39,8 +40,8 @@ namespace Jitter.Dynamics.Joints
 
             hingeAxis *= 0.5f;
 
-            var pos1 = position; pos1 = pos1 + hingeAxis;
-            var pos2 = position; pos2 = pos2 - hingeAxis;
+            var pos1 = position; pos1 += hingeAxis;
+            var pos2 = position; pos2 -= hingeAxis;
 
             worldPointConstraint[0] = new PointOnPoint(body1, body2, pos1);
             worldPointConstraint[1] = new PointOnPoint(body1, body2, pos2);
@@ -48,17 +49,17 @@ namespace Jitter.Dynamics.Joints
 
             // Now the limit, one max distance constraint
 
-            hingeAxis = JVector.Normalize(hingeAxis);
+            hingeAxis = Vector3.Normalize(hingeAxis);
 
             // choose a direction that is perpendicular to the hinge
             var perpDir = JVectorExtensions.Up;
 
-            if (JVector.Dot(perpDir, hingeAxis) > 0.1f) perpDir = JVectorExtensions.Right;
+            if (Vector3.Dot(perpDir, hingeAxis) > 0.1f) perpDir = JVectorExtensions.Right;
 
             // now make it perpendicular to the hinge
-            var sideAxis = JVector.Cross(hingeAxis, perpDir);
-            perpDir = JVector.Cross(sideAxis, hingeAxis);
-            perpDir = JVector.Normalize(perpDir);
+            var sideAxis = Vector3.Cross(hingeAxis, perpDir);
+            perpDir = Vector3.Cross(sideAxis, hingeAxis);
+            perpDir = Vector3.Normalize(perpDir);
 
             // the length of the "arm" TODO take this as a parameter? what's
             // the effect of changing it?

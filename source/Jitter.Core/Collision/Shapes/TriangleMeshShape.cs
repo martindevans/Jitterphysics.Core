@@ -18,6 +18,7 @@
 */
 
 using System.Collections.Generic;
+using System.Numerics;
 using Jitter.LinearMath;
 
 namespace Jitter.Collision.Shapes
@@ -90,7 +91,7 @@ namespace Jitter.Collision.Shapes
             return potentialTriangles.Count;
         }
 
-        public override void MakeHull(ref List<JVector> triangleList, int generationThreshold)
+        public override void MakeHull(List<Vector3> triangleList, int generationThreshold)
         {
             var large = JBBox.LargeBox;
 
@@ -112,12 +113,12 @@ namespace Jitter.Collision.Shapes
         /// <param name="rayOrigin"></param>
         /// <param name="rayDelta"></param>
         /// <returns></returns>
-        public override int Prepare(ref JVector rayOrigin, ref JVector rayDelta)
+        public override int Prepare(ref Vector3 rayOrigin, ref Vector3 rayDelta)
         {
             potentialTriangles.Clear();
 
-            JVector expDelta;
-            expDelta = JVector.Normalize(rayDelta);
+            Vector3 expDelta;
+            expDelta = Vector3.Normalize(rayDelta);
             expDelta = rayDelta + expDelta * sphericalExpansion;
 
             octree.GetTrianglesIntersectingRay(potentialTriangles, rayOrigin, expDelta);
@@ -125,7 +126,7 @@ namespace Jitter.Collision.Shapes
             return potentialTriangles.Count;
         }
 
-        JVector[] vecs = new JVector[3];
+        Vector3[] vecs = new Vector3[3];
 
         /// <summary>
         /// SupportMapping. Finds the point in the shape furthest away from the given direction.
@@ -134,28 +135,29 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         /// <param name="direction">The direction.</param>
         /// <param name="result">The result.</param>
-        public override void SupportMapping(ref JVector direction, out JVector result)
+        public override Vector3 SupportMapping(Vector3 direction)
         {
-            JVector exp;
-            exp = JVector.Normalize(direction);
+            Vector3 exp;
+            exp = Vector3.Normalize(direction);
             exp *= sphericalExpansion;
 
-            var min = JVector.Dot(vecs[0], direction);
+            var min = Vector3.Dot(vecs[0], direction);
             var minIndex = 0;
-            var dot = JVector.Dot(vecs[1], direction);
+            var dot = Vector3.Dot(vecs[1], direction);
             if (dot > min)
             {
                 min = dot;
                 minIndex = 1;
             }
-            dot = JVector.Dot(vecs[2], direction);
+            dot = Vector3.Dot(vecs[2], direction);
             if (dot > min)
             {
                 min = dot;
                 minIndex = 2;
             }
 
-            result = vecs[minIndex] + exp;
+            var result = vecs[minIndex] + exp;
+            return result;
         }
 
         /// <summary>
@@ -164,9 +166,9 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         /// <param name="orientation">The orientation of the shape.</param>
         /// <param name="box">The axis aligned bounding box of the shape.</param>
-        public override void GetBoundingBox(ref JMatrix orientation, out JBBox box)
+        public override JBBox GetBoundingBox(JMatrix orientation)
         {
-            box = octree.rootNodeBox;
+            var box = octree.rootNodeBox;
 
             box.Min.X -= sphericalExpansion;
             box.Min.Y -= sphericalExpansion;
@@ -176,6 +178,7 @@ namespace Jitter.Collision.Shapes
             box.Max.Z += sphericalExpansion;
 
             box.Transform(ref orientation);
+            return box;
         }
 
         private bool flipNormal;
@@ -195,27 +198,27 @@ namespace Jitter.Collision.Shapes
             vecs[2] = octree.GetVertex(octree.tris[potentialTriangles[index]].I2);
 
             var sum = vecs[0];
-            JVector value2 = vecs[1];
-            sum = sum + value2;
-            JVector value3 = vecs[2];
-            sum = sum + value3;
-            sum = sum * (1.0f / 3.0f);
+            var value2 = vecs[1];
+            sum += value2;
+            var value3 = vecs[2];
+            sum += value3;
+            sum *= (1.0f / 3.0f);
 
       
             geomCen = sum;
 
-            JVector value4 = vecs[0];
+            var value4 = vecs[0];
             sum = vecs[1] - value4;
-            JVector value5 = vecs[0];
+            var value5 = vecs[0];
             normal = vecs[2] - value5;
-            normal = JVector.Cross(sum, normal);
+            normal = Vector3.Cross(sum, normal);
 
             if (flipNormal) normal = -normal;
         }
 
-        private JVector normal = JVectorExtensions.Up;
+        private Vector3 normal = JVectorExtensions.Up;
 
-        public void CollisionNormal(out JVector normal)
+        public void CollisionNormal(out Vector3 normal)
         {
             normal = this.normal;
         }

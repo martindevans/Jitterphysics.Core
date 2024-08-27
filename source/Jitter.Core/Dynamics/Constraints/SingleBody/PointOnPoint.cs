@@ -17,6 +17,7 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
+using System.Numerics;
 using Jitter.LinearMath;
 
 namespace Jitter.Dynamics.Constraints.SingleBody
@@ -24,10 +25,10 @@ namespace Jitter.Dynamics.Constraints.SingleBody
 
     public class PointOnPoint : Constraint
     {
-        private JVector localAnchor1;
-        private JVector anchor;
+        private Vector3 localAnchor1;
+        private Vector3 anchor;
 
-        private JVector r1;
+        private Vector3 r1;
 
         private float biasFactor = 0.1f;
         private float softness = 0.01f;
@@ -41,7 +42,7 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         /// The distance is given by the initial distance between both anchor points.</param>
         /// <param name="anchor2">The anchor point of the second body in world space.
         /// The distance is given by the initial distance between both anchor points.</param>
-        public PointOnPoint(RigidBody body, JVector localAnchor)
+        public PointOnPoint(RigidBody body, Vector3 localAnchor)
             : base(body, null)
         {
             localAnchor1 = localAnchor;
@@ -61,7 +62,7 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         /// <summary>
         /// The anchor point in the world.
         /// </summary>
-        public JVector Anchor { get => anchor;
+        public Vector3 Anchor { get => anchor;
             set => anchor = value;
         }
 
@@ -78,7 +79,7 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         float bias;
         float softnessOverDt;
 
-        JVector[] jacobian = new JVector[2];
+        Vector3[] jacobian = new Vector3[2];
 
         /// <summary>
         /// Called once before iteration starts.
@@ -93,12 +94,12 @@ namespace Jitter.Dynamics.Constraints.SingleBody
             var deltaLength = dp.Length();
 
             var n = anchor - p1;
-            if (n.LengthSquared() != 0.0f) n = JVector.Normalize(n);
+            if (n.LengthSquared() != 0.0f) n = Vector3.Normalize(n);
 
             jacobian[0] = -1.0f * n;
-            jacobian[1] = -1.0f * JVector.Cross(r1, n);
+            jacobian[1] = -1.0f * Vector3.Cross(r1, n);
 
-            effectiveMass = body1.inverseMass + JVector.Dot(JVectorExtensions.Transform(jacobian[1], body1.invInertiaWorld), jacobian[1]);
+            effectiveMass = body1.inverseMass + Vector3.Dot(JVectorExtensions.Transform(jacobian[1], body1.invInertiaWorld), jacobian[1]);
 
             softnessOverDt = softness / timestep;
             effectiveMass += softnessOverDt;
@@ -120,8 +121,8 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         public override void Iterate()
         {
             var jv =
-                JVector.Dot(body1.linearVelocity, jacobian[0]) +
-                JVector.Dot(body1.angularVelocity, jacobian[1]);
+                Vector3.Dot(body1.linearVelocity, jacobian[0]) +
+                Vector3.Dot(body1.angularVelocity, jacobian[1]);
 
             var softnessScalar = accumulatedImpulse * softnessOverDt;
 

@@ -18,6 +18,7 @@
 */
 
 using System;
+using System.Numerics;
 using Jitter.LinearMath;
 
 namespace Jitter.Collision.Shapes
@@ -72,8 +73,9 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         /// <param name="direction">The direction.</param>
         /// <param name="result">The result.</param>
-        public override void SupportMapping(ref JVector direction, out JVector result)
+        public override Vector3 SupportMapping(Vector3 direction)
         {
+            Vector3 result;
             var sigma = (float)Math.Sqrt(direction.X * direction.X + direction.Z * direction.Z);
 
             if (sigma > 0.0f)
@@ -88,6 +90,8 @@ namespace Jitter.Collision.Shapes
                 result.Y = Math.Sign(direction.Y) * height * 0.5f;
                 result.Z = 0.0f;
             }
+
+            return result;
         }
     }
 }

@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Jitter.LinearMath;
 
 namespace Jitter.Collision
@@ -108,7 +109,7 @@ namespace Jitter.Collision
             public JBBox box;
         }
 
-        private JVector[] positions;
+        private Vector3[] positions;
         private JBBox[] triBoxes;
         private Node[] nodes;
         //private UInt16[] nodeStack;
@@ -137,10 +138,10 @@ namespace Jitter.Collision
         /// </summary>
         /// <param name="positions">Vertices.</param>
         /// <param name="tris">Indices.</param>
-        public void SetTriangles(List<JVector> positions, List<TriangleVertexIndices> tris)
+        public void SetTriangles(List<Vector3> positions, List<TriangleVertexIndices> tris)
         {
             // copy the position data into a array
-            this.positions = new JVector[positions.Count];
+            this.positions = new Vector3[positions.Count];
             positions.CopyTo(this.positions);
 
             // copy the triangles
@@ -157,21 +158,21 @@ namespace Jitter.Collision
             triBoxes = new JBBox[tris.Length];
 
             // create an infinite size root box
-            rootNodeBox = new JBBox(new JVector(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                                           new JVector(float.NegativeInfinity, float.NegativeInfinity, float.NegativeInfinity));
+            rootNodeBox = new JBBox(new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+                                           new Vector3(float.NegativeInfinity, float.NegativeInfinity, float.NegativeInfinity));
 
 
             for (var i = 0; i < tris.Length; i++)
             {
-                triBoxes[i].Min = JVector.Min(positions[tris[i].I1], positions[tris[i].I2]);
-                triBoxes[i].Min = JVector.Min(positions[tris[i].I0], triBoxes[i].Min);
+                triBoxes[i].Min = Vector3.Min(positions[tris[i].I1], positions[tris[i].I2]);
+                triBoxes[i].Min = Vector3.Min(positions[tris[i].I0], triBoxes[i].Min);
 
-                triBoxes[i].Max = JVector.Max(positions[tris[i].I1], positions[tris[i].I2]);
-                triBoxes[i].Max = JVector.Max(positions[tris[i].I0], triBoxes[i].Max);
+                triBoxes[i].Max = Vector3.Max(positions[tris[i].I1], positions[tris[i].I2]);
+                triBoxes[i].Max = Vector3.Max(positions[tris[i].I0], triBoxes[i].Max);
 
                 // get size of the root box
-                rootNodeBox.Min = JVector.Min(rootNodeBox.Min, triBoxes[i].Min);
-                rootNodeBox.Max = JVector.Max(rootNodeBox.Max, triBoxes[i].Max);
+                rootNodeBox.Min = Vector3.Min(rootNodeBox.Min, triBoxes[i].Min);
+                rootNodeBox.Max = Vector3.Max(rootNodeBox.Max, triBoxes[i].Max);
             }
 
             var buildNodes = new List<BuildNode>();
@@ -263,7 +264,7 @@ namespace Jitter.Collision
         /// </summary>
         /// <param name="positions">Vertices.</param>
         /// <param name="tris">Indices.</param>
-        public Octree(List<JVector> positions, List<TriangleVertexIndices> tris)
+        public Octree(List<Vector3> positions, List<TriangleVertexIndices> tris)
         {
             SetTriangles(positions, tris);
             BuildOctree();
@@ -279,18 +280,18 @@ namespace Jitter.Collision
         {
             var dims = 0.5f * (aabb.Max - aabb.Min);
 
-            var offset = default(JVector);
+            var offset = default(Vector3);
 
             switch (child)
             {
-                case EChild.PPP: offset = new JVector(1, 1, 1); break;
-                case EChild.PPM: offset = new JVector(1, 1, 0); break;
-                case EChild.PMP: offset = new JVector(1, 0, 1); break;
-                case EChild.PMM: offset = new JVector(1, 0, 0); break;
-                case EChild.MPP: offset = new JVector(0, 1, 1); break;
-                case EChild.MPM: offset = new JVector(0, 1, 0); break;
-                case EChild.MMP: offset = new JVector(0, 0, 1); break;
-                case EChild.MMM: offset = new JVector(0, 0, 0); break;
+                case EChild.PPP: offset = new Vector3(1, 1, 1); break;
+                case EChild.PPM: offset = new Vector3(1, 1, 0); break;
+                case EChild.PMP: offset = new Vector3(1, 0, 1); break;
+                case EChild.PMM: offset = new Vector3(1, 0, 0); break;
+                case EChild.MPP: offset = new Vector3(0, 1, 1); break;
+                case EChild.MPM: offset = new Vector3(0, 1, 0); break;
+                case EChild.MMP: offset = new Vector3(0, 0, 1); break;
+                case EChild.MMM: offset = new Vector3(0, 0, 0); break;
 
                 default:
                     System.Diagnostics.Debug.WriteLine("Octree.CreateAABox  got impossible child");
@@ -298,8 +299,8 @@ namespace Jitter.Collision
             }
 
             result = new JBBox();
-            result.Min = new JVector(offset.X * dims.X, offset.Y * dims.Y, offset.Z * dims.Z);
-            result.Min = result.Min + aabb.Min;
+            result.Min = new Vector3(offset.X * dims.X, offset.Y * dims.Y, offset.Z * dims.Z);
+            result.Min += aabb.Min;
 
             result.Max = result.Min + dims;
 
@@ -307,8 +308,8 @@ namespace Jitter.Collision
             var extra = 0.00001f;
 
             var temp = dims * extra;
-            result.Min = result.Min - temp;
-            result.Max = result.Max + temp;
+            result.Min -= temp;
+            result.Max += temp;
         }
 
         private void GatherTriangles(int nodeIndex, ref List<int> tris)
@@ -382,7 +383,7 @@ namespace Jitter.Collision
         /// <param name="rayDelta"></param>
         /// <param name="triangles"></param>
         /// <returns></returns>
-        public int GetTrianglesIntersectingRay(List<int> triangles, JVector rayOrigin, JVector rayDelta)
+        public int GetTrianglesIntersectingRay(List<int> triangles, Vector3 rayOrigin, Vector3 rayDelta)
         {
             if (nodes.Length == 0)
                 return 0;
@@ -436,7 +437,7 @@ namespace Jitter.Collision
         /// </summary>
         /// <param name="vertex">The index of the vertex</param>
         /// <returns></returns>
-        public JVector GetVertex(int vertex)
+        public Vector3 GetVertex(int vertex)
         {
             return positions[vertex];
         }
@@ -446,7 +447,7 @@ namespace Jitter.Collision
         /// </summary>
         /// <param name="vertex">The index of the vertex</param>
         /// <param name="result"></param>
-        public void GetVertex(int vertex, out JVector result)
+        public void GetVertex(int vertex, out Vector3 result)
         {
             result = positions[vertex];
         }

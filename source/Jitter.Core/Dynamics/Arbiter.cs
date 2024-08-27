@@ -20,6 +20,7 @@
 using System.Collections.Generic;
 using Jitter.LinearMath;
 using System.Diagnostics;
+using System.Numerics;
 
 namespace Jitter.Dynamics
 {
@@ -153,7 +154,7 @@ namespace Jitter.Dynamics
         /// <param name="point2">Point on body2. In world space.</param>
         /// <param name="normal">The normal pointing to body2.</param>
         /// <param name="penetration">The estimated penetration depth.</param>
-        public Contact AddContact(JVector point1, JVector point2, JVector normal, float penetration, 
+        public Contact AddContact(Vector3 point1, Vector3 point2, Vector3 normal, float penetration, 
             ContactSettings contactSettings)
         {
             var relPos1 = point1 - body1.position;
@@ -169,7 +170,7 @@ namespace Jitter.Dynamics
                     return null;
                 }
 
-                index = GetCacheEntry(ref relPos1, contactSettings.breakThreshold);
+                index = GetCacheEntry(ref relPos1, contactSettings.BreakThreshold);
 
                 if (index >= 0)
                 {
@@ -186,7 +187,7 @@ namespace Jitter.Dynamics
             }
         }
 
-        private void ReplaceContact(ref JVector point1, ref JVector point2, ref JVector n, float p, int index,
+        private void ReplaceContact(ref Vector3 point1, ref Vector3 point2, ref Vector3 n, float p, int index,
             ContactSettings contactSettings)
         {
             var contact = contactList[index];
@@ -197,7 +198,7 @@ namespace Jitter.Dynamics
 
         }
 
-        private int GetCacheEntry(ref JVector realRelPos1, float contactBreakThreshold)
+        private int GetCacheEntry(ref Vector3 realRelPos1, float contactBreakThreshold)
         {
             var shortestDist = contactBreakThreshold * contactBreakThreshold;
             var size = contactList.Count;
@@ -216,7 +217,7 @@ namespace Jitter.Dynamics
         }
 
         // sort cached points so most isolated points come first
-        private int SortCachedPoints(ref JVector realRelPos1, float pen)
+        private int SortCachedPoints(ref Vector3 realRelPos1, float pen)
         {
             //calculate 4 possible cases areas, and take biggest area
             //also need to keep 'deepest'
@@ -235,40 +236,40 @@ namespace Jitter.Dynamics
             float res0 = 0, res1 = 0, res2 = 0, res3 = 0;
             if (maxPenetrationIndex != 0)
             {
-                JVector value2 = contactList[1].relativePos1;
+                var value2 = contactList[1].relativePos1;
                 var a0 = realRelPos1 - value2;
-                JVector value3 = contactList[2].relativePos1;
+                var value3 = contactList[2].relativePos1;
                 var b0 = contactList[3].relativePos1 - value3;
-                var cross = JVector.Cross(a0, b0);
+                var cross = Vector3.Cross(a0, b0);
                 res0 = cross.LengthSquared();
             }
             if (maxPenetrationIndex != 1)
             {
-                JVector value2 = contactList[0].relativePos1;
+                var value2 = contactList[0].relativePos1;
                 var a0 = realRelPos1 - value2;
-                JVector value3 = contactList[2].relativePos1;
+                var value3 = contactList[2].relativePos1;
                 var b0 = contactList[3].relativePos1 - value3;
-                var cross = JVector.Cross(a0, b0);
+                var cross = Vector3.Cross(a0, b0);
                 res1 = cross.LengthSquared();
             }
 
             if (maxPenetrationIndex != 2)
             {
-                JVector value2 = contactList[0].relativePos1;
+                var value2 = contactList[0].relativePos1;
                 var a0 = realRelPos1 - value2;
-                JVector value3 = contactList[1].relativePos1;
+                var value3 = contactList[1].relativePos1;
                 var b0 = contactList[3].relativePos1 - value3;
-                var cross = JVector.Cross(a0, b0);
+                var cross = Vector3.Cross(a0, b0);
                 res2 = cross.LengthSquared();
             }
 
             if (maxPenetrationIndex != 3)
             {
-                JVector value2 = contactList[0].relativePos1;
+                var value2 = contactList[0].relativePos1;
                 var a0 = realRelPos1 - value2;
-                JVector value3 = contactList[1].relativePos1;
+                var value3 = contactList[1].relativePos1;
                 var b0 = contactList[2].relativePos1 - value3;
-                var cross = JVector.Cross(a0, b0);
+                var cross = Vector3.Cross(a0, b0);
                 res3 = cross.LengthSquared();
             }
 

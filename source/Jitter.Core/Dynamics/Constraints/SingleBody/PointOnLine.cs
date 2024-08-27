@@ -18,6 +18,7 @@
 */
 
 using System;
+using System.Numerics;
 using Jitter.LinearMath;
 
 namespace Jitter.Dynamics.Constraints.SingleBody
@@ -27,11 +28,11 @@ namespace Jitter.Dynamics.Constraints.SingleBody
     /// </summary>
     public class PointOnLine : Constraint
     {
-        private JVector localAnchor1;
-        private JVector r1;
+        private Vector3 localAnchor1;
+        private Vector3 r1;
 
-        private JVector lineNormal;
-        private JVector anchor;
+        private Vector3 lineNormal;
+        private Vector3 anchor;
 
         private float biasFactor = 0.5f;
         private float softness;
@@ -43,7 +44,7 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         /// <param name="localAnchor">The anchor point on the body in local (body)
         /// coordinates.</param>
         /// <param name="lineDirection">The axis defining the line in world space.</param>/param>
-        public PointOnLine(RigidBody body, JVector localAnchor, JVector lineDirection)
+        public PointOnLine(RigidBody body, Vector3 localAnchor, Vector3 lineDirection)
             : base(body, null)
         {
             if (lineDirection.LengthSquared() == 0.0f)
@@ -53,21 +54,21 @@ namespace Jitter.Dynamics.Constraints.SingleBody
             anchor = body.position + JVectorExtensions.Transform(localAnchor, body.orientation);
 
             lineNormal = lineDirection;
-            lineNormal = JVector.Normalize(lineNormal);
+            lineNormal = Vector3.Normalize(lineNormal);
         }
 
         /// <summary>
         /// The anchor point of the body in world space.
         /// </summary>
-        public JVector Anchor { get => anchor;
+        public Vector3 Anchor { get => anchor;
             set => anchor = value;
         }
 
         /// <summary>
         /// The axis defining the line of the constraint.
         /// </summary>
-        public JVector Axis { get => lineNormal;
-            set { lineNormal = value; lineNormal = JVector.Normalize(lineNormal); } }
+        public Vector3 Axis { get => lineNormal;
+            set { lineNormal = value; lineNormal = Vector3.Normalize(lineNormal); } }
 
         /// <summary>
         /// Defines how big the applied impulses can get.
@@ -88,7 +89,7 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         float bias;
         float softnessOverDt;
 
-        JVector[] jacobian = new JVector[2];
+        Vector3[] jacobian = new Vector3[2];
 
         /// <summary>
         /// Called once before iteration starts.
@@ -98,29 +99,29 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         {
             r1 = JVectorExtensions.Transform(localAnchor1, body1.orientation);
 
-            JVector dp;
+            Vector3 dp;
             var p1 = body1.position + r1;
 
             dp = p1 - anchor;
 
             var l = lineNormal;
 
-            var t = JVector.Cross(p1 - anchor, l);
-            if (t.LengthSquared() != 0.0f) t = JVector.Normalize(t);
-            t = JVector.Cross(t, l);
+            var t = Vector3.Cross(p1 - anchor, l);
+            if (t.LengthSquared() != 0.0f) t = Vector3.Normalize(t);
+            t = Vector3.Cross(t, l);
 
             jacobian[0] = t;
-            jacobian[1] = JVector.Cross(r1, t);
+            jacobian[1] = Vector3.Cross(r1, t);
 
             effectiveMass = body1.inverseMass
-                + JVector.Dot(JVectorExtensions.Transform(jacobian[1], body1.invInertiaWorld), jacobian[1]);
+                + Vector3.Dot(JVectorExtensions.Transform(jacobian[1], body1.invInertiaWorld), jacobian[1]);
 
             softnessOverDt = softness / timestep;
             effectiveMass += softnessOverDt;
 
             if (effectiveMass != 0) effectiveMass = 1.0f / effectiveMass;
 
-            bias = -JVector.Cross(l, p1 - anchor).Length() * biasFactor * (1.0f / timestep);
+            bias = -Vector3.Cross(l, p1 - anchor).Length() * biasFactor * (1.0f / timestep);
 
             if (!body1.isStatic)
             {
@@ -136,8 +137,8 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         public override void Iterate()
         {
             var jv =
-                JVector.Dot(body1.linearVelocity, jacobian[0]) +
-                JVector.Dot(body1.angularVelocity, jacobian[1]);
+                Vector3.Dot(body1.linearVelocity, jacobian[0]) +
+                Vector3.Dot(body1.angularVelocity, jacobian[1]);
 
             var softnessScalar = accumulatedImpulse * softnessOverDt;
 

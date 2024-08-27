@@ -30,7 +30,7 @@ namespace Jitter
     /// have a parameterless constructor.</typeparam>
     public class ResourcePool<T>
     {
-        private Stack<T> stack = new Stack<T>();
+        private readonly Stack<T> stack = new Stack<T>();
 
         /// <summary>
         /// Creates a new instance of the ResourcePool class.
@@ -47,8 +47,6 @@ namespace Jitter
         {
             lock (stack) { stack.Clear(); }
         }
-
-        public int Count => stack.Count;
 
         /// <summary>
         /// Gives a resource back to the pool.
@@ -90,12 +88,12 @@ namespace Jitter
     /// have a parameterless constructor.  Do not specify [].</typeparam>
     public class ArrayResourcePool<T>
     {
-        private Stack<T[]> stack = new Stack<T[]>();
+        private readonly Stack<T[]> stack = new Stack<T[]>();
 
         /// <summary>
         /// The length of each array object to be created in the pool.
         /// </summary>
-        private int arrayLength;
+        private readonly int arrayLength;
 
         /// <summary>
         /// Creates a new instance of the ResourcePool class.
@@ -113,8 +111,6 @@ namespace Jitter
         {
             lock (stack) { stack.Clear(); }
         }
-
-        public int Count => stack.Count;
 
         /// <summary>
         /// Gives a resource back to the pool.
@@ -138,7 +134,6 @@ namespace Jitter
                 if (stack.Count == 0)
                 {
                     freeObj = new T[arrayLength];
-                    //freeObj = Activator.CreateInstance<T>();
                     stack.Push(freeObj);
                 }
 

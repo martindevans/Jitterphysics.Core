@@ -18,6 +18,7 @@
 */
 
 using System;
+using System.Numerics;
 
 namespace Jitter.LinearMath
 {
@@ -66,25 +67,15 @@ namespace Jitter.LinearMath
         /// </summary>
         public float M33;
 
-        internal static JMatrix InternalIdentity;
-
         /// <summary>
         /// Identity matrix.
         /// </summary>
-        public static readonly JMatrix Identity;
-        public static readonly JMatrix Zero;
-
-        static JMatrix()
+        public static readonly JMatrix Identity = new JMatrix
         {
-            Zero = new JMatrix();
-
-            Identity = new JMatrix();
-            Identity.M11 = 1.0f;
-            Identity.M22 = 1.0f;
-            Identity.M33 = 1.0f;
-
-            InternalIdentity = Identity;
-        }
+            M11 = 1.0f,
+            M22 = 1.0f,
+            M33 = 1.0f,
+        };
 
         /// <returns>The absolute matrix.</returns>
         public JMatrix Absolute()
@@ -103,10 +94,10 @@ namespace Jitter.LinearMath
             };
         }
 
-        public System.Numerics.Quaternion ToQuaternion()
+        public Quaternion ToQuaternion()
         {
             var matrix = this;
-            var result = new System.Numerics.Quaternion();
+            var result = new Quaternion();
 
             var num8 = matrix.M11 + matrix.M22 + matrix.M33;
             if (num8 > 0f)
@@ -151,7 +142,7 @@ namespace Jitter.LinearMath
 
         public static JMatrix CreateFromYawPitchRoll(float yaw, float pitch, float roll)
         {
-            var q = System.Numerics.Quaternion.CreateFromYawPitchRoll(yaw, pitch, roll);
+            var q = Quaternion.CreateFromYawPitchRoll(yaw, pitch, roll);
             var matrix = CreateFromQuaternion(q);
             return matrix;
         }
@@ -479,7 +470,7 @@ namespace Jitter.LinearMath
         /// </summary>
         /// <param name="quaternion">The quaternion the matrix should be created from.</param>
         /// <param name="result">JMatrix representing an orientation.</param>
-        public static JMatrix CreateFromQuaternion(System.Numerics.Quaternion quaternion)
+        public static JMatrix CreateFromQuaternion(Quaternion quaternion)
         {
             JMatrix result;
 
@@ -584,7 +575,7 @@ namespace Jitter.LinearMath
         /// <param name="axis">The axis.</param>
         /// <param name="angle">The angle.</param>
         /// <param name="result">The resulting rotation matrix</param>
-        public static void CreateFromAxisAngle(ref JVector axis, float angle, out JMatrix result)
+        public static void CreateFromAxisAngle(ref Vector3 axis, float angle, out JMatrix result)
         {
             var x = axis.X;
             var y = axis.Y;
@@ -614,7 +605,7 @@ namespace Jitter.LinearMath
         /// <param name="axis">The axis.</param>
         /// <param name="angle">The angle.</param>
         /// <returns>The resulting rotation matrix</returns>
-        public static JMatrix CreateFromAxisAngle(JVector axis, float angle)
+        public static JMatrix CreateFromAxisAngle(Vector3 axis, float angle)
         {
             CreateFromAxisAngle(ref axis, angle, out var result);
             return result;

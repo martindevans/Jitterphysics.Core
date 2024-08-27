@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Jitter.LinearMath;
 
 namespace Jitter.Collision.Shapes
@@ -37,7 +38,7 @@ namespace Jitter.Collision.Shapes
         public struct TransformedShape
         {
             private Shape shape;
-            internal JVector position;
+            internal Vector3 position;
             internal JMatrix orientation;
             internal JMatrix invOrientation;
             internal JBBox boundingBox;
@@ -52,7 +53,7 @@ namespace Jitter.Collision.Shapes
             /// <summary>
             /// The position of a 'sub' shape
             /// </summary>
-            public JVector Position { get => position;
+            public Vector3 Position { get => position;
                 set { position = value; UpdateBoundingBox(); } }
 
             public JBBox BoundingBox => boundingBox;
@@ -73,7 +74,7 @@ namespace Jitter.Collision.Shapes
 
             public void UpdateBoundingBox()
             {
-                Shape.GetBoundingBox(ref orientation, out boundingBox);
+                boundingBox = Shape.GetBoundingBox(orientation);
 
                 boundingBox.Min += position;
                 boundingBox.Max += position;
@@ -85,7 +86,7 @@ namespace Jitter.Collision.Shapes
             /// <param name="shape">The shape.</param>
             /// <param name="orientation">The orientation this shape should have.</param>
             /// <param name="position">The position this shape should have.</param>
-            public TransformedShape(Shape shape, JMatrix orientation, JVector position)
+            public TransformedShape(Shape shape, JMatrix orientation, Vector3 position)
             {
                 this.position = position;
                 this.orientation = orientation;
@@ -103,8 +104,8 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         public TransformedShape[] Shapes => shapes;
 
-        JVector shifted;
-        public JVector Shift => -1.0f * shifted;
+        Vector3 shifted;
+        public Vector3 Shift => -1.0f * shifted;
 
         private JBBox mInternalBBox;
 
@@ -145,20 +146,20 @@ namespace Jitter.Collision.Shapes
             return true;
         }
 
-        public override void MakeHull(ref List<JVector> triangleList, int generationThreshold)
+        public override void MakeHull(List<Vector3> triangleList, int generationThreshold)
         {
-            var triangles = new List<JVector>();
+            var triangles = new List<Vector3>();
 
             for (var i = 0; i < shapes.Length; i++)
             {
-                shapes[i].Shape.MakeHull(ref triangles, 4);
+                shapes[i].Shape.MakeHull(triangles, 4);
                 for (var e = 0; e < triangles.Count; e++)
                 {
                     var pos = triangles[e];
-                    JMatrix matrix = shapes[i].orientation;
+                    var matrix = shapes[i].orientation;
                     pos = JVectorExtensions.Transform(pos, matrix);
-                    JVector value2 = shapes[i].position;
-                    pos = pos + value2;
+                    var value2 = shapes[i].position;
+                    pos += value2;
                     triangleList.Add(pos);
                 }
                 triangles.Clear();
@@ -179,7 +180,7 @@ namespace Jitter.Collision.Shapes
 
         public override void CalculateMassInertia()
         {
-            inertia = JMatrix.Zero;
+            inertia = default;
             mass = 0.0f;
 
             for (var i = 0; i < Shapes.Length; i++)
@@ -226,15 +227,16 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         /// <param name="direction">The direction.</param>
         /// <param name="result">The result.</param>
-        public override void SupportMapping(ref JVector direction, out JVector result)
+        public override Vector3 SupportMapping(Vector3 direction)
         {
-            JMatrix matrix = shapes[currentShape].invOrientation;
-            result = JVectorExtensions.Transform(direction, matrix);
-            shapes[currentShape].Shape.SupportMapping(ref direction, out result);
-            JMatrix matrix1 = shapes[currentShape].orientation;
+            var matrix = shapes[currentShape].invOrientation;
+            var result = JVectorExtensions.Transform(direction, matrix);
+            result = shapes[currentShape].Shape.SupportMapping(direction);
+            var matrix1 = shapes[currentShape].orientation;
             result = JVectorExtensions.Transform(result, matrix1);
-            JVector value2 = shapes[currentShape].position;
-            result = result + value2;
+            var value2 = shapes[currentShape].position;
+            result += value2;
+            return result;
         }
 
         /// <summary>
@@ -243,23 +245,25 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         /// <param name="orientation">The orientation of the shape.</param>
         /// <param name="box">The axis aligned bounding box of the shape.</param>
-        public override void GetBoundingBox(ref JMatrix orientation, out JBBox box)
+        public override JBBox GetBoundingBox(JMatrix orientation)
         {
+            JBBox box;
             box.Min = mInternalBBox.Min;
             box.Max = mInternalBBox.Max;
 
             var localHalfExtents = 0.5f * (box.Max - box.Min);
             var localCenter = 0.5f * (box.Max + box.Min);
 
-            JVector center;
+            Vector3 center;
             center = JVectorExtensions.Transform(localCenter, orientation);
 
             var abs = orientation.Absolute();
-            JVector temp;
+            Vector3 temp;
             temp = JVectorExtensions.Transform(localHalfExtents, abs);
 
             box.Max = center + temp;
             box.Min = center - temp;
+            return box;
         }
 
         int currentShape;
@@ -273,7 +277,7 @@ namespace Jitter.Collision.Shapes
         public override void SetCurrentShape(int index)
         {
             currentShape = currentSubShapes[index];
-            shapes[currentShape].Shape.SupportCenter(out geomCen);
+            geomCen = shapes[currentShape].Shape.SupportCenter();
             geomCen += shapes[currentShape].Position;
         }
 
@@ -303,7 +307,7 @@ namespace Jitter.Collision.Shapes
         /// <param name="rayOrigin"></param>
         /// <param name="rayEnd"></param>
         /// <returns></returns>
-        public override int Prepare(ref JVector rayOrigin, ref JVector rayEnd)
+        public override int Prepare(ref Vector3 rayOrigin, ref Vector3 rayEnd)
         {
             var box = JBBox.SmallBox;
 
@@ -323,8 +327,8 @@ namespace Jitter.Collision.Shapes
 
         protected void UpdateInternalBoundingBox()
         {
-            mInternalBBox.Min = new JVector(float.MaxValue);
-            mInternalBBox.Max = new JVector(float.MinValue);
+            mInternalBBox.Min = new Vector3(float.MaxValue);
+            mInternalBBox.Max = new Vector3(float.MinValue);
 
             for (var i = 0; i < shapes.Length; i++)
             {

@@ -18,6 +18,7 @@
 */
 
 using System;
+using System.Numerics;
 using Jitter.LinearMath;
 
 namespace Jitter.Collision.Shapes
@@ -53,12 +54,13 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         /// <param name="direction">The direction.</param>
         /// <param name="result">The result.</param>
-        public override void SupportMapping(ref JVector direction, out JVector result)
+        public override Vector3 SupportMapping(Vector3 direction)
         {
-            result = direction;
-            result = JVector.Normalize(result);
+            var result = direction;
+            result = Vector3.Normalize(result);
 
-            result = result * radius;
+            result *= radius;
+            return result;
         }
 
         /// <summary>
@@ -66,14 +68,16 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         /// <param name="orientation">The orientation of the shape.</param>
         /// <param name="box">The resulting axis aligned bounding box.</param>
-        public override void GetBoundingBox(ref JMatrix orientation, out JBBox box)
+        public override JBBox GetBoundingBox(JMatrix orientation)
         {
+            JBBox box;
             box.Min.X = -radius;
             box.Min.Y = -radius;
             box.Min.Z = -radius;
             box.Max.X = radius;
             box.Max.Y = radius;
             box.Max.Z = radius;
+            return box;
         }
 
         /// <summary>

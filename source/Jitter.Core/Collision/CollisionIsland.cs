@@ -20,7 +20,6 @@
 using System.Collections.Generic;
 using Jitter.Dynamics;
 using Jitter.Dynamics.Constraints;
-using Jitter.DataStructures;
 
 namespace Jitter.Collision
 {
@@ -32,37 +31,24 @@ namespace Jitter.Collision
 
         internal IslandManager islandManager;
 
-        internal HashSet<RigidBody> bodies = new HashSet<RigidBody>();
-        internal HashSet<Arbiter> arbiter = new HashSet<Arbiter>();
-        internal HashSet<Constraint> constraints = new HashSet<Constraint>();
+        internal readonly HashSet<RigidBody> bodies = new HashSet<RigidBody>();
+        internal readonly HashSet<Arbiter> arbiter = new HashSet<Arbiter>();
+        internal readonly HashSet<Constraint> constraints = new HashSet<Constraint>();
 
         /// <summary>
         /// Gets a read only list of <see cref="RigidBody"/> which are in contact with each other.
         /// </summary>
-        public ReadOnlyHashset<RigidBody> Bodies => readOnlyBodies;
+        public IReadOnlyCollection<RigidBody> Bodies => bodies;
 
         /// <summary>
         /// Gets a read only list of <see cref="Arbiter"/> which are involved in this island.
         /// </summary>
-        public ReadOnlyHashset<Arbiter> Arbiter => readOnlyArbiter;
+        public IReadOnlyCollection<Arbiter> Arbiter => arbiter;
 
         /// <summary>
         /// Gets a read only list of <see cref="Constraint"/> which are involved in this island.
         /// </summary>
-        public ReadOnlyHashset<Constraint> Constraints => readOnlyConstraints;
-
-        private ReadOnlyHashset<RigidBody> readOnlyBodies;
-        private ReadOnlyHashset<Arbiter> readOnlyArbiter;
-        private ReadOnlyHashset<Constraint> readOnlyConstraints;
-
-        /// Constructor of CollisionIsland class.
-        /// </summary>
-        public CollisionIsland()
-        {
-            readOnlyBodies = new ReadOnlyHashset<RigidBody>(bodies);
-            readOnlyArbiter = new ReadOnlyHashset<Arbiter>(arbiter);
-            readOnlyConstraints = new ReadOnlyHashset<Constraint>(constraints);
-        }
+        public IReadOnlyCollection<Constraint> Constraints => constraints;
 
         /// <summary>
         /// Whether the island is active or not.

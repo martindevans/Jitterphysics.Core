@@ -21,11 +21,11 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Numerics;
 using Jitter.Dynamics;
 using Jitter.LinearMath;
 using Jitter.Collision;
 using Jitter.Dynamics.Constraints;
-using Jitter.DataStructures;
 
 namespace Jitter
 {
@@ -117,8 +117,6 @@ namespace Jitter
             }
         }
 
-        private ContactSettings contactSettings = new ContactSettings();
-
         private float inactiveAngularThresholdSq = 0.1f;
         private float inactiveLinearThresholdSq = 0.1f;
         private float deactivationTime = 2f;
@@ -130,15 +128,15 @@ namespace Jitter
         private int smallIterations = 4;
         private float timestep;
 
-        private IslandManager islands = new IslandManager();
+        private readonly IslandManager islands = new IslandManager();
 
-        private HashSet<RigidBody> rigidBodies = new HashSet<RigidBody>();
-        private HashSet<Constraint> constraints = new HashSet<Constraint>();
+        private readonly HashSet<RigidBody> rigidBodies = new HashSet<RigidBody>();
+        public IReadOnlyCollection<RigidBody> RigidBodies => rigidBodies;
 
-        public ReadOnlyHashset<RigidBody> RigidBodies { get; private set; }
-        public ReadOnlyHashset<Constraint> Constraints { get; private set; }
+        private readonly HashSet<Constraint> constraints = new HashSet<Constraint>();
+        public IReadOnlyCollection<Constraint> Constraints => constraints;
 
-        private WorldEvents events = new WorldEvents();
+        private readonly WorldEvents events = new WorldEvents();
         public WorldEvents Events => events;
 
         /// <summary>
@@ -147,13 +145,14 @@ namespace Jitter
         /// </summary>
         public ArbiterMap ArbiterMap => arbiterMap;
 
-        private ArbiterMap arbiterMap;
+        private readonly ArbiterMap arbiterMap;
 
-        private Queue<Arbiter> removedArbiterQueue = new Queue<Arbiter>();
-        private Queue<Arbiter> addedArbiterQueue = new Queue<Arbiter>();
+        private readonly Queue<Arbiter> removedArbiterQueue = new Queue<Arbiter>();
+        private readonly Queue<Arbiter> addedArbiterQueue = new Queue<Arbiter>();
 
-        private JVector gravity = new JVector(0, 0, 0);
+        private Vector3 gravity = new Vector3(0, 0, 0);
 
+        private readonly ContactSettings contactSettings = new ContactSettings();
         public ContactSettings ContactSettings => contactSettings;
 
         /// <summary>
@@ -181,10 +180,6 @@ namespace Jitter
 
             arbiterCallback = ArbiterCallback;
             integrateCallback = IntegrateCallback;
-
-            // Create the readonly wrappers
-            RigidBodies = new ReadOnlyHashset<RigidBody>(rigidBodies);
-            Constraints = new ReadOnlyHashset<Constraint>(constraints);
 
             CollisionSystem = collision;
 
@@ -260,10 +255,11 @@ namespace Jitter
         }
 
         /// <summary>
-        /// Gets or sets the gravity in this <see cref="World"/>. The default gravity
-        /// is (0,-9.81,0)
+        /// Gets or sets the gravity in this <see cref="World"/>. The default gravity is (0,0,0)
         /// </summary>
-        public JVector Gravity { get => gravity;
+        public Vector3 Gravity
+        {
+            get => gravity;
             set => gravity = value;
         }
 
@@ -394,8 +390,8 @@ namespace Jitter
         /// <param name="body">The body which should be added.</param>
         public void AddBody(RigidBody body)
         {
-            if (body == null) throw new ArgumentNullException("body", "body can't be null.");
-            if(rigidBodies.Contains(body)) throw new ArgumentException("The body was already added to the world.", "body");
+            if (body == null) throw new ArgumentNullException(nameof(body), "body can't be null.");
+            if (rigidBodies.Contains(body)) throw new ArgumentException("The body was already added to the world.", nameof(body));
 
             events.RaiseAddedRigidBody(body);
 
@@ -411,9 +407,10 @@ namespace Jitter
         /// <returns>True if the constraint was successfully removed.</returns>
         public bool RemoveConstraint(Constraint constraint)
         {
-            if (!constraints.Remove(constraint)) return false;
-            events.RaiseRemovedConstraint(constraint);
+            if (!constraints.Remove(constraint))
+                return false;
 
+            events.RaiseRemovedConstraint(constraint);
             islands.ConstraintRemoved(constraint);
 
             return true;
@@ -425,21 +422,17 @@ namespace Jitter
         /// <param name="constraint">The constraint which should be removed.</param>
         public void AddConstraint(Constraint constraint)
         {
-            if(constraints.Contains(constraint)) 
-                throw new ArgumentException("The constraint was already added to the world.", "constraint");
-
-            constraints.Add(constraint);
+            if (!constraints.Add(constraint)) 
+                throw new ArgumentException("The constraint was already added to the world.", nameof(constraint));
 
             islands.ConstraintCreated(constraint);
-
             events.RaiseAddedConstraint(constraint);
         }
 
         private float currentLinearDampFactor = 1.0f;
         private float currentAngularDampFactor = 1.0f;
 
-#if(!WINDOWS_PHONE)
-        Stopwatch sw = new Stopwatch();
+        private readonly Stopwatch sw = new Stopwatch();
 
         public enum DebugType
         {
@@ -453,9 +446,8 @@ namespace Jitter
         /// <example>int time = DebugTimes[(int)DebugType.CollisionDetect] gives
         /// the amount of time spent on collision detection during the last <see cref="Step"/>.
         /// </example>
-        private double[] debugTimes = new double[(int)DebugType.Num];
-        public double[] DebugTimes => debugTimes;
-#endif
+        private readonly double[] debugTimes = new double[(int)DebugType.Num];
+        public IReadOnlyList<double> DebugTimes => debugTimes;
 
         /// <summary>
         /// Integrates the whole world a timestep further in time.
@@ -464,8 +456,6 @@ namespace Jitter
         /// It should be small as possible to keep the simulation stable.
         /// The physics simulation shouldn't run slower than 60fps.
         /// (timestep=1/60).</param>
-        /// <param name="multithread">If true the engine uses several threads to
-        /// integrate the world. This is faster on multicore CPUs.</param>
         public void Step(float timestep)
         {
             this.timestep = timestep;
@@ -491,13 +481,15 @@ namespace Jitter
             sw.Stop(); debugTimes[(int)DebugType.UpdateContacts] = sw.Elapsed.TotalMilliseconds;
 
             sw.Reset(); sw.Start();
-            double ms = 0;
             while (removedArbiterQueue.Count > 0) islands.ArbiterRemoved(removedArbiterQueue.Dequeue());
-            sw.Stop(); ms = sw.Elapsed.TotalMilliseconds;
+            sw.Stop();
+            var ms = sw.Elapsed.TotalMilliseconds;
 
-            sw.Reset(); sw.Start();
+            sw.Reset();
+            sw.Start();
             CollisionSystem.Detect();
-            sw.Stop(); debugTimes[(int)DebugType.CollisionDetect] = sw.Elapsed.TotalMilliseconds;
+            sw.Stop();
+            debugTimes[(int)DebugType.CollisionDetect] = sw.Elapsed.TotalMilliseconds;
 
             sw.Reset(); sw.Start();
 
@@ -565,7 +557,7 @@ namespace Jitter
         {
             if (arbiter.contactList.Count == 0)
             {
-                lock (removedArbiterStack) { removedArbiterStack.Push(arbiter); }
+                removedArbiterStack.Push(arbiter);
                 return;
             }
 
@@ -574,34 +566,32 @@ namespace Jitter
                 var c = arbiter.contactList[i];
                 c.UpdatePosition();
 
-                if (c.penetration < -contactSettings.breakThreshold)
+                if (c.penetration < -contactSettings.BreakThreshold)
                 {
                     Contact.Pool.GiveBack(c);
                     arbiter.contactList.RemoveAt(i);
-                    continue;
                 }
                 else
                 {
                     var diff = c.p1 - c.p2;
-                    var distance = JVector.Dot(diff, c.normal);
+                    var distance = Vector3.Dot(diff, c.normal);
 
-                    diff = diff - distance * c.normal;
+                    diff -= distance * c.normal;
                     distance = diff.LengthSquared();
 
                     // hack (multiplication by factor 100) in the
                     // following line.
-                    if (distance > contactSettings.breakThreshold * contactSettings.breakThreshold * 100)
+                    if (distance > contactSettings.BreakThreshold * contactSettings.BreakThreshold * 100)
                     {
                         Contact.Pool.GiveBack(c);
                         arbiter.contactList.RemoveAt(i);
-                        continue;
                     }
                 }
 
             }
         }
 
-        private Stack<Arbiter> removedArbiterStack = new Stack<Arbiter>();
+        private readonly Stack<Arbiter> removedArbiterStack = new Stack<Arbiter>();
 
         private void UpdateContacts()
         {
@@ -624,11 +614,11 @@ namespace Jitter
 
         private void ArbiterCallback(object obj)
         {
-            var island = obj as CollisionIsland;
+            var island = (CollisionIsland)obj;
 
-            int thisIterations;
-            if (island.Bodies.Count + island.Constraints.Count > 3) thisIterations = contactIterations;
-            else thisIterations = smallIterations;
+            var thisIterations = island.Bodies.Count + island.Constraints.Count > 3
+                               ? contactIterations
+                               : smallIterations;
 
             for (var i = -1; i < thisIterations; i++)
             {
@@ -658,13 +648,9 @@ namespace Jitter
 
         private void HandleArbiter(int iterations)
         {
-            {
-                for (var i = 0; i < islands.Count; i++)
-                {
-                    if (islands[i].IsActive()) arbiterCallback(islands[i]);
-                }
-
-            }
+            for (var i = 0; i < islands.Count; i++)
+                if (islands[i].IsActive())
+                    arbiterCallback(islands[i]);
         }
 
         private void IntegrateForces()
@@ -673,7 +659,7 @@ namespace Jitter
             {
                 if (!body.isStatic && body.IsActive)
                 {
-                    float scaleFactor = body.inverseMass * timestep;
+                    var scaleFactor = body.inverseMass * timestep;
                     var temp = body.force * scaleFactor;
                     body.linearVelocity = temp + body.linearVelocity;
 
@@ -687,7 +673,7 @@ namespace Jitter
                     if (body.affectedByGravity)
                     {
                         temp = gravity * timestep;
-                        body.linearVelocity = body.linearVelocity + temp;
+                        body.linearVelocity += temp;
                     }
                 }
 
@@ -699,7 +685,7 @@ namespace Jitter
 
         private void IntegrateCallback(object obj)
         {
-            var body = obj as RigidBody;
+            var body = (RigidBody)obj;
 
             var temp = body.linearVelocity * timestep;
             body.position = temp + body.position;
@@ -708,37 +694,37 @@ namespace Jitter
             {
 
                 //exponential map
-                JVector axis;
+                Vector3 axis;
                 var angle = body.angularVelocity.Length();
 
                 if (angle < 0.001f)
                 {
                     // use Taylor's expansions of sync function
                     // axis = body.angularVelocity * (0.5f * timestep - (timestep * timestep * timestep) * (0.020833333333f) * angle * angle);
-                    float scaleFactor = 0.5f * timestep - timestep * timestep * timestep * 0.020833333333f * angle * angle;
+                    var scaleFactor = 0.5f * timestep - timestep * timestep * timestep * 0.020833333333f * angle * angle;
                     axis = body.angularVelocity * scaleFactor;
                 }
                 else
                 {
                     // sync(fAngle) = sin(c*fAngle)/t
-                    float scaleFactor = (float)Math.Sin(0.5f * angle * timestep) / angle;
+                    var scaleFactor = (float)Math.Sin(0.5f * angle * timestep) / angle;
                     axis = body.angularVelocity * scaleFactor;
                 }
 
-                var dorn = new System.Numerics.Quaternion(axis.X, axis.Y, axis.Z, (float)Math.Cos(angle * timestep * 0.5f));
+                var dorn = new Quaternion(axis.X, axis.Y, axis.Z, (float)Math.Cos(angle * timestep * 0.5f));
 
                 var ornA = body.orientation.ToQuaternion();
-                dorn = System.Numerics.Quaternion.Multiply(dorn, ornA);
+                dorn = Quaternion.Multiply(dorn, ornA);
 
-                dorn = System.Numerics.Quaternion.Normalize(dorn);
+                dorn = Quaternion.Normalize(dorn);
                 body.orientation = JMatrix.CreateFromQuaternion(dorn);
             }
 
             if ((body.Damping & RigidBody.DampingType.Linear) != 0)
-                body.linearVelocity = body.linearVelocity * currentLinearDampFactor;
+                body.linearVelocity *= currentLinearDampFactor;
 
             if ((body.Damping & RigidBody.DampingType.Angular) != 0)
-                body.angularVelocity = body.angularVelocity * currentAngularDampFactor;
+                body.angularVelocity *= currentAngularDampFactor;
 
             body.Update();
 
@@ -759,9 +745,9 @@ namespace Jitter
             }
         }
 
-        private void CollisionDetected(RigidBody body1, RigidBody body2, JVector point1, JVector point2, JVector normal, float penetration)
+        private void CollisionDetected(RigidBody body1, RigidBody body2, Vector3 point1, Vector3 point2, Vector3 normal, float penetration)
         {
-            Arbiter arbiter = null;
+            Arbiter arbiter;
 
             lock (arbiterMap)
             {

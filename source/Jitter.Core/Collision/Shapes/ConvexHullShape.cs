@@ -18,6 +18,7 @@
 */
 
 using System.Collections.Generic;
+using System.Numerics;
 using Jitter.LinearMath;
 
 namespace Jitter.Collision.Shapes
@@ -28,22 +29,22 @@ namespace Jitter.Collision.Shapes
     /// </summary>
     public class ConvexHullShape : Shape
     {
-        List<JVector> vertices;
+        List<Vector3> vertices;
 
-        JVector shifted;
+        Vector3 shifted;
 
         /// <summary>
         /// Constructor of ConvexHullShape class.
         /// </summary>
         /// <param name="vertices">A list containing all vertices defining
         /// the convex hull.</param>
-        public ConvexHullShape(List<JVector> vertices)
+        public ConvexHullShape(List<Vector3> vertices)
         {
             this.vertices = vertices;
             UpdateShape();
         }
 
-        public JVector Shift => -1 * shifted;
+        public Vector3 Shift => -1 * shifted;
 
         public override void CalculateMassInertia()
         {
@@ -57,7 +58,7 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         /// <param name="direction">The direction.</param>
         /// <param name="result">The result.</param>
-        public override void SupportMapping(ref JVector direction, out JVector result)
+        public override Vector3 SupportMapping(Vector3 direction)
         {
             var maxDotProduct = float.MinValue;
             var maxIndex = 0;
@@ -65,7 +66,7 @@ namespace Jitter.Collision.Shapes
 
             for (var i = 0; i < vertices.Count; i++)
             {
-                dotProduct = JVector.Dot(vertices[i], direction);
+                dotProduct = Vector3.Dot(vertices[i], direction);
                 if (dotProduct > maxDotProduct)
                 {
                     maxDotProduct = dotProduct;
@@ -73,7 +74,8 @@ namespace Jitter.Collision.Shapes
                 }
             }
 
-            result = vertices[maxIndex] - shifted;
+            var result = vertices[maxIndex] - shifted;
+            return result;
         }
     }
 }
