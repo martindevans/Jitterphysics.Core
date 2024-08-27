@@ -17,18 +17,14 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
 using System;
 using System.Collections.Generic;
 using System.Threading;
-
-using Jitter.Dynamics;
 using Jitter.LinearMath;
 using Jitter.Collision.Shapes;
 using Jitter.Collision;
 using Jitter.Dynamics.Constraints;
 using Jitter.DataStructures;
-#endregion
 
 namespace Jitter.Dynamics
 {
@@ -61,10 +57,10 @@ namespace Jitter.Dynamics
 
         internal JBBox boundingBox;
 
-        internal float inactiveTime = 0.0f;
+        internal float inactiveTime;
 
         internal bool isActive = true;
-        internal bool isStatic = false;
+        internal bool isStatic;
         internal bool affectedByGravity = true;
 
         internal CollisionIsland island;
@@ -94,30 +90,30 @@ namespace Jitter.Dynamics
         {
         }
 
-        internal bool isParticle = false;
+        internal bool isParticle;
 
         /// <summary>
         /// If true, the body as no angular movement.
         /// </summary>
         public bool IsParticle { 
-            get { return isParticle; }
+            get => isParticle;
             set
             {
                 if (isParticle && !value)
                 {
-                    updatedHandler = new ShapeUpdatedHandler(ShapeUpdated);
-                    this.Shape.ShapeUpdated += updatedHandler;
+                    updatedHandler = ShapeUpdated;
+                    Shape.ShapeUpdated += updatedHandler;
                     SetMassProperties();
                     isParticle = false;
                 }
                 else if (!isParticle && value)
                 {
-                    this.inertia = JMatrix.Zero;
-                    this.invInertia = this.invInertiaWorld = JMatrix.Zero;
-                    this.invOrientation = this.orientation = JMatrix.Identity;
+                    inertia = JMatrix.Zero;
+                    invInertia = invInertiaWorld = JMatrix.Zero;
+                    invOrientation = orientation = JMatrix.Identity;
                     inverseMass = 1.0f;
 
-                    this.Shape.ShapeUpdated -= updatedHandler;
+                    Shape.ShapeUpdated -= updatedHandler;
 
                     isParticle = true;
                 }
@@ -149,20 +145,20 @@ namespace Jitter.Dynamics
             instance = Interlocked.Increment(ref instanceCount);
             hashCode = CalculateHash(instance);
 
-            this.Shape = shape;
+            Shape = shape;
             orientation = JMatrix.Identity;
 
             if (!isParticle)
             {
-                updatedHandler = new ShapeUpdatedHandler(ShapeUpdated);
-                this.Shape.ShapeUpdated += updatedHandler;
+                updatedHandler = ShapeUpdated;
+                Shape.ShapeUpdated += updatedHandler;
                 SetMassProperties();
             }
             else
             {
-                this.inertia = JMatrix.Zero;
-                this.invInertia = this.invInertiaWorld = JMatrix.Zero;
-                this.invOrientation = this.orientation = JMatrix.Identity;
+                inertia = JMatrix.Zero;
+                invInertia = invInertiaWorld = JMatrix.Zero;
+                invOrientation = orientation = JMatrix.Identity;
                 inverseMass = 1.0f;
             }
 
@@ -187,8 +183,8 @@ namespace Jitter.Dynamics
             return hashCode;
         }
 
-        public ReadOnlyHashset<Arbiter> Arbiters { get { return readOnlyArbiters; } }
-        public ReadOnlyHashset<Constraint> Constraints { get { return readOnlyConstraints; } }
+        public ReadOnlyHashset<Arbiter> Arbiters => readOnlyArbiters;
+        public ReadOnlyHashset<Constraint> Constraints => readOnlyConstraints;
 
         /// <summary>
         /// If set to false the body will never be deactived by the
@@ -201,15 +197,15 @@ namespace Jitter.Dynamics
         /// <summary>
         /// The axis aligned bounding box of the body.
         /// </summary>
-        public JBBox BoundingBox { get { return boundingBox; } }
+        public JBBox BoundingBox => boundingBox;
 
 
-        private static int instanceCount = 0;
+        private static int instanceCount;
         private int instance;
 
         private int CalculateHash(int a)
         {
-            a = (a ^ 61) ^ (a >> 16);
+            a = a ^ 61 ^ (a >> 16);
             a = a + (a << 3);
             a = a ^ (a >> 4);
             a = a * 0x27d4eb2d;
@@ -220,7 +216,7 @@ namespace Jitter.Dynamics
         /// <summary>
         /// Gets the current collision island the body is in.
         /// </summary>
-        public CollisionIsland CollisionIsland { get { return this.island; } }
+        public CollisionIsland CollisionIsland => island;
 
         /// <summary>
         /// If set to false the velocity is set to zero,
@@ -228,10 +224,7 @@ namespace Jitter.Dynamics
         /// </summary>
         public bool IsActive
         {
-            get 
-            {
-                return isActive;
-            }
+            get => isActive;
             set
             {
                 if (!isActive && value)
@@ -243,8 +236,8 @@ namespace Jitter.Dynamics
                 {
                     // if active and should be inactive
                     inactiveTime = float.PositiveInfinity;
-                    this.angularVelocity.MakeZero();
-                    this.linearVelocity.MakeZero();
+                    angularVelocity = JVector.Zero;
+                    linearVelocity = JVector.Zero;
                 }
 
                 isActive = value;
@@ -258,12 +251,11 @@ namespace Jitter.Dynamics
         /// <param name="impulse">Impulse direction and magnitude.</param>
         public void ApplyImpulse(JVector impulse)
         {
-            if (this.isStatic)
+            if (isStatic)
                 throw new InvalidOperationException("Can't apply an impulse to a static body.");
 
-            JVector temp;
-            JVector.Multiply(ref impulse, inverseMass, out temp);
-            JVector.Add(ref linearVelocity, ref temp, out linearVelocity);
+            var temp = JVector.Multiply(impulse, inverseMass);
+            linearVelocity = JVector.Add(linearVelocity, temp);
         }
 
         /// <summary>
@@ -275,16 +267,15 @@ namespace Jitter.Dynamics
         /// in Body coordinate frame.</param>
         public void ApplyImpulse(JVector impulse, JVector relativePosition)
         {
-            if (this.isStatic)
+            if (isStatic)
                 throw new InvalidOperationException("Can't apply an impulse to a static body.");
 
-            JVector temp;
-            JVector.Multiply(ref impulse, inverseMass, out temp);
-            JVector.Add(ref linearVelocity, ref temp, out linearVelocity);
+            var temp = JVector.Multiply(impulse, inverseMass);
+            linearVelocity = JVector.Add(linearVelocity, temp);
 
-            JVector.Cross(ref relativePosition, ref impulse, out temp);
+            temp = JVector.Cross(relativePosition, impulse);
             JVector.Transform(ref temp, ref invInertiaWorld, out temp);
-            JVector.Add(ref angularVelocity, ref temp, out angularVelocity);
+            angularVelocity = JVector.Add(angularVelocity, temp);
         }
 
         /// <summary>
@@ -296,7 +287,7 @@ namespace Jitter.Dynamics
         /// <param name="force">The force to add next <see cref="World.Step"/>.</param>
         public void AddForce(JVector force)
         {
-            JVector.Add(ref force, ref this.force, out this.force);
+            this.force = JVector.Add(force, this.force);
         }
 
         /// <summary>
@@ -309,21 +300,23 @@ namespace Jitter.Dynamics
         /// <param name="pos">The position where the force is applied.</param>
         public void AddForce(JVector force, JVector pos)
         {
-            JVector.Add(ref this.force, ref force, out this.force);
-            JVector.Subtract(ref pos, ref this.position, out pos);
-            JVector.Cross(ref pos, ref force, out pos);
-            JVector.Add(ref pos, ref this.torque, out this.torque);
+            this.force = JVector.Add(this.force, force);
+            pos = JVector.Subtract(pos, position);
+            pos = JVector.Cross(pos, force);
+            torque = JVector.Add(pos, torque);
         }
 
         /// <summary>
         /// Returns the torque which acts this timestep on the body.
         /// </summary>
-        public JVector Torque { get { return torque; } }
+        public JVector Torque => torque;
 
         /// <summary>
         /// Returns the force which acts this timestep on the body.
         /// </summary>
-        public JVector Force { get { return force; } set { force = value; } }
+        public JVector Force { get => force;
+            set => force = value;
+        }
 
         /// <summary>
         /// Adds torque to the body. The torque gets applied
@@ -334,7 +327,7 @@ namespace Jitter.Dynamics
         /// <param name="torque">The torque to add next <see cref="World.Step"/>.</param>
         public void AddTorque(JVector torque)
         {
-            JVector.Add(ref torque, ref this.torque, out this.torque);
+            this.torque = JVector.Add(torque, this.torque);
         }
 
         protected bool useShapeMassProperties = true;
@@ -344,9 +337,9 @@ namespace Jitter.Dynamics
         /// </summary>
         public void SetMassProperties()
         {
-            this.inertia = Shape.inertia;
+            inertia = Shape.inertia;
             JMatrix.Inverse(ref inertia, out invInertia);
-            this.inverseMass = 1.0f / Shape.mass;
+            inverseMass = 1.0f / Shape.mass;
             useShapeMassProperties = true;
         }
 
@@ -364,19 +357,19 @@ namespace Jitter.Dynamics
             {
                 if (!isParticle)
                 {
-                    this.invInertia = inertia;
+                    invInertia = inertia;
                     JMatrix.Inverse(ref inertia, out this.inertia);
                 }
-                this.inverseMass = mass;
+                inverseMass = mass;
             }
             else
             {
                 if (!isParticle)
                 {
                     this.inertia = inertia;
-                    JMatrix.Inverse(ref inertia, out this.invInertia);
+                    JMatrix.Inverse(ref inertia, out invInertia);
                 }
-                this.inverseMass = 1.0f / mass;
+                inverseMass = 1.0f / mass;
             }
 
             useShapeMassProperties = false;
@@ -400,7 +393,7 @@ namespace Jitter.Dynamics
         /// </summary>
         public Shape Shape 
         {
-            get { return shape; } 
+            get => shape;
             set 
             {
                 // deregister update event
@@ -408,39 +401,41 @@ namespace Jitter.Dynamics
 
                 // register new event
                 shape = value; 
-                shape.ShapeUpdated += new ShapeUpdatedHandler(ShapeUpdated); 
+                shape.ShapeUpdated += ShapeUpdated; 
             } 
         }
 
         private Shape shape;
 
-        #region Properties
-
         private DampingType damping = DampingType.Angular | DampingType.Linear;
 
-        public DampingType Damping { get { return damping; } set { damping = value; } }
+        public DampingType Damping { get => damping;
+            set => damping = value;
+        }
 
-        public Material Material { get { return material; } set { material = value; } }
+        public Material Material { get => material;
+            set => material = value;
+        }
 
         /// <summary>
         /// The inertia currently used for this body.
         /// </summary>
-        public JMatrix Inertia { get { return inertia; } }
+        public JMatrix Inertia => inertia;
 
         /// <summary>
         /// The inverse inertia currently used for this body.
         /// </summary>
-        public JMatrix InverseInertia { get { return invInertia; } }
+        public JMatrix InverseInertia => invInertia;
 
         /// <summary>
         /// The velocity of the body.
         /// </summary>
         public JVector LinearVelocity
         {
-            get { return linearVelocity; }
+            get => linearVelocity;
             set 
             { 
-                if (this.isStatic) 
+                if (isStatic) 
                     throw new InvalidOperationException("Can't set a velocity to a static body.");
                 linearVelocity = value;
             }
@@ -452,10 +447,10 @@ namespace Jitter.Dynamics
         /// </summary>
         public JVector AngularVelocity
         {
-            get { return angularVelocity; }
+            get => angularVelocity;
             set
             {
-                if (this.isStatic)
+                if (isStatic)
                     throw new InvalidOperationException("Can't set a velocity to a static body.");
                 angularVelocity = value;
             }
@@ -466,7 +461,7 @@ namespace Jitter.Dynamics
         /// </summary>
         public JVector Position
         {
-            get { return position; }
+            get => position;
             set { position = value ; Update(); }
         }
 
@@ -475,7 +470,7 @@ namespace Jitter.Dynamics
         /// </summary>
         public JMatrix Orientation
         {
-            get { return orientation; }
+            get => orientation;
             set { orientation = value; Update(); }
         }
 
@@ -484,10 +479,7 @@ namespace Jitter.Dynamics
         /// </summary>
         public bool IsStatic
         {
-            get
-            {
-                return isStatic;
-            }
+            get => isStatic;
             set
             {
                 if (value && !isStatic)
@@ -495,25 +487,21 @@ namespace Jitter.Dynamics
                     if(island != null)
                     island.islandManager.MakeBodyStatic(this);
 
-                    this.angularVelocity.MakeZero();
-                    this.linearVelocity.MakeZero();
+                    angularVelocity = JVector.Zero;
+                    linearVelocity = JVector.Zero;
                 }
                 isStatic = value;
             }
         }
 
-        public bool AffectedByGravity { get { return affectedByGravity; } set { affectedByGravity = value; } }
+        public bool AffectedByGravity { get => affectedByGravity;
+            set => affectedByGravity = value;
+        }
 
         /// <summary>
         /// The inverse inertia tensor in world space.
         /// </summary>
-        public JMatrix InverseInertiaWorld
-        {
-            get
-            {
-                return invInertiaWorld;
-            }
-        }
+        public JMatrix InverseInertiaWorld => invInertiaWorld;
 
         /// <summary>
         /// Setting the mass automatically scales the inertia.
@@ -521,7 +509,7 @@ namespace Jitter.Dynamics
         /// </summary>
         public float Mass
         {
-            get { return 1.0f / inverseMass; }
+            get => 1.0f / inverseMass;
             set 
             {
                 if (value <= 0.0f) throw new ArgumentException("Mass can't be less or equal zero.");
@@ -536,8 +524,6 @@ namespace Jitter.Dynamics
                 inverseMass = 1.0f / value;
             }
         }
-
-        #endregion
 
 
         internal JVector sweptDirection = JVector.Zero;
@@ -582,22 +568,22 @@ namespace Jitter.Dynamics
         {
             if (isParticle)
             {
-                this.inertia = JMatrix.Zero;
-                this.invInertia = this.invInertiaWorld = JMatrix.Zero;
-                this.invOrientation = this.orientation = JMatrix.Identity;
-                this.boundingBox = shape.boundingBox;
-                JVector.Add(ref boundingBox.Min, ref this.position, out boundingBox.Min);
-                JVector.Add(ref boundingBox.Max, ref this.position, out boundingBox.Max);
+                inertia = JMatrix.Zero;
+                invInertia = invInertiaWorld = JMatrix.Zero;
+                invOrientation = orientation = JMatrix.Identity;
+                boundingBox = shape.boundingBox;
+                boundingBox.Min = JVector.Add(boundingBox.Min, position);
+                boundingBox.Max = JVector.Add(boundingBox.Max, position);
 
-                angularVelocity.MakeZero();
+                angularVelocity = JVector.Zero;
             }
             else
             {
                 // Given: Orientation, Inertia
                 JMatrix.Transpose(ref orientation, out invOrientation);
-                this.Shape.GetBoundingBox(ref orientation, out boundingBox);
-                JVector.Add(ref boundingBox.Min, ref this.position, out boundingBox.Min);
-                JVector.Add(ref boundingBox.Max, ref this.position, out boundingBox.Max);
+                Shape.GetBoundingBox(ref orientation, out boundingBox);
+                boundingBox.Min = JVector.Add(boundingBox.Min, position);
+                boundingBox.Max = JVector.Add(boundingBox.Max, position);
 
 
                 if (!isStatic)
@@ -610,13 +596,13 @@ namespace Jitter.Dynamics
 
         public bool Equals(RigidBody other)
         {
-            return (other.instance == this.instance);
+            return other.instance == instance;
         }
 
         public int CompareTo(RigidBody other)
         {
-            if (other.instance < this.instance) return -1;
-            else if (other.instance > this.instance) return 1;
+            if (other.instance < instance) return -1;
+            else if (other.instance > instance) return 1;
             else return 0;
         }
 
@@ -634,15 +620,12 @@ namespace Jitter.Dynamics
         }
 
 
-        public bool IsStaticOrInactive
-        {
-            get { return (!this.isActive || this.isStatic); }
-        }
+        public bool IsStaticOrInactive => !isActive || isStatic;
 
-        private bool enableDebugDraw = false;
+        private bool enableDebugDraw;
         public bool EnableDebugDraw
         {
-            get { return enableDebugDraw; }
+            get => enableDebugDraw;
             set
             {
                 enableDebugDraw = value;
@@ -664,20 +647,20 @@ namespace Jitter.Dynamics
         {
             JVector pos1,pos2,pos3;
 
-            for(int i = 0;i<hullPoints.Count;i+=3)
+            for(var i = 0;i<hullPoints.Count;i+=3)
             {
                 pos1 = hullPoints[i + 0];
                 pos2 = hullPoints[i + 1];
                 pos3 = hullPoints[i + 2];
 
                 JVector.Transform(ref pos1, ref orientation, out pos1);
-                JVector.Add(ref pos1, ref position, out pos1);
+                pos1 = JVector.Add(pos1, position);
 
                 JVector.Transform(ref pos2, ref orientation, out pos2);
-                JVector.Add(ref pos2, ref position, out pos2);
+                pos2 = JVector.Add(pos2, position);
 
                 JVector.Transform(ref pos3, ref orientation, out pos3);
-                JVector.Add(ref pos3, ref position, out pos3);
+                pos3 = JVector.Add(pos3, position);
 
                 drawer.DrawTriangle(pos1, pos2, pos3);
             }

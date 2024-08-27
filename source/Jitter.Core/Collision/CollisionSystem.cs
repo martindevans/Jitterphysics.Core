@@ -17,15 +17,12 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
-using System;
 using System.Collections.Generic;
 
 using Jitter.Dynamics;
 using Jitter.LinearMath;
 using Jitter.Collision.Shapes;
 using System.Diagnostics;
-#endregion
 
 namespace Jitter.Collision
 {
@@ -90,31 +87,6 @@ namespace Jitter.Collision
     /// </summary>
     public abstract class CollisionSystem
     {
-
-        /// <summary>
-        /// Helper class which holds two bodies. Mostly used
-        /// for multithreaded detection. (Passing this as
-        /// the object parameter to ThreadManager.Instance.AddTask)
-        /// </summary>
-        #region protected class BroadphasePair
-        protected class BroadphasePair
-        {
-            /// <summary>
-            /// The first body.
-            /// </summary>
-            public IBroadphaseEntity Entity1;
-            /// <summary>
-            /// The second body.
-            /// </summary>
-            public IBroadphaseEntity Entity2;
-
-            /// <summary>
-            /// A resource pool of Pairs.
-            /// </summary>
-            public static ResourcePool<BroadphasePair> Pool = new ResourcePool<BroadphasePair>();
-        }
-        #endregion
-
         /// <summary>
         /// Remove a body from the collision system. Removing a body from the world
         /// does automatically remove it from the collision system.
@@ -140,11 +112,9 @@ namespace Jitter.Collision
         /// </summary>
         public event CollisionDetectedHandler CollisionDetected;
 
-        protected ThreadManager threadManager = ThreadManager.Instance;
-
-        private bool speculativeContacts = false;
-        public bool EnableSpeculativeContacts { get { return speculativeContacts; }
-            set { speculativeContacts = value; }
+        private bool speculativeContacts;
+        public bool EnableSpeculativeContacts { get => speculativeContacts;
+            set => speculativeContacts = value;
         }
 
         /// <summary>
@@ -154,7 +124,6 @@ namespace Jitter.Collision
         {
         }
 
-        internal bool useTerrainNormal = true;
         internal bool useTriangleMeshNormal = true;
 
         /// <summary>
@@ -162,27 +131,21 @@ namespace Jitter.Collision
         /// the current colliding triangle as collision normal. This
         /// fixes unwanted behavior on triangle transitions.
         /// </summary>
-        public bool UseTriangleMeshNormal { get { return useTriangleMeshNormal; } set { useTriangleMeshNormal = value; } }
+        public bool UseTriangleMeshNormal { get => useTriangleMeshNormal;
+            set => useTriangleMeshNormal = value;
+        }
         
-                /// <summary>
-        /// If set to true the collision system uses the normal of
-        /// the current colliding triangle as collision normal. This
-        /// fixes unwanted behavior on triangle transitions.
-        /// </summary>
-        public bool UseTerrainNormal { get { return useTerrainNormal; } set { useTerrainNormal = value; } }
-
         /// <summary>
         /// Checks two bodies for collisions using narrowphase.
         /// </summary>
         /// <param name="body1">The first body.</param>
         /// <param name="body2">The second body.</param>
-        #region public virtual void Detect(IBroadphaseEntity body1, IBroadphaseEntity body2)
         public virtual void Detect(IBroadphaseEntity entity1, IBroadphaseEntity entity2)
         {
             Debug.Assert(entity1 != entity2, "CollisionSystem reports selfcollision. Something is wrong.");
 
-            RigidBody rigidBody1 = entity1 as RigidBody;
-            RigidBody rigidBody2 = entity2 as RigidBody;
+            var rigidBody1 = entity1 as RigidBody;
+            var rigidBody2 = entity2 as RigidBody;
 
             if (rigidBody1 != null)
             { 
@@ -191,73 +154,18 @@ namespace Jitter.Collision
                     // most common
                     DetectRigidRigid(rigidBody1, rigidBody2);
                 }
-                else
-                {
-                    SoftBody softBody2 = entity2 as SoftBody;
-                    if(softBody2 != null) DetectSoftRigid(rigidBody1,softBody2);
-                }
-            }
-            else
-            {
-                SoftBody softBody1 = entity1 as SoftBody;
-
-                if(rigidBody2 != null)
-                {
-                    if(softBody1 != null) DetectSoftRigid(rigidBody2,softBody1);
-                }
-                else
-                {
-                    // less common
-                    SoftBody softBody2 = entity2 as SoftBody;
-                    if(softBody1 != null && softBody2 != null) DetectSoftSoft(softBody1,softBody2);
-                }
             }
         }
 
         private ResourcePool<List<int>> potentialTriangleLists = new ResourcePool<List<int>>();
 
-        private void DetectSoftSoft(SoftBody body1, SoftBody body2)
-        {
-            List<int> my = potentialTriangleLists.GetNew();
-            List<int> other = potentialTriangleLists.GetNew();
-
-            body1.dynamicTree.Query(other, my, body2.dynamicTree);
-
-            for (int i = 0; i < other.Count; i++)
-            {
-                SoftBody.Triangle myTriangle = body1.dynamicTree.GetUserData(my[i]);
-                SoftBody.Triangle otherTriangle = body2.dynamicTree.GetUserData(other[i]);
-
-                JVector point, normal;
-                float penetration;
-                bool result;
-
-                result = XenoCollide.Detect(myTriangle, otherTriangle, ref JMatrix.InternalIdentity, ref JMatrix.InternalIdentity,
-                    ref JVector.InternalZero, ref JVector.InternalZero, out point, out normal, out penetration);
-
-                if (result)
-                {
-                    int minIndexMy = FindNearestTrianglePoint(body1, my[i], ref point);
-                    int minIndexOther = FindNearestTrianglePoint(body2, other[i], ref point);
-
-
-                    RaiseCollisionDetected(body1.VertexBodies[minIndexMy],
-                        body2.VertexBodies[minIndexOther], ref point, ref point, ref normal, penetration);
-                }
-            }
-
-            my.Clear(); other.Clear();
-            potentialTriangleLists.GiveBack(my);
-            potentialTriangleLists.GiveBack(other);
-        }
-
         private void DetectRigidRigid(RigidBody body1, RigidBody body2)
         {
-            bool b1IsMulti = (body1.Shape is Multishape);
-            bool b2IsMulti = (body2.Shape is Multishape);
+            var b1IsMulti = body1.Shape is Multishape;
+            var b2IsMulti = body2.Shape is Multishape;
 
-            bool speculative = speculativeContacts ||
-                (body1.EnableSpeculativeContacts || body2.EnableSpeculativeContacts);
+            var speculative = speculativeContacts ||
+                              body1.EnableSpeculativeContacts || body2.EnableSpeculativeContacts;
 
             JVector point, normal;
             float penetration;
@@ -268,18 +176,15 @@ namespace Jitter.Collision
                     ref body2.orientation, ref body1.position, ref body2.position,
                     out point, out normal, out penetration))
                 {
-                    JVector point1, point2;
-                    FindSupportPoints(body1, body2, body1.Shape, body2.Shape, ref point, ref normal, out point1, out point2);
+                    FindSupportPoints(body1, body2, body1.Shape, body2.Shape, ref point, ref normal, out var point1, out var point2);
                     RaiseCollisionDetected(body1, body2, ref point1, ref point2, ref normal, penetration);
                 }
                 else if (speculative)
                 {
-                    JVector hit1, hit2;
-
                     if (GJKCollide.ClosestPoints(body1.Shape, body2.Shape, ref body1.orientation, ref body2.orientation,
-                        ref body1.position, ref body2.position, out hit1, out hit2, out normal))
+                            ref body1.position, ref body2.position, out var hit1, out var hit2, out normal))
                     {
-                        JVector delta = hit2 - hit1;
+                        var delta = hit2 - hit1;
 
                         if (delta.LengthSquared() < (body1.sweptDirection - body2.sweptDirection).LengthSquared())
                         {
@@ -297,21 +202,21 @@ namespace Jitter.Collision
             }
             else if (b1IsMulti && b2IsMulti)
             {
-                Multishape ms1 = (body1.Shape as Multishape);
-                Multishape ms2 = (body2.Shape as Multishape);
+                var ms1 = body1.Shape as Multishape;
+                var ms2 = body2.Shape as Multishape;
 
                 ms1 = ms1.RequestWorkingClone();
                 ms2 = ms2.RequestWorkingClone();
 
-                JBBox transformedBoundingBox = body2.boundingBox;
+                var transformedBoundingBox = body2.boundingBox;
                 transformedBoundingBox.InverseTransform(ref body1.position, ref body1.orientation);
 
-                int ms1Length = ms1.Prepare(ref transformedBoundingBox);
+                var ms1Length = ms1.Prepare(ref transformedBoundingBox);
 
                 transformedBoundingBox = body1.boundingBox;
                 transformedBoundingBox.InverseTransform(ref body2.position, ref body2.orientation);
 
-                int ms2Length = ms2.Prepare(ref transformedBoundingBox);
+                var ms2Length = ms2.Prepare(ref transformedBoundingBox);
 
                 if (ms1Length == 0 || ms2Length == 0)
                 {
@@ -320,11 +225,11 @@ namespace Jitter.Collision
                     return;
                 }
 
-                for (int i = 0; i < ms1Length; i++)
+                for (var i = 0; i < ms1Length; i++)
                 {
                     ms1.SetCurrentShape(i);
 
-                    for (int e = 0; e < ms2Length; e++)
+                    for (var e = 0; e < ms2Length; e++)
                     {
                         ms2.SetCurrentShape(e);
 
@@ -332,18 +237,15 @@ namespace Jitter.Collision
                             ref body2.orientation, ref body1.position, ref body2.position,
                             out point, out normal, out penetration))
                         {
-                            JVector point1, point2;
-                            FindSupportPoints(body1, body2, ms1, ms2, ref point, ref normal, out point1, out point2);
+                            FindSupportPoints(body1, body2, ms1, ms2, ref point, ref normal, out var point1, out var point2);
                             RaiseCollisionDetected(body1, body2, ref point1, ref point2, ref normal, penetration);
                         }
                         else if (speculative)
                         {
-                            JVector hit1, hit2;
-
                             if (GJKCollide.ClosestPoints(ms1, ms2, ref body1.orientation, ref body2.orientation,
-                                ref body1.position, ref body2.position, out hit1, out hit2, out normal))
+                                    ref body1.position, ref body2.position, out var hit1, out var hit2, out normal))
                             {
-                                JVector delta = hit2 - hit1;
+                                var delta = hit2 - hit1;
 
                                 if (delta.LengthSquared() < (body1.sweptDirection - body2.sweptDirection).LengthSquared())
                                 {
@@ -372,14 +274,14 @@ namespace Jitter.Collision
                 if (body2.Shape is Multishape) { b1 = body2; b2 = body1; }
                 else { b2 = body2; b1 = body1; }
 
-                Multishape ms = (b1.Shape as Multishape);
+                var ms = b1.Shape as Multishape;
 
                 ms = ms.RequestWorkingClone();
 
-                JBBox transformedBoundingBox = b2.boundingBox;
+                var transformedBoundingBox = b2.boundingBox;
                 transformedBoundingBox.InverseTransform(ref b1.position, ref b1.orientation);
 
-                int msLength = ms.Prepare(ref transformedBoundingBox);
+                var msLength = ms.Prepare(ref transformedBoundingBox);
 
                 if (msLength == 0)
                 {
@@ -387,7 +289,7 @@ namespace Jitter.Collision
                     return;
                 }
 
-                for (int i = 0; i < msLength; i++)
+                for (var i = 0; i < msLength; i++)
                 {
                     ms.SetCurrentShape(i);
 
@@ -395,15 +297,9 @@ namespace Jitter.Collision
                         ref b2.orientation, ref b1.position, ref b2.position,
                         out point, out normal, out penetration))
                     {
-                        JVector point1, point2;
-                        FindSupportPoints(b1, b2, ms, b2.Shape, ref point, ref normal, out point1, out point2);
+                        FindSupportPoints(b1, b2, ms, b2.Shape, ref point, ref normal, out var point1, out var point2);
 
-                        if (useTerrainNormal && ms is TerrainShape)
-                        {
-                            (ms as TerrainShape).CollisionNormal(out normal);
-                            JVector.Transform(ref normal, ref b1.orientation, out normal);
-                        }
-                        else if (useTriangleMeshNormal && ms is TriangleMeshShape)
+                        if (useTriangleMeshNormal && ms is TriangleMeshShape)
                         {
                             (ms as TriangleMeshShape).CollisionNormal(out normal);
                             JVector.Transform(ref normal, ref b1.orientation, out normal);
@@ -413,12 +309,10 @@ namespace Jitter.Collision
                     }
                     else if (speculative)
                     {
-                        JVector hit1, hit2;
-
                         if (GJKCollide.ClosestPoints(ms, b2.Shape, ref b1.orientation, ref b2.orientation,
-                            ref b1.position, ref b2.position, out hit1, out hit2, out normal))
+                                ref b1.position, ref b2.position, out var hit1, out var hit2, out normal))
                         {
-                            JVector delta = hit2 - hit1;
+                            var delta = hit2 - hit1;
 
                             if (delta.LengthSquared() < (body1.sweptDirection - body2.sweptDirection).LengthSquared())
                             {
@@ -437,133 +331,26 @@ namespace Jitter.Collision
             }
         }
 
-        private void DetectSoftRigid(RigidBody rigidBody, SoftBody softBody)
-        {
-            if (rigidBody.Shape is Multishape)
-            {
-                Multishape ms = (rigidBody.Shape as Multishape);
-                ms = ms.RequestWorkingClone();
-
-                JBBox transformedBoundingBox = softBody.BoundingBox;
-                transformedBoundingBox.InverseTransform(ref rigidBody.position, ref rigidBody.orientation);
-
-                int msLength = ms.Prepare(ref transformedBoundingBox);
-
-                List<int> detected = potentialTriangleLists.GetNew();
-                softBody.dynamicTree.Query(detected, ref rigidBody.boundingBox);
-
-                foreach (int i in detected)
-                {
-                    SoftBody.Triangle t = softBody.dynamicTree.GetUserData(i);
-
-                    JVector point, normal;
-                    float penetration;
-                    bool result;
-
-                    for (int e = 0; e < msLength; e++)
-                    {
-                        ms.SetCurrentShape(e);
-
-                        result = XenoCollide.Detect(ms, t, ref rigidBody.orientation, ref JMatrix.InternalIdentity,
-                            ref rigidBody.position, ref JVector.InternalZero, out point, out normal, out penetration);
-
-                        if (result)
-                        {
-                            int minIndex = FindNearestTrianglePoint(softBody, i, ref point);
-
-                            RaiseCollisionDetected(rigidBody,
-                                softBody.VertexBodies[minIndex], ref point, ref point, ref normal, penetration);
-                        }
-                    }
-
-                }
-
-                detected.Clear(); potentialTriangleLists.GiveBack(detected);
-                ms.ReturnWorkingClone();      
-            }
-            else
-            {
-                List<int> detected = potentialTriangleLists.GetNew();
-                softBody.dynamicTree.Query(detected, ref rigidBody.boundingBox);
-
-                foreach (int i in detected)
-                {
-                    SoftBody.Triangle t = softBody.dynamicTree.GetUserData(i);
-
-                    JVector point, normal;
-                    float penetration;
-                    bool result;
-
-                    result = XenoCollide.Detect(rigidBody.Shape, t, ref rigidBody.orientation, ref JMatrix.InternalIdentity,
-                        ref rigidBody.position, ref JVector.InternalZero, out point, out normal, out penetration);
-
-                    if (result)
-                    {
-                        int minIndex = FindNearestTrianglePoint(softBody, i, ref point);
-
-                        RaiseCollisionDetected(rigidBody,
-                            softBody.VertexBodies[minIndex], ref point, ref point, ref normal, penetration);
-                    }
-                }
-
-                detected.Clear();
-                potentialTriangleLists.GiveBack(detected);
-            }
-        }
-
-        public static int FindNearestTrianglePoint(SoftBody sb, int id, ref JVector point)
-        {
-            SoftBody.Triangle triangle = sb.dynamicTree.GetUserData(id);
-            JVector p;
-
-            p = sb.VertexBodies[triangle.indices.I0].position;
-            JVector.Subtract(ref p, ref point, out p);
-
-            float length0 = p.LengthSquared();
-
-            p = sb.VertexBodies[triangle.indices.I1].position;
-            JVector.Subtract(ref p, ref point, out p);
-
-            float length1 = p.LengthSquared();
-
-            p = sb.VertexBodies[triangle.indices.I2].position;
-            JVector.Subtract(ref p, ref point, out p);
-
-            float length2 = p.LengthSquared();
-
-            if (length0 < length1)
-            {
-                if (length0 < length2) return triangle.indices.I0;
-                else return triangle.indices.I2;
-            }
-            else
-            {
-                if (length1 < length2) return triangle.indices.I1;
-                else return triangle.indices.I2;
-            }
-        }
-
-
         private void FindSupportPoints(RigidBody body1, RigidBody body2,
             Shape shape1, Shape shape2, ref JVector point, ref JVector normal,
             out JVector point1, out JVector point2)
         {
-            JVector mn; JVector.Negate(ref normal, out mn);
+            JVector.Negate(ref normal, out var mn);
 
-            JVector sA; SupportMapping(body1, shape1, ref mn, out sA);
-            JVector sB; SupportMapping(body2, shape2, ref normal, out sB);
+            SupportMapping(body1, shape1, ref mn, out var sA);
+            SupportMapping(body2, shape2, ref normal, out var sB);
 
-            JVector.Subtract(ref sA, ref point, out sA);
-            JVector.Subtract(ref sB, ref point, out sB);
+            sA = JVector.Subtract(sA, point);
+            sB = JVector.Subtract(sB, point);
 
-            float dot1 = JVector.Dot(ref sA, ref normal);
-            float dot2 = JVector.Dot(ref sB, ref normal);
+            var dot1 = JVector.Dot(sA, normal);
+            var dot2 = JVector.Dot(sB, normal);
 
-            JVector.Multiply(ref normal, dot1, out sA);
-            JVector.Multiply(ref normal, dot2, out sB);
+            sA = JVector.Multiply(normal, dot1);
+            sB = JVector.Multiply(normal, dot2);
 
-            JVector.Add(ref point, ref sA, out point1);
-            JVector.Add(ref point, ref sB, out point2);
+            point1 = JVector.Add(point, sA);
+            point2 = JVector.Add(point, sB);
         }
 
         private void SupportMapping(RigidBody body, Shape workingShape, ref JVector direction, out JVector result)
@@ -571,10 +358,8 @@ namespace Jitter.Collision
             JVector.Transform(ref direction, ref body.invOrientation, out result);
             workingShape.SupportMapping(ref result, out result);
             JVector.Transform(ref result, ref body.orientation, out result);
-            JVector.Add(ref result, ref body.position, out result);
+            result = JVector.Add(result, body.position);
         }
-
-        #endregion
 
         /// <summary>
         /// Sends a ray (definied by start and direction) through the scene (all bodies added).
@@ -600,7 +385,7 @@ namespace Jitter.Collision
         /// <returns>Returns true if both are static or inactive.</returns>
         public bool CheckBothStaticOrInactive(IBroadphaseEntity entity1, IBroadphaseEntity entity2)
         {
-            return (entity1.IsStaticOrInactive && entity2.IsStaticOrInactive);
+            return entity1.IsStaticOrInactive && entity2.IsStaticOrInactive;
        }
 
         /// <summary>
@@ -611,12 +396,12 @@ namespace Jitter.Collision
         /// <returns>Returns true if an intersection occours.</returns>
         public bool CheckBoundingBoxes(IBroadphaseEntity entity1, IBroadphaseEntity entity2)
         {
-            JBBox box1 = entity1.BoundingBox;
-            JBBox box2 = entity2.BoundingBox;
+            var box1 = entity1.BoundingBox;
+            var box2 = entity2.BoundingBox;
 
-            return ((((box1.Max.Z >= box2.Min.Z) && (box1.Min.Z <= box2.Max.Z)) &&
-                ((box1.Max.Y >= box2.Min.Y) && (box1.Min.Y <= box2.Max.Y))) &&
-                ((box1.Max.X >= box2.Min.X) && (box1.Min.X <= box2.Max.X)));
+            return box1.Max.Z >= box2.Min.Z && box1.Min.Z <= box2.Max.Z &&
+                   box1.Max.Y >= box2.Min.Y && box1.Min.Y <= box2.Max.Y &&
+                   box1.Max.X >= box2.Min.X && box1.Min.X <= box2.Max.X;
         }
 
         /// <summary>
@@ -628,8 +413,8 @@ namespace Jitter.Collision
         /// should be dropped</returns>
         public bool RaisePassedBroadphase(IBroadphaseEntity entity1, IBroadphaseEntity entity2)
         {
-            if (this.PassedBroadphase != null)
-                return this.PassedBroadphase(entity1, entity2);
+            if (PassedBroadphase != null)
+                return PassedBroadphase(entity1, entity2);
 
             // allow this detection by default
             return true;
@@ -648,8 +433,8 @@ namespace Jitter.Collision
                                             ref JVector point1, ref JVector point2,
                                             ref JVector normal, float penetration)
         {
-            if (this.CollisionDetected != null)
-                this.CollisionDetected(body1, body2, point1, point2, normal, penetration);
+            if (CollisionDetected != null)
+                CollisionDetected(body1, body2, point1, point2, normal, penetration);
         }
 
         /// <summary>
@@ -657,6 +442,6 @@ namespace Jitter.Collision
         /// and <see cref="CollisionDetected"/> events to get the results.
         /// </summary>
         /// <param name="multiThreaded">If true internal multithreading is used.</param>
-        public abstract void Detect(bool multiThreaded);
+        public abstract void Detect();
     }
 }

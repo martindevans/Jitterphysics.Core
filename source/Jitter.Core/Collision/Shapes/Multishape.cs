@@ -17,15 +17,9 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-
-using Jitter.Dynamics;
 using Jitter.LinearMath;
-using Jitter.Collision.Shapes;
-#endregion
 
 namespace Jitter.Collision.Shapes
 {
@@ -63,15 +57,15 @@ namespace Jitter.Collision.Shapes
 
         protected abstract Multishape CreateWorkingClone();
 
-        internal bool isClone = false;
+        internal bool isClone;
 
-        public bool IsClone { get{ return isClone;} }
+        public bool IsClone => isClone;
 
         Stack<Multishape> workingCloneStack = new Stack<Multishape>();
         public Multishape RequestWorkingClone()
         {
-            Debug.Assert(this.workingCloneStack.Count<10, "Unusual size of the workingCloneStack. Forgot to call ReturnWorkingClone?");
-            Debug.Assert(!this.isClone, "Can't clone clones! Something wrong here!");
+            Debug.Assert(workingCloneStack.Count<10, "Unusual size of the workingCloneStack. Forgot to call ReturnWorkingClone?");
+            Debug.Assert(!isClone, "Can't clone clones! Something wrong here!");
 
             Multishape multiShape;
 
@@ -79,8 +73,8 @@ namespace Jitter.Collision.Shapes
             {
                 if (workingCloneStack.Count == 0)
                 {
-                    multiShape = this.CreateWorkingClone();
-                    multiShape.workingCloneStack = this.workingCloneStack;
+                    multiShape = CreateWorkingClone();
+                    multiShape.workingCloneStack = workingCloneStack;
                     workingCloneStack.Push(multiShape);
                 }
                 multiShape = workingCloneStack.Pop();
@@ -98,7 +92,7 @@ namespace Jitter.Collision.Shapes
 
         public void ReturnWorkingClone()
         {
-            Debug.Assert(this.isClone, "Only clones can be returned!");
+            Debug.Assert(isClone, "Only clones can be returned!");
             lock (workingCloneStack) { workingCloneStack.Push(this); }
         }
 
@@ -110,14 +104,14 @@ namespace Jitter.Collision.Shapes
         /// <param name="box">The axis aligned bounding box of the shape.</param>
         public override void GetBoundingBox(ref JMatrix orientation, out JBBox box)
         {
-            JBBox helpBox = JBBox.LargeBox;
-            int length = this.Prepare(ref helpBox);
+            var helpBox = JBBox.LargeBox;
+            var length = Prepare(ref helpBox);
 
             box = JBBox.SmallBox;
 
-            for (int i = 0; i < length; i++)
+            for (var i = 0; i < length; i++)
             {
-                this.SetCurrentShape(i);
+                SetCurrentShape(i);
                 base.GetBoundingBox(ref orientation, out helpBox);
                 JBBox.CreateMerged(ref box, ref helpBox, out box);
             }
@@ -139,13 +133,13 @@ namespace Jitter.Collision.Shapes
             // TODO: calc this right
             inertia = JMatrix.Identity;
 
-            JVector size; JVector.Subtract(ref boundingBox.Max, ref boundingBox.Min, out size);
+            var size = JVector.Subtract(boundingBox.Max, boundingBox.Min);
 
             mass = size.X * size.Y * size.Z;
 
-            inertia.M11 = (1.0f / 12.0f) * mass * (size.Y * size.Y + size.Z * size.Z);
-            inertia.M22 = (1.0f / 12.0f) * mass * (size.X * size.X + size.Z * size.Z);
-            inertia.M33 = (1.0f / 12.0f) * mass * (size.X * size.X + size.Y * size.Y);
+            inertia.M11 = 1.0f / 12.0f * mass * (size.Y * size.Y + size.Z * size.Z);
+            inertia.M22 = 1.0f / 12.0f * mass * (size.X * size.X + size.Z * size.Z);
+            inertia.M33 = 1.0f / 12.0f * mass * (size.X * size.X + size.Y * size.Y);
         }
 
     }

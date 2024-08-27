@@ -17,14 +17,8 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
 using System;
-using System.Collections.Generic;
-
-using Jitter.Dynamics;
 using Jitter.LinearMath;
-using Jitter.Collision.Shapes;
-#endregion
 
 namespace Jitter.Collision.Shapes
 {
@@ -39,12 +33,14 @@ namespace Jitter.Collision.Shapes
         /// <summary>
         /// Sets the height of the cylinder.
         /// </summary>
-        public float Height { get { return height; } set { height = value; UpdateShape(); } }
+        public float Height { get => height;
+            set { height = value; UpdateShape(); } }
 
         /// <summary>
         /// Sets the radius of the cylinder.
         /// </summary>
-        public float Radius { get { return radius; } set { radius = value; UpdateShape(); } }
+        public float Radius { get => radius;
+            set { radius = value; UpdateShape(); } }
 
         /// <summary>
         /// Initializes a new instance of the CylinderShape class.
@@ -63,10 +59,10 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         public override void CalculateMassInertia()
         {
-            this.mass = JMath.Pi * radius * radius * height;
-            this.inertia.M11 = (1.0f / 4.0f) * mass * radius * radius + (1.0f / 12.0f) * mass * height * height;
-            this.inertia.M22 = (1.0f / 2.0f) * mass * radius * radius;
-            this.inertia.M33 = (1.0f / 4.0f) * mass * radius * radius + (1.0f / 12.0f) * mass * height * height;
+            mass = MathF.PI * radius * radius * height;
+            inertia.M11 = 1.0f / 4.0f * mass * radius * radius + 1.0f / 12.0f * mass * height * height;
+            inertia.M22 = 1.0f / 2.0f * mass * radius * radius;
+            inertia.M33 = 1.0f / 4.0f * mass * radius * radius + 1.0f / 12.0f * mass * height * height;
         }
 
         /// <summary>
@@ -78,18 +74,18 @@ namespace Jitter.Collision.Shapes
         /// <param name="result">The result.</param>
         public override void SupportMapping(ref JVector direction, out JVector result)
         {
-            float sigma = (float)Math.Sqrt((float)(direction.X * direction.X + direction.Z * direction.Z));
+            var sigma = (float)Math.Sqrt(direction.X * direction.X + direction.Z * direction.Z);
 
             if (sigma > 0.0f)
             {
                 result.X = direction.X / sigma * radius;
-                result.Y = (float)Math.Sign(direction.Y) * height * 0.5f;
+                result.Y = Math.Sign(direction.Y) * height * 0.5f;
                 result.Z = direction.Z / sigma * radius;
             }
             else
             {
                 result.X = 0.0f;
-                result.Y = (float)Math.Sign(direction.Y) * height * 0.5f;
+                result.Y = Math.Sign(direction.Y) * height * 0.5f;
                 result.Z = 0.0f;
             }
         }

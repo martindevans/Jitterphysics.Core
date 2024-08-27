@@ -17,14 +17,11 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
 using System;
 using System.Collections.Generic;
-
 using Jitter.Dynamics;
 using Jitter.LinearMath;
 using Jitter.Collision.Shapes;
-#endregion
 
 namespace Jitter.Collision
 {
@@ -41,14 +38,14 @@ namespace Jitter.Collision
         {
             public int Compare(IBroadphaseEntity body1, IBroadphaseEntity body2)
             {
-                float f = body1.BoundingBox.Min.X - body2.BoundingBox.Min.X;
-                return (f < 0) ? -1 : (f > 0) ? 1 : 0;
+                var f = body1.BoundingBox.Min.X - body2.BoundingBox.Min.X;
+                return f < 0 ? -1 : f > 0 ? 1 : 0;
             }
         }
 
         private IBroadphaseEntityXCompare xComparer;
 
-        private bool swapOrder = false;
+        private bool swapOrder;
 
         /// <summary>
         /// Creates a new instance of the CollisionSystemSAP class.
@@ -56,7 +53,6 @@ namespace Jitter.Collision
         public CollisionSystemSAP()
         {
             xComparer = new IBroadphaseEntityXCompare();
-            detectCallback = new Action<object>(DetectCallback);
         }
 
         /// <summary>
@@ -83,47 +79,35 @@ namespace Jitter.Collision
             bodyList.Add(body);
         }
 
-        Action<object> detectCallback;
-
         /// <summary>
         /// Tells the collisionsystem to check all bodies for collisions. Hook into the
         /// <see cref="CollisionSystem.PassedBroadphase"/>
         /// and <see cref="CollisionSystem.CollisionDetected"/> events to get the results.
         /// </summary>
-        /// <param name="multiThreaded">If true internal multithreading is used.</param>
-        public override void Detect(bool multiThreaded)
+        public override void Detect()
         {
             bodyList.Sort(xComparer);
 
             active.Clear();
 
-            if (multiThreaded)
             {
-                for (int i = 0; i < bodyList.Count; i++)
-                    AddToActiveMultithreaded(bodyList[i], false);
-
-                threadManager.Execute();
-            }
-            else
-            {
-                for (int i = 0; i < bodyList.Count; i++)
+                for (var i = 0; i < bodyList.Count; i++)
                     AddToActive(bodyList[i], false);
             }
         }
 
-        #region private void AddToActiveSingleThreaded(IBroadphaseEntity body, bool addToList)
         private void AddToActive(IBroadphaseEntity body, bool addToList)
         {
-            float xmin = body.BoundingBox.Min.X;
-            int n = active.Count;
+            var xmin = body.BoundingBox.Min.X;
+            var n = active.Count;
 
-            bool thisInactive = body.IsStaticOrInactive;
+            var thisInactive = body.IsStaticOrInactive;
 
             JBBox acBox, bodyBox;
 
-            for (int i = 0; i != n; )
+            for (var i = 0; i != n; )
             {
-                IBroadphaseEntity ac = active[i];
+                var ac = active[i];
                 acBox = ac.BoundingBox;
 
                 if (acBox.Max.X < xmin)
@@ -136,10 +120,10 @@ namespace Jitter.Collision
                     bodyBox = body.BoundingBox;
 
                     if (!(thisInactive && ac.IsStaticOrInactive) &&
-                        (((bodyBox.Max.Z >= acBox.Min.Z) && (bodyBox.Min.Z <= acBox.Max.Z)) &&
-                        ((bodyBox.Max.Y >= acBox.Min.Y) && (bodyBox.Min.Y <= acBox.Max.Y))))
+                        bodyBox.Max.Z >= acBox.Min.Z && bodyBox.Min.Z <= acBox.Max.Z &&
+                        bodyBox.Max.Y >= acBox.Min.Y && bodyBox.Min.Y <= acBox.Max.Y)
                     {
-                        if (base.RaisePassedBroadphase(ac, body))
+                        if (RaisePassedBroadphase(ac, body))
                         {
                             if (swapOrder) Detect(body, ac);
                             else Detect(ac, body);
@@ -153,69 +137,6 @@ namespace Jitter.Collision
 
             active.Add(body);
         }
-        #endregion
-
-        #region private void AddToActiveMultithreaded(IBroadphaseEntity body, bool addToList)
-        private void AddToActiveMultithreaded(IBroadphaseEntity body, bool addToList)
-        {
-            float xmin = body.BoundingBox.Min.X;
-            int n = active.Count;
-
-            bool thisInactive = body.IsStaticOrInactive;
-
-            JBBox acBox, bodyBox;
-
-
-            for (int i = 0; i != n; )
-            {
-                IBroadphaseEntity ac = active[i];
-                acBox = ac.BoundingBox;
-
-                if (acBox.Max.X < xmin)
-                {
-                    n--;
-                    active.RemoveAt(i);
-                }
-                else
-                {
-                    bodyBox = body.BoundingBox;
-
-                    if (!(thisInactive && ac.IsStaticOrInactive) &&
-                        (((bodyBox.Max.Z >= acBox.Min.Z) && (bodyBox.Min.Z <= acBox.Max.Z)) &&
-                        ((bodyBox.Max.Y >= acBox.Min.Y) && (bodyBox.Min.Y <= acBox.Max.Y))))
-                    {
-                        if (base.RaisePassedBroadphase(ac, body))
-                        {
-                            BroadphasePair pair = BroadphasePair.Pool.GetNew();
-
-                            if (swapOrder) { pair.Entity1 = body; pair.Entity2 = ac; }
-                            else { pair.Entity2 = body; pair.Entity1 = ac; }
-                            swapOrder = !swapOrder;
-
-                            threadManager.AddTask(detectCallback, pair);
-                        }
-                    }
-
-                    i++;
-                }
-            }
-
-            active.Add(body);
-        }
-        #endregion
-
-        private void DetectCallback(object obj)
-        {
-            BroadphasePair pair = obj as BroadphasePair;
-            base.Detect(pair.Entity1, pair.Entity2);
-            BroadphasePair.Pool.GiveBack(pair);
-        }
-
-        private int Compare(IBroadphaseEntity body1, IBroadphaseEntity body2)
-        {
-            float f = body1.BoundingBox.Min.X - body2.BoundingBox.Min.X;
-            return (f < 0) ? -1 : (f > 0) ? 1 : 0;
-        }
 
         /// <summary>
         /// Sends a ray (definied by start and direction) through the scene (all bodies added).
@@ -223,39 +144,19 @@ namespace Jitter.Collision
         /// against rays (rays are of infinite length). They are checked against segments
         /// which start at rayOrigin and end in rayOrigin + rayDirection.
         /// </summary>
-        #region public override bool Raycast(JVector rayOrigin, JVector rayDirection, out JVector normal,out float fraction)
         public override bool Raycast(JVector rayOrigin, JVector rayDirection, RaycastCallback raycast, out RigidBody body, out JVector normal, out float fraction)
         {
             body = null; normal = JVector.Zero; fraction = float.MaxValue;
 
-            JVector tempNormal; float tempFraction;
-            bool result = false;
+            var result = false;
 
             // TODO: This can be done better in CollisionSystemPersistenSAP
-            foreach (IBroadphaseEntity e in bodyList)
+            foreach (var e in bodyList)
             {
-                if (e is SoftBody)
                 {
-                    SoftBody softBody = e as SoftBody;
-                    foreach (RigidBody b in softBody.VertexBodies)
-                    {
-                        if (this.Raycast(b, rayOrigin, rayDirection, out tempNormal, out tempFraction))
-                        {
-                            if (tempFraction < fraction && (raycast == null || raycast(b, tempNormal, tempFraction)))
-                            {
-                                body = b;
-                                normal = tempNormal;
-                                fraction = tempFraction;
-                                result = true;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    RigidBody b = e as RigidBody;
+                    var b = e as RigidBody;
 
-                    if (this.Raycast(b, rayOrigin, rayDirection, out tempNormal, out tempFraction))
+                    if (Raycast(b, rayOrigin, rayDirection, out var tempNormal, out var tempFraction))
                     {
                         if (tempFraction < fraction && (raycast == null || raycast(b, tempNormal, tempFraction)))
                         {
@@ -270,7 +171,6 @@ namespace Jitter.Collision
 
             return result;
         }
-        #endregion
 
 
         /// <summary>
@@ -278,7 +178,6 @@ namespace Jitter.Collision
         /// against rays (rays are of infinite length). They are checked against segments
         /// which start at rayOrigin and end in rayOrigin + rayDirection.
         /// </summary>
-        #region public override bool Raycast(RigidBody body, JVector rayOrigin, JVector rayDirection, out JVector normal, out float fraction)
         public override bool Raycast(RigidBody body, JVector rayOrigin, JVector rayDirection, out JVector normal, out float fraction)
         {
             fraction = float.MaxValue; normal = JVector.Zero;
@@ -287,33 +186,26 @@ namespace Jitter.Collision
 
             if (body.Shape is Multishape)
             {
-                Multishape ms = (body.Shape as Multishape).RequestWorkingClone();
+                var ms = (body.Shape as Multishape).RequestWorkingClone();
 
-                JVector tempNormal; float tempFraction;
-                bool multiShapeCollides = false;
+                var multiShapeCollides = false;
 
-                JVector transformedOrigin; JVector.Subtract(ref rayOrigin, ref body.position, out transformedOrigin);
+                var transformedOrigin = JVector.Subtract(rayOrigin, body.position);
                 JVector.Transform(ref transformedOrigin, ref body.invOrientation, out transformedOrigin);
-                JVector transformedDirection; JVector.Transform(ref rayDirection, ref body.invOrientation, out transformedDirection);
+                JVector.Transform(ref rayDirection, ref body.invOrientation, out var transformedDirection);
 
-                int msLength = ms.Prepare(ref transformedOrigin, ref transformedDirection);
+                var msLength = ms.Prepare(ref transformedOrigin, ref transformedDirection);
 
-                for (int i = 0; i < msLength; i++)
+                for (var i = 0; i < msLength; i++)
                 {
                     ms.SetCurrentShape(i);
 
                     if (GJKCollide.Raycast(ms, ref body.orientation, ref body.invOrientation, ref body.position,
-                        ref rayOrigin, ref rayDirection, out tempFraction, out tempNormal))
+                        ref rayOrigin, ref rayDirection, out var tempFraction, out var tempNormal))
                     {
                         if (tempFraction < fraction)
                         {
-                            if (useTerrainNormal && ms is TerrainShape)
-                            {
-                                (ms as TerrainShape).CollisionNormal(out tempNormal);
-                                JVector.Transform(ref tempNormal, ref body.orientation, out tempNormal);
-                                tempNormal.Negate();
-                            }
-                            else if (useTriangleMeshNormal && ms is TriangleMeshShape)
+                            if (useTriangleMeshNormal && ms is TriangleMeshShape)
                             {
                                 (ms as TriangleMeshShape).CollisionNormal(out tempNormal);
                                 JVector.Transform(ref tempNormal, ref body.orientation, out tempNormal);
@@ -332,13 +224,11 @@ namespace Jitter.Collision
             }
             else
             {
-                return (GJKCollide.Raycast(body.Shape, ref body.orientation, ref body.invOrientation, ref body.position,
-                    ref rayOrigin, ref rayDirection, out fraction, out normal));
+                return GJKCollide.Raycast(body.Shape, ref body.orientation, ref body.invOrientation, ref body.position,
+                    ref rayOrigin, ref rayDirection, out fraction, out normal);
             }
 
 
         }
-        #endregion
-
     }
 }

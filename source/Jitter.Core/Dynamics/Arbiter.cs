@@ -17,15 +17,9 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
-using System;
 using System.Collections.Generic;
-
-using Jitter.Dynamics;
 using Jitter.LinearMath;
-using Jitter.Collision.Shapes;
 using System.Diagnostics;
-#endregion
 
 namespace Jitter.Dynamics
 {
@@ -42,8 +36,6 @@ namespace Jitter.Dynamics
 
         public ContactList() : base(4) { }
 
-
-        #region TODO: Write an implementation which only has 4 elements.
 
         //Contact[] contacts = new Contact[4];
         //int count = 0;
@@ -89,7 +81,6 @@ namespace Jitter.Dynamics
         //{
         //    count = 0;
         //}
-        #endregion
     }
 
     /// <summary>
@@ -104,17 +95,17 @@ namespace Jitter.Dynamics
         /// <summary>
         /// The first body.
         /// </summary>
-        public RigidBody Body1 { get { return body1; } }
+        public RigidBody Body1 => body1;
 
         /// <summary>
         /// The second body.
         /// </summary>
-        public RigidBody Body2 { get { return body2; } }
+        public RigidBody Body2 => body2;
 
         /// <summary>
         /// The contact list containing all contacts of both bodies.
         /// </summary>
-        public ContactList ContactList { get { return contactList; } }
+        public ContactList ContactList => contactList;
 
         /// <summary>
         /// </summary>
@@ -130,7 +121,7 @@ namespace Jitter.Dynamics
         /// <param name="body2"></param>
         public Arbiter(RigidBody body1, RigidBody body2)
         {
-            this.contactList = new ContactList();
+            contactList = new ContactList();
             this.body1 = body1;
             this.body2 = body2;
         }
@@ -140,7 +131,7 @@ namespace Jitter.Dynamics
         /// </summary>
         public Arbiter()
         {
-            this.contactList = new ContactList();
+            contactList = new ContactList();
         }
 
         /// <summary>
@@ -165,14 +156,13 @@ namespace Jitter.Dynamics
         public Contact AddContact(JVector point1, JVector point2, JVector normal, float penetration, 
             ContactSettings contactSettings)
         {
-            JVector relPos1;
-            JVector.Subtract(ref point1, ref body1.position, out relPos1);
+            var relPos1 = JVector.Subtract(point1, body1.position);
 
             int index;
 
             lock (contactList)
             {
-                if (this.contactList.Count == 4)
+                if (contactList.Count == 4)
                 {
                     index = SortCachedPoints(ref relPos1, penetration);
                     ReplaceContact(ref point1, ref point2, ref normal, penetration, index, contactSettings);
@@ -188,7 +178,7 @@ namespace Jitter.Dynamics
                 }
                 else
                 {
-                    Contact contact = Contact.Pool.GetNew();
+                    var contact = Contact.Pool.GetNew();
                     contact.Initialize(body1, body2, ref point1, ref point2, ref normal, penetration, true, contactSettings);
                     contactList.Add(contact);
                     return contact;
@@ -199,7 +189,7 @@ namespace Jitter.Dynamics
         private void ReplaceContact(ref JVector point1, ref JVector point2, ref JVector n, float p, int index,
             ContactSettings contactSettings)
         {
-            Contact contact = contactList[index];
+            var contact = contactList[index];
 
             Debug.Assert(body1 == contact.body1, "Body1 and Body2 not consistent.");
 
@@ -209,13 +199,13 @@ namespace Jitter.Dynamics
 
         private int GetCacheEntry(ref JVector realRelPos1, float contactBreakThreshold)
         {
-            float shortestDist = contactBreakThreshold * contactBreakThreshold;
-            int size = contactList.Count;
-            int nearestPoint = -1;
-            for (int i = 0; i < size; i++)
+            var shortestDist = contactBreakThreshold * contactBreakThreshold;
+            var size = contactList.Count;
+            var nearestPoint = -1;
+            for (var i = 0; i < size; i++)
             {
-                JVector diffA; JVector.Subtract(ref contactList[i].relativePos1,ref realRelPos1,out diffA);
-                float distToManiPoint = diffA.LengthSquared();
+                var diffA = JVector.Subtract(contactList[i].relativePos1, realRelPos1);
+                var distToManiPoint = diffA.LengthSquared();
                 if (distToManiPoint < shortestDist)
                 {
                     shortestDist = distToManiPoint;
@@ -231,9 +221,9 @@ namespace Jitter.Dynamics
             //calculate 4 possible cases areas, and take biggest area
             //also need to keep 'deepest'
 
-            int maxPenetrationIndex = -1;
-            float maxPenetration = pen;
-            for (int i = 0; i < 4; i++)
+            var maxPenetrationIndex = -1;
+            var maxPenetration = pen;
+            for (var i = 0; i < 4; i++)
             {
                 if (contactList[i].penetration > maxPenetration)
                 {
@@ -245,43 +235,43 @@ namespace Jitter.Dynamics
             float res0 = 0, res1 = 0, res2 = 0, res3 = 0;
             if (maxPenetrationIndex != 0)
             {
-                JVector a0; JVector.Subtract(ref realRelPos1,ref contactList[1].relativePos1,out a0);
-                JVector b0; JVector.Subtract(ref contactList[3].relativePos1, ref contactList[2].relativePos1, out b0);
-                JVector cross; JVector.Cross(ref a0, ref b0, out cross);
+                var a0 = JVector.Subtract(realRelPos1, contactList[1].relativePos1);
+                var b0 = JVector.Subtract(contactList[3].relativePos1, contactList[2].relativePos1);
+                var cross = JVector.Cross(a0, b0);
                 res0 = cross.LengthSquared();
             }
             if (maxPenetrationIndex != 1)
             {
-                JVector a0; JVector.Subtract(ref realRelPos1, ref contactList[0].relativePos1, out a0);
-                JVector b0; JVector.Subtract(ref contactList[3].relativePos1, ref contactList[2].relativePos1, out b0);
-                JVector cross; JVector.Cross(ref a0, ref b0, out cross);
+                var a0 = JVector.Subtract(realRelPos1, contactList[0].relativePos1);
+                var b0 = JVector.Subtract(contactList[3].relativePos1, contactList[2].relativePos1);
+                var cross = JVector.Cross(a0, b0);
                 res1 = cross.LengthSquared();
             }
 
             if (maxPenetrationIndex != 2)
             {
-                JVector a0; JVector.Subtract(ref realRelPos1, ref contactList[0].relativePos1, out a0);
-                JVector b0; JVector.Subtract(ref contactList[3].relativePos1, ref contactList[1].relativePos1, out b0);
-                JVector cross; JVector.Cross(ref a0, ref b0, out cross);
+                var a0 = JVector.Subtract(realRelPos1, contactList[0].relativePos1);
+                var b0 = JVector.Subtract(contactList[3].relativePos1, contactList[1].relativePos1);
+                var cross = JVector.Cross(a0, b0);
                 res2 = cross.LengthSquared();
             }
 
             if (maxPenetrationIndex != 3)
             {
-                JVector a0; JVector.Subtract(ref realRelPos1, ref contactList[0].relativePos1, out a0);
-                JVector b0; JVector.Subtract(ref contactList[2].relativePos1, ref contactList[1].relativePos1, out b0);
-                JVector cross; JVector.Cross(ref a0, ref b0, out cross);
+                var a0 = JVector.Subtract(realRelPos1, contactList[0].relativePos1);
+                var b0 = JVector.Subtract(contactList[2].relativePos1, contactList[1].relativePos1);
+                var cross = JVector.Cross(a0, b0);
                 res3 = cross.LengthSquared();
             }
 
-            int biggestarea = MaxAxis(res0, res1, res2, res3);
+            var biggestarea = MaxAxis(res0, res1, res2, res3);
             return biggestarea;
         }
 
         internal static int MaxAxis(float x, float y, float z, float w)
         {
-            int maxIndex = -1;
-            float maxVal = float.MinValue;
+            var maxIndex = -1;
+            var maxVal = float.MinValue;
 
             if (x > maxVal) { maxIndex = 0; maxVal = x; }
             if (y > maxVal) { maxIndex = 1; maxVal = y; }

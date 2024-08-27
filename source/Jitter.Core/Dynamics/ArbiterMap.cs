@@ -17,16 +17,8 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
-using System;
 using System.Collections.Generic;
-
-using Jitter.Dynamics;
-using Jitter.LinearMath;
-using Jitter.Collision.Shapes;
 using System.Collections;
-using Jitter.Collision;
-#endregion
 
 namespace Jitter.Dynamics
 {
@@ -63,7 +55,6 @@ namespace Jitter.Dynamics
             this.body2 = body2;
         }
 
-        #region public override bool Equals(object obj)
         /// <summary>
         /// Checks if two objects are equal.
         /// </summary>
@@ -71,13 +62,11 @@ namespace Jitter.Dynamics
         /// <returns>Returns true if they are equal, otherwise false.</returns>
         public override bool Equals(object obj)
         {
-            ArbiterKey other = (ArbiterKey)obj;
-            return (other.body1.Equals(body1) && other.body2.Equals(body2) ||
-                other.body1.Equals(body2) && other.body2.Equals(body1));
+            var other = (ArbiterKey)obj;
+            return other.body1.Equals(body1) && other.body2.Equals(body2) ||
+                   other.body1.Equals(body2) && other.body2.Equals(body1);
         }
-        #endregion
 
-        #region public override int GetHashCode()
         /// <summary>
         /// Returns the hashcode of the ArbiterKey.
         /// The hashcode is the same if an ArbiterKey contains the same bodies.
@@ -87,17 +76,14 @@ namespace Jitter.Dynamics
         {
             return body1.GetHashCode() + body2.GetHashCode();
         }
-        #endregion
-
-
     }
 
     internal class ArbiterKeyComparer : IEqualityComparer<ArbiterKey>
     {
         public bool Equals(ArbiterKey x, ArbiterKey y)
         {
-            return (x.body1.Equals(y.body1) && x.body2.Equals(y.body2) ||
-                x.body1.Equals(y.body2) && x.body2.Equals(y.body1));
+            return x.body1.Equals(y.body1) && x.body2.Equals(y.body2) ||
+                   x.body1.Equals(y.body2) && x.body2.Equals(y.body1);
         }
 
         public int GetHashCode(ArbiterKey obj)
@@ -138,10 +124,7 @@ namespace Jitter.Dynamics
             return dictionary.TryGetValue(lookUpKey, out arbiter);
         }
 
-        public Dictionary<ArbiterKey, Arbiter>.ValueCollection Arbiters
-        {
-            get { return dictionary.Values; }
-        }
+        public Dictionary<ArbiterKey, Arbiter>.ValueCollection Arbiters => dictionary.Values;
 
         internal void Add(ArbiterKey key, Arbiter arbiter)
         {

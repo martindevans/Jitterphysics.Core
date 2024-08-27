@@ -17,14 +17,8 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
 using System;
-using System.Collections.Generic;
-
-using Jitter.Dynamics;
 using Jitter.LinearMath;
-using Jitter.Collision.Shapes;
-#endregion
 
 namespace Jitter.Collision.Shapes
 {
@@ -39,7 +33,8 @@ namespace Jitter.Collision.Shapes
         /// <summary>
         /// The radius of the sphere.
         /// </summary>
-        public float Radius { get { return radius; } set { radius = value; UpdateShape(); } }
+        public float Radius { get => radius;
+            set { radius = value; UpdateShape(); } }
 
         /// <summary>
         /// Creates a new instance of the SphereShape class.
@@ -48,7 +43,7 @@ namespace Jitter.Collision.Shapes
         public SphereShape(float radius)
         {
             this.radius = radius;
-            this.UpdateShape();
+            UpdateShape();
         }
 
         /// <summary>
@@ -63,7 +58,7 @@ namespace Jitter.Collision.Shapes
             result = direction;
             result.Normalize();
 
-            JVector.Multiply(ref result, radius, out result);
+            result = JVector.Multiply(result, radius);
         }
 
         /// <summary>
@@ -86,14 +81,14 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         public override void CalculateMassInertia()
         {
-            mass = (4.0f / 3.0f) * JMath.Pi * radius * radius * radius;
+            mass = 4.0f / 3.0f * MathF.PI * radius * radius * radius;
 
             // (0,0,0) is the center of mass, so only
             // the main matrix elements are != 0
             inertia = JMatrix.Identity;
-            inertia.M11 = 0.4f * this.mass * radius * radius;
-            inertia.M22 = 0.4f * this.mass * radius * radius;
-            inertia.M33 = 0.4f * this.mass * radius * radius;
+            inertia.M11 = 0.4f * mass * radius * radius;
+            inertia.M22 = 0.4f * mass * radius * radius;
+            inertia.M33 = 0.4f * mass * radius * radius;
         }
 
 

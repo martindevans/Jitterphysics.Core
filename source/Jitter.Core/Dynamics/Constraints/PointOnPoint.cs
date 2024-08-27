@@ -17,14 +17,7 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
-using System;
-using System.Collections.Generic;
-
-using Jitter.Dynamics;
 using Jitter.LinearMath;
-using Jitter.Collision.Shapes;
-#endregion
 
 namespace Jitter.Dynamics.Constraints
 {
@@ -49,27 +42,31 @@ namespace Jitter.Dynamics.Constraints
         public PointOnPoint(RigidBody body1, RigidBody body2, JVector anchor)
             : base(body1, body2)
         {
-            JVector.Subtract(ref anchor, ref body1.position, out localAnchor1);
-            JVector.Subtract(ref anchor, ref body2.position, out localAnchor2);
+            localAnchor1 = JVector.Subtract(anchor, body1.position);
+            localAnchor2 = JVector.Subtract(anchor, body2.position);
 
             JVector.Transform(ref localAnchor1, ref body1.invOrientation, out localAnchor1);
             JVector.Transform(ref localAnchor2, ref body2.invOrientation, out localAnchor2);
         }
 
-        public float AppliedImpulse { get { return accumulatedImpulse; } }
+        public float AppliedImpulse => accumulatedImpulse;
 
         /// <summary>
         /// Defines how big the applied impulses can get.
         /// </summary>
-        public float Softness { get { return softness; } set { softness = value; } }
+        public float Softness { get => softness;
+            set => softness = value;
+        }
 
         /// <summary>
         /// Defines how big the applied impulses can get which correct errors.
         /// </summary>
-        public float BiasFactor { get { return biasFactor; } set { biasFactor = value; } }
+        public float BiasFactor { get => biasFactor;
+            set => biasFactor = value;
+        }
 
-        float effectiveMass = 0.0f;
-        float accumulatedImpulse = 0.0f;
+        float effectiveMass;
+        float accumulatedImpulse;
         float bias;
         float softnessOverDt;
 
@@ -84,21 +81,20 @@ namespace Jitter.Dynamics.Constraints
             JVector.Transform(ref localAnchor1, ref body1.orientation, out r1);
             JVector.Transform(ref localAnchor2, ref body2.orientation, out r2);
 
-            JVector p1, p2, dp;
-            JVector.Add(ref body1.position, ref r1, out p1);
-            JVector.Add(ref body2.position, ref r2, out p2);
+            var p1 = JVector.Add(body1.position, r1);
+            var p2 = JVector.Add(body2.position, r2);
 
-            JVector.Subtract(ref p2, ref p1, out dp);
+            var dp = JVector.Subtract(p2, p1);
 
-            float deltaLength = dp.Length();
+            var deltaLength = dp.Length();
 
-            JVector n = p2 - p1;
+            var n = p2 - p1;
             if (n.LengthSquared() != 0.0f) n.Normalize();
 
             jacobian[0] = -1.0f * n;
             jacobian[1] = -1.0f * (r1 % n);
             jacobian[2] = 1.0f * n;
-            jacobian[3] = (r2 % n);
+            jacobian[3] = r2 % n;
 
             effectiveMass = body1.inverseMass + body2.inverseMass
                 + JVector.Transform(jacobian[1], body1.invInertiaWorld) * jacobian[1]
@@ -131,15 +127,15 @@ namespace Jitter.Dynamics.Constraints
         /// </summary>
         public override void Iterate()
         {
-            float jv =
+            var jv =
                 body1.linearVelocity * jacobian[0] +
                 body1.angularVelocity * jacobian[1] +
                 body2.linearVelocity * jacobian[2] +
                 body2.angularVelocity * jacobian[3];
 
-            float softnessScalar = accumulatedImpulse * softnessOverDt;
+            var softnessScalar = accumulatedImpulse * softnessOverDt;
 
-            float lambda = -effectiveMass * (jv + bias + softnessScalar);
+            var lambda = -effectiveMass * (jv + bias + softnessScalar);
 
             accumulatedImpulse += lambda;
 

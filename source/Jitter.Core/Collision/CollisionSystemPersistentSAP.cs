@@ -17,15 +17,12 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
 using System;
 using System.Collections.Generic;
 
 using Jitter.Dynamics;
 using Jitter.LinearMath;
 using Jitter.Collision.Shapes;
-using System.Collections;
-#endregion
 
 namespace Jitter.Collision
 {
@@ -36,7 +33,6 @@ namespace Jitter.Collision
     {
         private const int AddedObjectsBruteForceIsUsed = 250;
 
-        #region private class SweepPoint
         private class SweepPoint
         {
             public IBroadphaseEntity Body;
@@ -45,9 +41,9 @@ namespace Jitter.Collision
 
             public SweepPoint(IBroadphaseEntity body, bool begin, int axis)
             {
-                this.Body = body;
-                this.Begin = begin;
-                this.Axis = axis;
+                Body = body;
+                Begin = begin;
+                Axis = axis;
             }
 
             public float Value
@@ -71,9 +67,7 @@ namespace Jitter.Collision
 
 
         }
-        #endregion
 
-        #region private struct OverlapPair
         private struct OverlapPair
         {
             // internal values for faster access within the engine
@@ -86,8 +80,8 @@ namespace Jitter.Collision
             /// <param name="entity2"></param>
             public OverlapPair(IBroadphaseEntity entity1, IBroadphaseEntity entity2)
             {
-                this.Entity1 = entity1;
-                this.Entity2 = entity2;
+                Entity1 = entity1;
+                Entity2 = entity2;
             }
 
             /// <summary>
@@ -98,8 +92,8 @@ namespace Jitter.Collision
             /// <param name="entity2">The second body.</param>
             internal void SetBodies(IBroadphaseEntity entity1, IBroadphaseEntity entity2)
             {
-                this.Entity1 = entity1;
-                this.Entity2 = entity2;
+                Entity1 = entity1;
+                Entity2 = entity2;
             }
 
             /// <summary>
@@ -109,9 +103,9 @@ namespace Jitter.Collision
             /// <returns>Returns true if they are equal, otherwise false.</returns>
             public override bool Equals(object obj)
             {
-                OverlapPair other = (OverlapPair)obj;
-                return (other.Entity1.Equals(Entity1) && other.Entity2.Equals(Entity2) ||
-                    other.Entity1.Equals(Entity2) && other.Entity2.Equals(Entity1));
+                var other = (OverlapPair)obj;
+                return other.Entity1.Equals(Entity1) && other.Entity2.Equals(Entity2) ||
+                       other.Entity1.Equals(Entity2) && other.Entity2.Equals(Entity1);
             }
 
             /// <summary>
@@ -124,7 +118,6 @@ namespace Jitter.Collision
                 return Entity1.GetHashCode() + Entity2.GetHashCode();
             }
         }
-        #endregion
 
         // not needed anymore
         private List<IBroadphaseEntity> bodyList = new List<IBroadphaseEntity>();
@@ -135,20 +128,17 @@ namespace Jitter.Collision
 
         private HashSet<OverlapPair> fullOverlaps = new HashSet<OverlapPair>();
 
-        Action<object> detectCallback, sortCallback;
+        Action<object> sortCallback;
 
         public CollisionSystemPersistentSAP()
         {
-            detectCallback = new Action<object>(DetectCallback);
-            sortCallback = new Action<object>(SortCallback);
+            sortCallback = SortCallback;
         }
-
-        #region Incoherent Update - Quicksort
 
         private int QuickSort(SweepPoint sweepPoint1, SweepPoint sweepPoint2)
         {
-            float val1 = sweepPoint1.Value;
-            float val2 = sweepPoint2.Value;
+            var val1 = sweepPoint1.Value;
+            var val2 = sweepPoint2.Value;
 
             if (val1 > val2) return 1;
             else if (val2 > val1) return -1;
@@ -162,13 +152,13 @@ namespace Jitter.Collision
             axis.Sort(QuickSort);
             activeList.Clear();
 
-            for (int i = 0; i < axis.Count; i++)
+            for (var i = 0; i < axis.Count; i++)
             {
-                SweepPoint keyelement = axis[i];
+                var keyelement = axis[i];
 
                 if (keyelement.Begin)
                 {
-                    foreach (IBroadphaseEntity body in activeList)
+                    foreach (var body in activeList)
                     {
                         if (CheckBoundingBoxes(body,keyelement.Body)) 
                             fullOverlaps.Add(new OverlapPair(body, keyelement.Body));
@@ -182,22 +172,19 @@ namespace Jitter.Collision
                 }
             }
         }
-        #endregion
-
-        #region Coherent Update - Insertionsort
 
         private void SortAxis(List<SweepPoint> axis)
         {
-            for (int j = 1; j < axis.Count; j++)
+            for (var j = 1; j < axis.Count; j++)
             {
-                SweepPoint keyelement = axis[j];
-                float key = keyelement.Value;
+                var keyelement = axis[j];
+                var key = keyelement.Value;
 
-                int i = j - 1;
+                var i = j - 1;
 
                 while (i >= 0 && axis[i].Value > key)
                 {
-                    SweepPoint swapper = axis[i];
+                    var swapper = axis[i];
 
                     if (keyelement.Begin && !swapper.Begin)
                     {
@@ -218,9 +205,8 @@ namespace Jitter.Collision
                 axis[i + 1] = keyelement;
             }
         }
-        #endregion
 
-        int addCounter = 0;
+        int addCounter;
         public override void AddEntity(IBroadphaseEntity body)
         {
             bodyList.Add(body);
@@ -238,15 +224,15 @@ namespace Jitter.Collision
             int count;
 
             count = 0;
-            for (int i = 0; i < axis1.Count; i++)
+            for (var i = 0; i < axis1.Count; i++)
             { if (axis1[i].Body == body) { count++; axis1.RemoveAt(i); if (count == 2) break; i--; } }
 
             count = 0;
-            for (int i = 0; i < axis2.Count; i++)
+            for (var i = 0; i < axis2.Count; i++)
             { if (axis2[i].Body == body) { count++; axis2.RemoveAt(i); if (count == 2) break; i--; } }
 
             count = 0;
-            for (int i = 0; i < axis3.Count; i++)
+            for (var i = 0; i < axis3.Count; i++)
             { if (axis3[i].Body == body) { count++; axis3.RemoveAt(i); if (count == 2) break; i--; } }
 
             foreach (var pair in fullOverlaps) if (pair.Entity1 == body || pair.Entity2 == body) depricated.Push(pair);
@@ -257,7 +243,7 @@ namespace Jitter.Collision
             return true;
         }
 
-        bool swapOrder = false;
+        bool swapOrder;
 
         /// <summary>
         /// Tells the collisionsystem to check all bodies for collisions. Hook into the
@@ -265,7 +251,7 @@ namespace Jitter.Collision
         /// and <see cref="CollisionSystem.CollisionDetected"/> events to get the results.
         /// </summary>
         /// <param name="multiThreaded">If true internal multithreading is used.</param>
-        public override void Detect(bool multiThreaded)
+        public override void Detect()
         {
             if (addCounter > AddedObjectsBruteForceIsUsed)
             {
@@ -277,15 +263,7 @@ namespace Jitter.Collision
             }
             else
             {
-                if (multiThreaded)
-                {
-                    threadManager.AddTask(sortCallback, axis1);
-                    threadManager.AddTask(sortCallback, axis2);
-                    threadManager.AddTask(sortCallback, axis3);
 
-                    threadManager.Execute();
-                }
-                else
                 {
                     sortCallback(axis1);
                     sortCallback(axis2);
@@ -295,20 +273,12 @@ namespace Jitter.Collision
 
             addCounter = 0;
 
-            foreach (OverlapPair key in fullOverlaps)
+            foreach (var key in fullOverlaps)
             {
-                if (this.CheckBothStaticOrInactive(key.Entity1, key.Entity2)) continue;
+                if (CheckBothStaticOrInactive(key.Entity1, key.Entity2)) continue;
 
-                if (base.RaisePassedBroadphase(key.Entity1, key.Entity2))
+                if (RaisePassedBroadphase(key.Entity1, key.Entity2))
                 {
-                    if (multiThreaded)
-                    {
-                        BroadphasePair pair = BroadphasePair.Pool.GetNew();
-                        if (swapOrder) { pair.Entity1 = key.Entity1; pair.Entity2 = key.Entity2; }
-                        else { pair.Entity2 = key.Entity2; pair.Entity1 = key.Entity1; }
-                        threadManager.AddTask(detectCallback, pair);
-                    }
-                    else
                     {
                         if (swapOrder) { Detect(key.Entity1, key.Entity2); }
                         else Detect(key.Entity2, key.Entity1);
@@ -317,21 +287,11 @@ namespace Jitter.Collision
                     swapOrder = !swapOrder;
                 }
             }
-
-            threadManager.Execute();
-
         }
 
         private void SortCallback(object obj)
         {
             SortAxis(obj as List<SweepPoint>);
-        }
-
-        private void DetectCallback(object obj)
-        {
-            BroadphasePair pair = obj as BroadphasePair;
-            base.Detect(pair.Entity1, pair.Entity2);
-            BroadphasePair.Pool.GiveBack(pair);
         }
 
         // okay, people often say raycasting can be made faster using the sweep
@@ -343,7 +303,6 @@ namespace Jitter.Collision
         // it also gives the hits in order but the startposition problem
         // is unsolved - so it starts from outside the broadphase.
 
-        #region Depricated
         //public void QueryRay(HashSet<IBroadphaseEntity> entities,JVector rayOrigin, JVector rayDirection)
         //{
         //    rayDirection.Normalize();
@@ -431,7 +390,6 @@ namespace Jitter.Collision
 
         //    System.Diagnostics.Debug.WriteLine(steps);
         //}
-        #endregion
 
 
         /// <summary>
@@ -440,39 +398,19 @@ namespace Jitter.Collision
         /// against rays (rays are of infinite length). They are checked against segments
         /// which start at rayOrigin and end in rayOrigin + rayDirection.
         /// </summary>
-        #region public override bool Raycast(JVector rayOrigin, JVector rayDirection, out JVector normal,out float fraction)
         public override bool Raycast(JVector rayOrigin, JVector rayDirection, RaycastCallback raycast, out RigidBody body, out JVector normal, out float fraction)
         {
             body = null; normal = JVector.Zero; fraction = float.MaxValue;
 
-            JVector tempNormal;float tempFraction;
-            bool result = false;
+            var result = false;
 
             // TODO: This can be done better in CollisionSystemPersistenSAP
-            foreach (IBroadphaseEntity e in bodyList)
+            foreach (var e in bodyList)
             {
-                if (e is SoftBody)
                 {
-                    SoftBody softBody = e as SoftBody;
-                    foreach (RigidBody b in softBody.VertexBodies)
-                    {
-                        if (this.Raycast(b, rayOrigin, rayDirection, out tempNormal, out tempFraction))
-                        {
-                            if (tempFraction < fraction && (raycast == null || raycast(b, tempNormal, tempFraction)))
-                            {
-                                body = b;
-                                normal = tempNormal;
-                                fraction = tempFraction;
-                                result = true;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    RigidBody b = e as RigidBody;
+                    var b = e as RigidBody;
 
-                    if (this.Raycast(b, rayOrigin, rayDirection, out tempNormal, out tempFraction))
+                    if (Raycast(b, rayOrigin, rayDirection, out var tempNormal, out var tempFraction))
                     {
                         if (tempFraction < fraction && (raycast == null || raycast(b, tempNormal, tempFraction)))
                         {
@@ -487,7 +425,6 @@ namespace Jitter.Collision
 
             return result;
         }
-        #endregion
 
 
         /// <summary>
@@ -495,7 +432,6 @@ namespace Jitter.Collision
         /// against rays (rays are of infinite length). They are checked against segments
         /// which start at rayOrigin and end in rayOrigin + rayDirection.
         /// </summary>
-        #region public override bool Raycast(RigidBody body, JVector rayOrigin, JVector rayDirection, out JVector normal, out float fraction)
         public override bool Raycast(RigidBody body, JVector rayOrigin, JVector rayDirection, out JVector normal, out float fraction)
         {
             fraction = float.MaxValue; normal = JVector.Zero;
@@ -504,35 +440,28 @@ namespace Jitter.Collision
 
             if (body.Shape is Multishape)
             {
-                Multishape ms = (body.Shape as Multishape).RequestWorkingClone();
-                
-                JVector tempNormal;float tempFraction;
-                bool multiShapeCollides = false;
+                var ms = (body.Shape as Multishape).RequestWorkingClone();
 
-                JVector transformedOrigin; JVector.Subtract(ref rayOrigin, ref body.position, out transformedOrigin);
+                var multiShapeCollides = false;
+
+                var transformedOrigin = JVector.Subtract(rayOrigin, body.position);
                 JVector.Transform(ref transformedOrigin, ref body.invOrientation, out transformedOrigin);
-                JVector transformedDirection; JVector.Transform(ref rayDirection, ref body.invOrientation, out transformedDirection);
+                JVector.Transform(ref rayDirection, ref body.invOrientation, out var transformedDirection);
 
-                int msLength = ms.Prepare(ref transformedOrigin, ref transformedDirection);
+                var msLength = ms.Prepare(ref transformedOrigin, ref transformedDirection);
 
-                for (int i = 0; i < msLength; i++)
+                for (var i = 0; i < msLength; i++)
                 {
                     ms.SetCurrentShape(i);
 
                     if (GJKCollide.Raycast(ms, ref body.orientation, ref body.invOrientation, ref body.position,
-                        ref rayOrigin, ref rayDirection, out tempFraction, out tempNormal))
+                        ref rayOrigin, ref rayDirection, out var tempFraction, out var tempNormal))
                     {
                         if (tempFraction < fraction)
                         {
-                            if (useTerrainNormal && ms is TerrainShape)
+                            if (useTriangleMeshNormal && ms is TriangleMeshShape shape)
                             {
-                                (ms as TerrainShape).CollisionNormal(out tempNormal);
-                                JVector.Transform(ref tempNormal, ref body.orientation, out tempNormal);
-                                tempNormal.Negate();
-                            }
-                            else if (useTriangleMeshNormal && ms is TriangleMeshShape)
-                            {
-                                (ms as TriangleMeshShape).CollisionNormal(out tempNormal);
+                                shape.CollisionNormal(out tempNormal);
                                 JVector.Transform(ref tempNormal, ref body.orientation, out tempNormal);
                                 tempNormal.Negate();
                             }
@@ -549,14 +478,11 @@ namespace Jitter.Collision
             }
             else
             {
-                return (GJKCollide.Raycast(body.Shape, ref body.orientation, ref body.invOrientation, ref body.position,
-                    ref rayOrigin, ref rayDirection, out fraction, out normal));
+                return GJKCollide.Raycast(body.Shape, ref body.orientation, ref body.invOrientation, ref body.position,
+                    ref rayOrigin, ref rayDirection, out fraction, out normal);
             }
 
 
         }
-        #endregion
-
-
     }
 }

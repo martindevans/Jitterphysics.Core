@@ -17,14 +17,8 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
 using System;
-using System.Collections.Generic;
-
-using Jitter.Dynamics;
 using Jitter.LinearMath;
-using Jitter.Collision.Shapes;
-#endregion
 
 namespace Jitter.Dynamics.Constraints.SingleBody
 {
@@ -40,7 +34,7 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         private JVector anchor;
 
         private float biasFactor = 0.5f;
-        private float softness = 0.0f;
+        private float softness;
 
         /// <summary>
         /// Initializes a new instance of the WorldLineConstraint.
@@ -56,34 +50,41 @@ namespace Jitter.Dynamics.Constraints.SingleBody
                 throw new ArgumentException("Line direction can't be zero", "lineDirection");
 
             localAnchor1 = localAnchor;
-            this.anchor = body.position + JVector.Transform(localAnchor, body.orientation);
+            anchor = body.position + JVector.Transform(localAnchor, body.orientation);
 
-            this.lineNormal = lineDirection;
-            this.lineNormal.Normalize();
+            lineNormal = lineDirection;
+            lineNormal.Normalize();
         }
 
         /// <summary>
         /// The anchor point of the body in world space.
         /// </summary>
-        public JVector Anchor { get { return anchor; } set { anchor = value; } }
+        public JVector Anchor { get => anchor;
+            set => anchor = value;
+        }
 
         /// <summary>
         /// The axis defining the line of the constraint.
         /// </summary>
-        public JVector Axis { get { return lineNormal; } set { lineNormal = value; lineNormal.Normalize(); } }
+        public JVector Axis { get => lineNormal;
+            set { lineNormal = value; lineNormal.Normalize(); } }
 
         /// <summary>
         /// Defines how big the applied impulses can get.
         /// </summary>
-        public float Softness { get { return softness; } set { softness = value; } }
+        public float Softness { get => softness;
+            set => softness = value;
+        }
 
         /// <summary>
         /// Defines how big the applied impulses can get which correct errors.
         /// </summary>
-        public float BiasFactor { get { return biasFactor; } set { biasFactor = value; } }
+        public float BiasFactor { get => biasFactor;
+            set => biasFactor = value;
+        }
 
-        float effectiveMass = 0.0f;
-        float accumulatedImpulse = 0.0f;
+        float effectiveMass;
+        float accumulatedImpulse;
         float bias;
         float softnessOverDt;
 
@@ -97,14 +98,14 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         {
             JVector.Transform(ref localAnchor1, ref body1.orientation, out r1);
 
-            JVector p1, dp;
-            JVector.Add(ref body1.position, ref r1, out p1);
+            JVector dp;
+            var p1 = JVector.Add(body1.position, r1);
 
-            JVector.Subtract(ref p1, ref anchor, out dp);
+            dp = JVector.Subtract(p1, anchor);
 
-            JVector l = lineNormal;
+            var l = lineNormal;
 
-            JVector t = (p1 - anchor) % l;
+            var t = (p1 - anchor) % l;
             if (t.LengthSquared() != 0.0f) t.Normalize();
             t = t % l;
 
@@ -134,13 +135,13 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         /// </summary>
         public override void Iterate()
         {
-            float jv =
+            var jv =
                 body1.linearVelocity * jacobian[0] +
                 body1.angularVelocity * jacobian[1];
 
-            float softnessScalar = accumulatedImpulse * softnessOverDt;
+            var softnessScalar = accumulatedImpulse * softnessOverDt;
 
-            float lambda = -effectiveMass * (jv + bias + softnessScalar);
+            var lambda = -effectiveMass * (jv + bias + softnessScalar);
 
             accumulatedImpulse += lambda;
 

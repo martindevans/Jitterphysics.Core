@@ -17,19 +17,11 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
 using System;
-using System.Collections.Generic;
-
-using Jitter.Dynamics;
 using Jitter.LinearMath;
-using Jitter.Collision.Shapes;
-#endregion
 
 namespace Jitter.Dynamics.Constraints.SingleBody
 {
-
-    #region Constraint Equations
     // Constraint formulation:
     // 
     // C_1 = R1_x - R2_x
@@ -57,7 +49,6 @@ namespace Jitter.Dynamics.Constraints.SingleBody
     // Effective Mass:
     //
     // 1/m_eff = [J^T * M^-1 * J] = I1^(-1) + I2^(-1)
-    #endregion
 
     /// <summary>
     /// The body stays at a fixed angle relative to
@@ -67,7 +58,7 @@ namespace Jitter.Dynamics.Constraints.SingleBody
     {
 
         private float biasFactor = 0.05f;
-        private float softness = 0.0f;
+        private float softness;
 
         private JMatrix orientation;
         private JVector accumulatedImpulse;
@@ -86,14 +77,20 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         /// <summary>
         /// Defines how big the applied impulses can get.
         /// </summary>
-        public float Softness { get { return softness; } set { softness = value; } }
+        public float Softness { get => softness;
+            set => softness = value;
+        }
 
         /// <summary>
         /// Defines how big the applied impulses can get which correct errors.
         /// </summary>
-        public float BiasFactor { get { return biasFactor; } set { biasFactor = value; } }
+        public float BiasFactor { get => biasFactor;
+            set => biasFactor = value;
+        }
 
-        public JMatrix InitialOrientation { get { return orientation; } set { orientation = value; } }
+        public JMatrix InitialOrientation { get => orientation;
+            set => orientation = value;
+        }
 
         JMatrix effectiveMass;
         JVector bias;
@@ -115,17 +112,17 @@ namespace Jitter.Dynamics.Constraints.SingleBody
 
             JMatrix.Inverse(ref effectiveMass, out effectiveMass);
 
-            JMatrix q = JMatrix.Transpose(orientation) * body1.orientation;
+            var q = JMatrix.Transpose(orientation) * body1.orientation;
             JVector axis;
 
-            float x = q.M32 - q.M23;
-            float y = q.M13 - q.M31;
-            float z = q.M21 - q.M12;
+            var x = q.M32 - q.M23;
+            var y = q.M13 - q.M31;
+            var z = q.M21 - q.M12;
 
-            float r = JMath.Sqrt(x * x + y * y + z * z);
-            float t = q.M11 + q.M22 + q.M33;
+            var r = MathF.Sqrt(x * x + y * y + z * z);
+            var t = q.M11 + q.M22 + q.M33;
 
-            float angle = (float)Math.Atan2(r, t - 1);
+            var angle = (float)Math.Atan2(r, t - 1);
             axis = new JVector(x, y, z) * angle;
 
             if (r != 0.0f) axis = axis * (1.0f / r);
@@ -141,11 +138,11 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         /// </summary>
         public override void Iterate()
         {
-            JVector jv = body1.angularVelocity;
+            var jv = body1.angularVelocity;
 
-            JVector softnessVector = accumulatedImpulse * softnessOverDt;
+            var softnessVector = accumulatedImpulse * softnessOverDt;
 
-            JVector lambda = -1.0f * JVector.Transform(jv + bias + softnessVector, effectiveMass);
+            var lambda = -1.0f * JVector.Transform(jv + bias + softnessVector, effectiveMass);
 
             accumulatedImpulse += lambda;
 

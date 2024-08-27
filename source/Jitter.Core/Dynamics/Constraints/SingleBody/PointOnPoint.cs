@@ -17,14 +17,7 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
-using System;
-using System.Collections.Generic;
-
-using Jitter.Dynamics;
 using Jitter.LinearMath;
-using Jitter.Collision.Shapes;
-#endregion
 
 namespace Jitter.Dynamics.Constraints.SingleBody
 {
@@ -53,29 +46,35 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         {
             localAnchor1 = localAnchor;
 
-            this.anchor = body.position + JVector.Transform(localAnchor, body.orientation);
+            anchor = body.position + JVector.Transform(localAnchor, body.orientation);
         }
 
-        public float AppliedImpulse { get { return accumulatedImpulse; } }
+        public float AppliedImpulse => accumulatedImpulse;
 
         /// <summary>
         /// Defines how big the applied impulses can get.
         /// </summary>
-        public float Softness { get { return softness; } set { softness = value; } }
+        public float Softness { get => softness;
+            set => softness = value;
+        }
 
         /// <summary>
         /// The anchor point in the world.
         /// </summary>
-        public JVector Anchor { get { return anchor; } set { anchor = value; } }
+        public JVector Anchor { get => anchor;
+            set => anchor = value;
+        }
 
 
         /// <summary>
         /// Defines how big the applied impulses can get which correct errors.
         /// </summary>
-        public float BiasFactor { get { return biasFactor; } set { biasFactor = value; } }
+        public float BiasFactor { get => biasFactor;
+            set => biasFactor = value;
+        }
 
-        float effectiveMass = 0.0f;
-        float accumulatedImpulse = 0.0f;
+        float effectiveMass;
+        float accumulatedImpulse;
         float bias;
         float softnessOverDt;
 
@@ -87,14 +86,13 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         /// <param name="timestep">The 5simulation timestep</param>
         public override void PrepareForIteration(float timestep)
         {
-            JVector p1,dp;
             JVector.Transform(ref localAnchor1, ref body1.orientation, out r1);
-            JVector.Add(ref body1.position, ref r1, out p1);
+            var p1 = JVector.Add(body1.position, r1);
 
-            JVector.Subtract(ref p1, ref anchor, out dp);
-            float deltaLength = dp.Length();
+            var dp = JVector.Subtract(p1, anchor);
+            var deltaLength = dp.Length();
 
-            JVector n = anchor - p1;
+            var n = anchor - p1;
             if (n.LengthSquared() != 0.0f) n.Normalize();
 
             jacobian[0] = -1.0f * n;
@@ -121,13 +119,13 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         /// </summary>
         public override void Iterate()
         {
-            float jv =
+            var jv =
                 body1.linearVelocity * jacobian[0] +
                 body1.angularVelocity * jacobian[1];
 
-            float softnessScalar = accumulatedImpulse * softnessOverDt;
+            var softnessScalar = accumulatedImpulse * softnessOverDt;
 
-            float lambda = -effectiveMass * (jv + bias + softnessScalar);
+            var lambda = -effectiveMass * (jv + bias + softnessScalar);
 
             accumulatedImpulse += lambda;
 

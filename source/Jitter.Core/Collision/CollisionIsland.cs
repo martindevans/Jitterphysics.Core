@@ -17,18 +17,10 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
-using System;
 using System.Collections.Generic;
-using System.Threading;
-
 using Jitter.Dynamics;
-using Jitter.LinearMath;
-using Jitter.Collision.Shapes;
 using Jitter.Dynamics.Constraints;
-using System.Collections.ObjectModel;
 using Jitter.DataStructures;
-#endregion
 
 namespace Jitter.Collision
 {
@@ -47,17 +39,17 @@ namespace Jitter.Collision
         /// <summary>
         /// Gets a read only list of <see cref="RigidBody"/> which are in contact with each other.
         /// </summary>
-        public ReadOnlyHashset<RigidBody> Bodies { get { return readOnlyBodies; } }
+        public ReadOnlyHashset<RigidBody> Bodies => readOnlyBodies;
 
         /// <summary>
         /// Gets a read only list of <see cref="Arbiter"/> which are involved in this island.
         /// </summary>
-        public ReadOnlyHashset<Arbiter> Arbiter { get { return readOnlyArbiter; } }
+        public ReadOnlyHashset<Arbiter> Arbiter => readOnlyArbiter;
 
         /// <summary>
         /// Gets a read only list of <see cref="Constraint"/> which are involved in this island.
         /// </summary>
-        public ReadOnlyHashset<Constraint> Constraints { get { return readOnlyConstraints; } }
+        public ReadOnlyHashset<Constraint> Constraints => readOnlyConstraints;
 
         private ReadOnlyHashset<RigidBody> readOnlyBodies;
         private ReadOnlyHashset<Arbiter> readOnlyArbiter;
@@ -94,7 +86,7 @@ namespace Jitter.Collision
         /// <seealso cref="RigidBody.IsActive"/>
         public void SetStatus(bool active)
         {
-            foreach (RigidBody body in bodies)
+            foreach (var body in bodies)
             {
                 body.IsActive = active;
                 if (active && !body.IsActive) body.inactiveTime = 0.0f;

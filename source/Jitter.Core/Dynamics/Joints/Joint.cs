@@ -17,15 +17,6 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
-using System;
-using System.Collections.Generic;
-
-using Jitter.Dynamics;
-using Jitter.LinearMath;
-using Jitter.Collision.Shapes;
-#endregion
-
 namespace Jitter.Dynamics.Joints
 {
 
@@ -45,7 +36,7 @@ namespace Jitter.Dynamics.Joints
         /// </summary>
         /// <param name="world">The world class to which the internal constraints
         /// should be added.</param>
-        public Joint(World world) {this.World = world;}
+        public Joint(World world) {World = world;}
 
         /// <summary>
         /// Adds the internal constraints of this joint to the world class.

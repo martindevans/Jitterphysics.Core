@@ -17,14 +17,9 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
 using System;
 using System.Collections.Generic;
-
-using Jitter.Dynamics;
 using Jitter.LinearMath;
-using Jitter.Collision.Shapes;
-#endregion
 
 namespace Jitter.Collision.Shapes
 {
@@ -40,13 +35,13 @@ namespace Jitter.Collision.Shapes
 
         public void AddShapes(IEnumerable<Shape> shapes)
         {
-            foreach (Shape shape in shapes)
+            foreach (var shape in shapes)
             {
                 if (shape is Multishape) throw new Exception("Multishapes not supported by MinkowskiSumShape.");
                 this.shapes.Add(shape);
             }
 
-            this.UpdateShape();
+            UpdateShape();
         }
 
         public void AddShape(Shape shape)
@@ -54,38 +49,38 @@ namespace Jitter.Collision.Shapes
             if (shape is Multishape) throw new Exception("Multishapes not supported by MinkowskiSumShape.");
             shapes.Add(shape);
 
-            this.UpdateShape();
+            UpdateShape();
         }
 
         public bool Remove(Shape shape)
         {
             if (shapes.Count == 1) throw new Exception("There must be at least one shape.");
-            bool result = shapes.Remove(shape);
+            var result = shapes.Remove(shape);
             UpdateShape();
             return result;
         }
 
         public JVector Shift()
         {
-            return -1 * this.shifted;
+            return -1 * shifted;
         }
 
         public override void CalculateMassInertia()
         {
-            this.mass = Shape.CalculateMassInertia(this, out shifted, out inertia);
+            mass = Shape.CalculateMassInertia(this, out shifted, out inertia);
         }
 
         public override void SupportMapping(ref JVector direction, out JVector result)
         {
             JVector temp1, temp2 = JVector.Zero;
 
-            for (int i = 0; i < shapes.Count; i++)
+            for (var i = 0; i < shapes.Count; i++)
             {
                 shapes[i].SupportMapping(ref direction, out temp1);
-                JVector.Add(ref temp1, ref temp2, out temp2);
+                temp2 = JVector.Add(temp1, temp2);
             }
 
-            JVector.Subtract(ref temp2, ref shifted, out result);
+            result = JVector.Subtract(temp2, shifted);
         }
 
     }

@@ -17,15 +17,8 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
 using System;
-using System.Collections.Generic;
 using System.Threading;
-
-using Jitter.Dynamics;
-using Jitter.LinearMath;
-using Jitter.Collision.Shapes;
-#endregion
 
 namespace Jitter.Dynamics.Constraints
 {
@@ -54,14 +47,14 @@ namespace Jitter.Dynamics.Constraints
         /// <summary>
         /// Gets the first body. Can be null.
         /// </summary>
-        public RigidBody Body1 { get { return body1; } }
+        public RigidBody Body1 => body1;
 
         /// <summary>
         /// Gets the second body. Can be null.
         /// </summary>
-        public RigidBody Body2 { get { return body2; } }
+        public RigidBody Body2 => body2;
 
-        private static int instanceCount = 0;
+        private static int instanceCount;
         private int instance;
 
         /// <summary>
@@ -98,8 +91,8 @@ namespace Jitter.Dynamics.Constraints
 
         public int CompareTo(Constraint other)
         {
-            if (other.instance < this.instance) return -1;
-            else if (other.instance > this.instance) return 1;
+            if (other.instance < instance) return -1;
+            else if (other.instance > instance) return 1;
             else return 0;
         }
 

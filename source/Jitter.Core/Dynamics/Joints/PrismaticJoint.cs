@@ -17,15 +17,8 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
-using System;
-using System.Collections.Generic;
-
-using Jitter.Dynamics;
 using Jitter.LinearMath;
-using Jitter.Collision.Shapes;
 using Jitter.Dynamics.Constraints;
-#endregion
 
 namespace Jitter.Dynamics.Joints
 {
@@ -35,14 +28,14 @@ namespace Jitter.Dynamics.Joints
         FixedAngle fixedAngle;
         PointOnLine pointOnLine;
 
-        PointPointDistance minDistance = null;
-        PointPointDistance maxDistance = null;
+        PointPointDistance minDistance;
+        PointPointDistance maxDistance;
 
-        public PointPointDistance MaximumDistanceConstraint { get { return maxDistance; } }
-        public PointPointDistance MinimumDistanceConstraint { get { return minDistance; } }
+        public PointPointDistance MaximumDistanceConstraint => maxDistance;
+        public PointPointDistance MinimumDistanceConstraint => minDistance;
 
-        public FixedAngle FixedAngleConstraint { get { return fixedAngle; } }
-        public PointOnLine PointOnLineConstraint { get { return pointOnLine; } }
+        public FixedAngle FixedAngleConstraint => fixedAngle;
+        public PointOnLine PointOnLineConstraint => pointOnLine;
 
         public PrismaticJoint(World world, RigidBody body1, RigidBody body2)
             : base(world)

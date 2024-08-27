@@ -17,13 +17,8 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
-using System;
 using System.Collections.Generic;
-using System.Text;
-using Jitter.Dynamics;
 using System.Collections;
-#endregion
 
 namespace Jitter.DataStructures
 {
@@ -44,7 +39,7 @@ namespace Jitter.DataStructures
             return hashset.GetEnumerator();
         }
 
-        public int Count { get { return hashset.Count; } }
+        public int Count => hashset.Count;
 
         public bool Contains(T item) { return hashset.Contains(item); }
 

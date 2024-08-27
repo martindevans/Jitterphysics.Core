@@ -17,14 +17,8 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
 using System;
-using System.Collections.Generic;
-
-using Jitter.Dynamics;
 using Jitter.LinearMath;
-using Jitter.Collision.Shapes;
-#endregion
 
 namespace Jitter.Collision.Shapes
 {
@@ -39,12 +33,14 @@ namespace Jitter.Collision.Shapes
         /// <summary>
         /// Gets or sets the length of the capsule (exclusive the round endcaps).
         /// </summary>
-        public float Length { get { return length; } set { length = value; UpdateShape(); } }
+        public float Length { get => length;
+            set { length = value; UpdateShape(); } }
 
         /// <summary>
         /// Gets or sets the radius of the endcaps.
         /// </summary>
-        public float Radius { get { return radius; } set { radius = value; UpdateShape(); } }
+        public float Radius { get => radius;
+            set { radius = value; UpdateShape(); } }
 
         /// <summary>
         /// Create a new instance of the capsule.
@@ -63,14 +59,14 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         public override void CalculateMassInertia()
         {
-            float massSphere = (3.0f / 4.0f) * JMath.Pi * radius * radius * radius;
-            float massCylinder = JMath.Pi * radius * radius * length;
+            var massSphere = 3.0f / 4.0f * MathF.PI * radius * radius * radius;
+            var massCylinder = MathF.PI * radius * radius * length;
 
             mass = massCylinder + massSphere;
 
-            this.inertia.M11 = (1.0f / 4.0f) * massCylinder * radius * radius + (1.0f / 12.0f) * massCylinder * length * length + (2.0f / 5.0f) * massSphere * radius * radius + (1.0f / 4.0f) * length * length * massSphere;
-            this.inertia.M22 = (1.0f / 2.0f) * massCylinder * radius * radius + (2.0f / 5.0f) * massSphere * radius * radius;
-            this.inertia.M33 = (1.0f / 4.0f) * massCylinder * radius * radius + (1.0f / 12.0f) * massCylinder * length * length + (2.0f / 5.0f) * massSphere * radius * radius + (1.0f / 4.0f) * length * length * massSphere;
+            inertia.M11 = 1.0f / 4.0f * massCylinder * radius * radius + 1.0f / 12.0f * massCylinder * length * length + 2.0f / 5.0f * massSphere * radius * radius + 1.0f / 4.0f * length * length * massSphere;
+            inertia.M22 = 1.0f / 2.0f * massCylinder * radius * radius + 2.0f / 5.0f * massSphere * radius * radius;
+            inertia.M33 = 1.0f / 4.0f * massCylinder * radius * radius + 1.0f / 12.0f * massCylinder * length * length + 2.0f / 5.0f * massSphere * radius * radius + 1.0f / 4.0f * length * length * massSphere;
 
             //this.inertia.M11 = (1.0f / 4.0f) * mass * radius * radius + (1.0f / 12.0f) * mass * height * height;
             //this.inertia.M22 = (1.0f / 2.0f) * mass * radius * radius;
@@ -87,12 +83,12 @@ namespace Jitter.Collision.Shapes
         /// <param name="result">The result.</param>
         public override void SupportMapping(ref JVector direction, out JVector result)
         {
-            float r = (float)Math.Sqrt(direction.X * direction.X + direction.Z * direction.Z);
+            var r = (float)Math.Sqrt(direction.X * direction.X + direction.Z * direction.Z);
 
             if (Math.Abs(direction.Y) > 0.0f)
             {
-                JVector dir; JVector.Normalize(ref direction, out dir);
-                JVector.Multiply(ref dir, radius, out result);
+                JVector.Normalize(ref direction, out var dir);
+                result = JVector.Multiply(dir, radius);
                 result.Y += Math.Sign(direction.Y) * 0.5f * length;              
             }
             else if (r > 0.0f)

@@ -17,14 +17,8 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
 using System;
 using System.Collections.Generic;
-
-using Jitter.Dynamics;
-using Jitter.LinearMath;
-using Jitter.Collision.Shapes;
-#endregion
 
 namespace Jitter
 {
@@ -34,7 +28,6 @@ namespace Jitter
     /// </summary>
     /// <typeparam name="T">The type of the object to cache. The type T must
     /// have a parameterless constructor.</typeparam>
-    #region public class ResourcePool<T>
     public class ResourcePool<T>
     {
         private Stack<T> stack = new Stack<T>();
@@ -55,7 +48,7 @@ namespace Jitter
             lock (stack) { stack.Clear(); }
         }
 
-        public int Count { get { return stack.Count; } }
+        public int Count => stack.Count;
 
         /// <summary>
         /// Gives a resource back to the pool.
@@ -88,7 +81,6 @@ namespace Jitter
             return freeObj;
         }
     }
-    #endregion
 
 
     /// <summary>
@@ -96,7 +88,6 @@ namespace Jitter
     /// </summary>
     /// <typeparam name="T">The type of the array of objects to cache. The type T must
     /// have a parameterless constructor.  Do not specify [].</typeparam>
-    #region public class ArrayResourcePool<T>
     public class ArrayResourcePool<T>
     {
         private Stack<T[]> stack = new Stack<T[]>();
@@ -123,7 +114,7 @@ namespace Jitter
             lock (stack) { stack.Clear(); }
         }
 
-        public int Count { get { return stack.Count; } }
+        public int Count => stack.Count;
 
         /// <summary>
         /// Gives a resource back to the pool.
@@ -157,5 +148,4 @@ namespace Jitter
             return freeObj;
         }
     }
-    #endregion
 }

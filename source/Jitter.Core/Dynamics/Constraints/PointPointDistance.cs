@@ -17,14 +17,8 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
 using System;
-using System.Collections.Generic;
-
-using Jitter.Dynamics;
 using Jitter.LinearMath;
-using Jitter.Collision.Shapes;
-#endregion
 
 namespace Jitter.Dynamics.Constraints
 {
@@ -62,8 +56,8 @@ namespace Jitter.Dynamics.Constraints
         public PointPointDistance(RigidBody body1, RigidBody body2, JVector anchor1,JVector anchor2)
             : base(body1, body2)
         {
-            JVector.Subtract(ref anchor1, ref body1.position, out localAnchor1);
-            JVector.Subtract(ref anchor2, ref body2.position, out localAnchor2);
+            localAnchor1 = JVector.Subtract(anchor1, body1.position);
+            localAnchor2 = JVector.Subtract(anchor2, body2.position);
 
             JVector.Transform(ref localAnchor1, ref body1.invOrientation, out localAnchor1);
             JVector.Transform(ref localAnchor2, ref body2.invOrientation, out localAnchor2);
@@ -71,46 +65,58 @@ namespace Jitter.Dynamics.Constraints
             distance = (anchor1 - anchor2).Length();
         }
 
-        public float AppliedImpulse { get { return accumulatedImpulse; } }
+        public float AppliedImpulse => accumulatedImpulse;
 
         /// <summary>
         /// 
         /// </summary>
-        public float Distance { get { return distance; } set { distance = value; } }
+        public float Distance { get => distance;
+            set => distance = value;
+        }
 
         /// <summary>
         /// 
         /// </summary>
-        public DistanceBehavior Behavior { get { return behavior; } set { behavior = value; } }
+        public DistanceBehavior Behavior { get => behavior;
+            set => behavior = value;
+        }
 
         /// <summary>
         /// The anchor point of body1 in local (body) coordinates.
         /// </summary>
-        public JVector LocalAnchor1 { get { return localAnchor1; } set { localAnchor1 = value; } }
+        public JVector LocalAnchor1 { get => localAnchor1;
+            set => localAnchor1 = value;
+        }
 
         /// <summary>
         /// The anchor point of body2 in local (body) coordinates.
         /// </summary>
-        public JVector LocalAnchor2 { get { return localAnchor2; } set { localAnchor2 = value; } }
+        public JVector LocalAnchor2 { get => localAnchor2;
+            set => localAnchor2 = value;
+        }
 
         /// <summary>
         /// Defines how big the applied impulses can get.
         /// </summary>
-        public float Softness { get { return softness; } set { softness = value; } }
+        public float Softness { get => softness;
+            set => softness = value;
+        }
 
         /// <summary>
         /// Defines how big the applied impulses can get which correct errors.
         /// </summary>
-        public float BiasFactor { get { return biasFactor; } set { biasFactor = value; } }
+        public float BiasFactor { get => biasFactor;
+            set => biasFactor = value;
+        }
 
-        float effectiveMass = 0.0f;
-        float accumulatedImpulse = 0.0f;
+        float effectiveMass;
+        float accumulatedImpulse;
         float bias;
         float softnessOverDt;
         
         JVector[] jacobian = new JVector[4];
 
-        bool skipConstraint = false;
+        bool skipConstraint;
 
         /// <summary>
         /// Called once before iteration starts.
@@ -121,13 +127,12 @@ namespace Jitter.Dynamics.Constraints
             JVector.Transform(ref localAnchor1, ref body1.orientation, out r1);
             JVector.Transform(ref localAnchor2, ref body2.orientation, out r2);
 
-            JVector p1, p2, dp;
-            JVector.Add(ref body1.position, ref r1, out p1);
-            JVector.Add(ref body2.position, ref r2, out p2);
+            var p1 = JVector.Add(body1.position, r1);
+            var p2 = JVector.Add(body2.position, r2);
 
-            JVector.Subtract(ref p2, ref p1, out dp);
+            var dp = JVector.Subtract(p2, p1);
 
-            float deltaLength = dp.Length() - distance;
+            var deltaLength = dp.Length() - distance;
 
             if (behavior == DistanceBehavior.LimitMaximumDistance && deltaLength <= 0.0f)
             {
@@ -141,13 +146,13 @@ namespace Jitter.Dynamics.Constraints
             {
                 skipConstraint = false;
 
-                JVector n = p2 - p1;
+                var n = p2 - p1;
                 if (n.LengthSquared() != 0.0f) n.Normalize();
 
                 jacobian[0] = -1.0f * n;
                 jacobian[1] = -1.0f * (r1 % n);
                 jacobian[2] = 1.0f * n;
-                jacobian[3] = (r2 % n);
+                jacobian[3] = r2 % n;
 
                 effectiveMass = body1.inverseMass + body2.inverseMass
                     + JVector.Transform(jacobian[1], body1.invInertiaWorld) * jacobian[1]
@@ -182,26 +187,26 @@ namespace Jitter.Dynamics.Constraints
         {
             if (skipConstraint) return;
 
-            float jv =
+            var jv =
                 body1.linearVelocity * jacobian[0] +
                 body1.angularVelocity * jacobian[1] +
                 body2.linearVelocity * jacobian[2] +
                 body2.angularVelocity * jacobian[3];
 
-            float softnessScalar = accumulatedImpulse * softnessOverDt;
+            var softnessScalar = accumulatedImpulse * softnessOverDt;
 
-            float lambda = -effectiveMass * (jv + bias + softnessScalar);
+            var lambda = -effectiveMass * (jv + bias + softnessScalar);
 
             if (behavior == DistanceBehavior.LimitMinimumDistance)
             {
-                float previousAccumulatedImpulse = accumulatedImpulse;
-                accumulatedImpulse = JMath.Max(accumulatedImpulse + lambda, 0);
+                var previousAccumulatedImpulse = accumulatedImpulse;
+                accumulatedImpulse = Math.Max(accumulatedImpulse + lambda, 0);
                 lambda = accumulatedImpulse - previousAccumulatedImpulse;
             }
             else if (behavior == DistanceBehavior.LimitMaximumDistance)
             {
-                float previousAccumulatedImpulse = accumulatedImpulse;
-                accumulatedImpulse = JMath.Min(accumulatedImpulse + lambda, 0);
+                var previousAccumulatedImpulse = accumulatedImpulse;
+                accumulatedImpulse = Math.Min(accumulatedImpulse + lambda, 0);
                 lambda = accumulatedImpulse - previousAccumulatedImpulse;
             }
             else

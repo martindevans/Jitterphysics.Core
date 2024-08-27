@@ -17,15 +17,8 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
-using System;
-using System.Collections.Generic;
-
-using Jitter.Dynamics;
 using Jitter.LinearMath;
-using Jitter.Collision.Shapes;
 using Jitter.Dynamics.Constraints;
-#endregion
 
 namespace Jitter.Dynamics.Joints
 {
@@ -38,8 +31,8 @@ namespace Jitter.Dynamics.Joints
 
         private PointOnPoint[] worldPointConstraint;
 
-        public PointOnPoint PointConstraint1 { get { return worldPointConstraint[0]; } }
-        public PointOnPoint PointConstraint2 { get { return worldPointConstraint[1]; } }
+        public PointOnPoint PointConstraint1 => worldPointConstraint[0];
+        public PointOnPoint PointConstraint2 => worldPointConstraint[1];
 
         /// <summary>
         /// Initializes a new instance of the HingeJoint class.
@@ -55,18 +48,18 @@ namespace Jitter.Dynamics.Joints
 
             hingeAxis *= 0.5f;
 
-            JVector pos1 = position; JVector.Add(ref pos1,ref hingeAxis,out pos1);
-            JVector pos2 = position; JVector.Subtract(ref pos2,ref hingeAxis,out pos2);
+            var pos1 = position; pos1 = JVector.Add(pos1, hingeAxis);
+            var pos2 = position; pos2 = JVector.Subtract(pos2, hingeAxis);
 
             worldPointConstraint[0] = new PointOnPoint(body1,body2,pos1);
             worldPointConstraint[1] = new PointOnPoint(body1,body2,pos2);
         }
 
-        public PointOnPoint PointOnPointConstraint1 { get { return worldPointConstraint[0]; } }
+        public PointOnPoint PointOnPointConstraint1 => worldPointConstraint[0];
 
-        public PointOnPoint PointOnPointConstraint2 { get { return worldPointConstraint[1]; } }
+        public PointOnPoint PointOnPointConstraint2 => worldPointConstraint[1];
 
-        public float AppliedImpulse { get { return worldPointConstraint[0].AppliedImpulse + worldPointConstraint[1].AppliedImpulse; } }
+        public float AppliedImpulse => worldPointConstraint[0].AppliedImpulse + worldPointConstraint[1].AppliedImpulse;
 
         /// <summary>
         /// Adds the internal constraints of this joint to the world class.

@@ -17,14 +17,9 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
 using System;
 using System.Collections.Generic;
-
-using Jitter.Dynamics;
 using Jitter.LinearMath;
-using Jitter.Collision.Shapes;
-#endregion
 
 namespace Jitter.Collision.Shapes
 {
@@ -67,13 +62,17 @@ namespace Jitter.Collision.Shapes
         /// <summary>
         /// Returns the inertia of the untransformed shape.
         /// </summary>
-        public JMatrix Inertia { get { return inertia; } protected set { inertia = value; } }
+        public JMatrix Inertia { get => inertia;
+            protected set => inertia = value;
+        }
 
 
         /// <summary>
         /// Gets the mass of the shape. This is the volume. (density = 1)
         /// </summary>
-        public float Mass { get { return mass; } protected set { mass = value; } }
+        public float Mass { get => mass;
+            protected set => mass = value;
+        }
 
         /// <summary>
         /// Informs all listener that the shape changed.
@@ -86,7 +85,7 @@ namespace Jitter.Collision.Shapes
         /// <summary>
         /// The untransformed axis aligned bounding box of the shape.
         /// </summary>
-        public JBBox BoundingBox { get { return boundingBox; } }
+        public JBBox BoundingBox => boundingBox;
 
         /// <summary>
         /// Allows to set a user defined value to the shape.
@@ -111,13 +110,13 @@ namespace Jitter.Collision.Shapes
         /// <param name="generationThreshold"></param>
         public virtual void MakeHull(ref List<JVector> triangleList, int generationThreshold)
         {
-            float distanceThreshold = 0.0f;
+            var distanceThreshold = 0.0f;
 
             if (generationThreshold < 0) generationThreshold = 4;
 
-            Stack<ClipTriangle> activeTriList = new Stack<ClipTriangle>();
+            var activeTriList = new Stack<ClipTriangle>();
 
-            JVector[] v = new JVector[] // 6 Array
+            var v = new JVector[] // 6 Array
 		    {
 			new JVector( -1,  0,  0 ),
 			new JVector(  1,  0,  0 ),
@@ -129,7 +128,7 @@ namespace Jitter.Collision.Shapes
 			new JVector(  0,  0,  1 ),
 		    };
 
-            int[,] kTriangleVerts = new int[8, 3] // 8 x 3 Array
+            var kTriangleVerts = new int[8, 3] // 8 x 3 Array
 		    {
 			{ 5, 1, 3 },
 			{ 4, 3, 1 },
@@ -142,9 +141,9 @@ namespace Jitter.Collision.Shapes
 			{ 0, 2, 5 }
 		    };
 
-            for (int i = 0; i < 8; i++)
+            for (var i = 0; i < 8; i++)
             {
-                ClipTriangle tri = new ClipTriangle();
+                var tri = new ClipTriangle();
                 tri.n1 = v[kTriangleVerts[i, 0]];
                 tri.n2 = v[kTriangleVerts[i, 1]];
                 tri.n3 = v[kTriangleVerts[i, 2]];
@@ -152,27 +151,27 @@ namespace Jitter.Collision.Shapes
                 activeTriList.Push(tri);
             }
 
-            List<JVector> pointSet = new List<JVector>();
+            var pointSet = new List<JVector>();
 
             // surfaceTriList
             while (activeTriList.Count > 0)
             {
-                ClipTriangle tri = activeTriList.Pop();
+                var tri = activeTriList.Pop();
 
-                JVector p1; SupportMapping(ref tri.n1, out p1);
-                JVector p2; SupportMapping(ref tri.n2, out p2);
-                JVector p3; SupportMapping(ref tri.n3, out p3);
+                SupportMapping(ref tri.n1, out var p1);
+                SupportMapping(ref tri.n2, out var p2);
+                SupportMapping(ref tri.n3, out var p3);
 
-                float d1 = (p2 - p1).LengthSquared();
-                float d2 = (p3 - p2).LengthSquared();
-                float d3 = (p1 - p3).LengthSquared();
+                var d1 = (p2 - p1).LengthSquared();
+                var d2 = (p3 - p2).LengthSquared();
+                var d3 = (p1 - p3).LengthSquared();
 
                 if (Math.Max(Math.Max(d1, d2), d3) > distanceThreshold && tri.generation < generationThreshold)
                 {
-                    ClipTriangle tri1 = new ClipTriangle();
-                    ClipTriangle tri2 = new ClipTriangle();
-                    ClipTriangle tri3 = new ClipTriangle();
-                    ClipTriangle tri4 = new ClipTriangle();
+                    var tri1 = new ClipTriangle();
+                    var tri2 = new ClipTriangle();
+                    var tri3 = new ClipTriangle();
+                    var tri4 = new ClipTriangle();
 
                     tri1.generation = tri.generation + 1;
                     tri2.generation = tri.generation + 1;
@@ -183,7 +182,7 @@ namespace Jitter.Collision.Shapes
                     tri2.n2 = tri.n2;
                     tri3.n3 = tri.n3;
 
-                    JVector n = 0.5f * (tri.n1 + tri.n2);
+                    var n = 0.5f * (tri.n1 + tri.n2);
                     n.Normalize();
 
                     tri1.n2 = n;
@@ -233,29 +232,27 @@ namespace Jitter.Collision.Shapes
             // I don't think that this can be done faster.
             // 6 is the minimum number of SupportMap calls.
 
-            JVector vec = JVector.Zero;
-
-            vec.Set(orientation.M11, orientation.M21, orientation.M31);
+            var vec = new JVector(orientation.M11, orientation.M21, orientation.M31);
             SupportMapping(ref vec, out vec);
             box.Max.X = orientation.M11 * vec.X + orientation.M21 * vec.Y + orientation.M31 * vec.Z;
 
-            vec.Set(orientation.M12, orientation.M22, orientation.M32);
+            vec = new JVector(orientation.M12, orientation.M22, orientation.M32);
             SupportMapping(ref vec, out vec);
             box.Max.Y = orientation.M12 * vec.X + orientation.M22 * vec.Y + orientation.M32 * vec.Z;
 
-            vec.Set(orientation.M13, orientation.M23, orientation.M33);
+            vec = new JVector(orientation.M13, orientation.M23, orientation.M33);
             SupportMapping(ref vec, out vec);
             box.Max.Z = orientation.M13 * vec.X + orientation.M23 * vec.Y + orientation.M33 * vec.Z;
 
-            vec.Set(-orientation.M11, -orientation.M21, -orientation.M31);
+            vec = new JVector(-orientation.M11, -orientation.M21, -orientation.M31);
             SupportMapping(ref vec, out vec);
             box.Min.X = orientation.M11 * vec.X + orientation.M21 * vec.Y + orientation.M31 * vec.Z;
 
-            vec.Set(-orientation.M12, -orientation.M22, -orientation.M32);
+            vec = new JVector(-orientation.M12, -orientation.M22, -orientation.M32);
             SupportMapping(ref vec, out vec);
             box.Min.Y = orientation.M12 * vec.X + orientation.M22 * vec.Y + orientation.M32 * vec.Z;
 
-            vec.Set(-orientation.M13, -orientation.M23, -orientation.M33);
+            vec = new JVector(-orientation.M13, -orientation.M23, -orientation.M33);
             SupportMapping(ref vec, out vec);
             box.Min.Z = orientation.M13 * vec.X + orientation.M23 * vec.Y + orientation.M33 * vec.Z;
         }
@@ -281,42 +278,41 @@ namespace Jitter.Collision.Shapes
         /// <param name="centerOfMass"></param>
         /// <param name="inertia">Returns the inertia relative to the center of mass, not to the origin</param>
         /// <returns></returns>
-        #region  public static float CalculateMassInertia(Shape shape, out JVector centerOfMass, out JMatrix inertia)
         public static float CalculateMassInertia(Shape shape, out JVector centerOfMass,
-            out JMatrix inertia)
+                                                 out JMatrix inertia)
         {
-            float mass = 0.0f;
+            var mass = 0.0f;
             centerOfMass = JVector.Zero; inertia = JMatrix.Zero;
 
             if (shape is Multishape) throw new ArgumentException("Can't calculate inertia of multishapes.", "shape");
 
             // build a triangle hull around the shape
-            List<JVector> hullTriangles = new List<JVector>();
+            var hullTriangles = new List<JVector>();
             shape.MakeHull(ref hullTriangles, 3);
 
             // create inertia of tetrahedron with vertices at
             // (0,0,0) (1,0,0) (0,1,0) (0,0,1)
             float a = 1.0f / 60.0f, b = 1.0f / 120.0f;
-            JMatrix C = new JMatrix(a, b, b, b, a, b, b, b, a);
+            var C = new JMatrix(a, b, b, b, a, b, b, b, a);
 
-            for (int i = 0; i < hullTriangles.Count; i += 3)
+            for (var i = 0; i < hullTriangles.Count; i += 3)
             {
-                JVector column0 = hullTriangles[i + 0];
-                JVector column1 = hullTriangles[i + 1];
-                JVector column2 = hullTriangles[i + 2];
+                var column0 = hullTriangles[i + 0];
+                var column1 = hullTriangles[i + 1];
+                var column2 = hullTriangles[i + 2];
 
-                JMatrix A = new JMatrix(column0.X, column1.X, column2.X,
+                var A = new JMatrix(column0.X, column1.X, column2.X,
                     column0.Y, column1.Y, column2.Y,
                     column0.Z, column1.Z, column2.Z);
 
-                float detA = A.Determinant();
+                var detA = A.Determinant();
 
                 // now transform this canonical tetrahedron to the target tetrahedron
                 // inertia by a linear transformation A
-                JMatrix tetrahedronInertia = JMatrix.Multiply(A * C * JMatrix.Transpose(A), detA);
+                var tetrahedronInertia = JMatrix.Multiply(A * C * JMatrix.Transpose(A), detA);
 
-                JVector tetrahedronCOM = (1.0f / 4.0f) * (hullTriangles[i + 0] + hullTriangles[i + 1] + hullTriangles[i + 2]);
-                float tetrahedronMass = (1.0f / 6.0f) * detA;
+                var tetrahedronCOM = 1.0f / 4.0f * (hullTriangles[i + 0] + hullTriangles[i + 1] + hullTriangles[i + 2]);
+                var tetrahedronMass = 1.0f / 6.0f * detA;
 
                 inertia += tetrahedronInertia;
                 centerOfMass += tetrahedronMass * tetrahedronCOM;
@@ -326,12 +322,12 @@ namespace Jitter.Collision.Shapes
             inertia = JMatrix.Multiply(JMatrix.Identity, inertia.Trace()) - inertia;
             centerOfMass = centerOfMass * (1.0f / mass);
 
-            float x = centerOfMass.X;
-            float y = centerOfMass.Y;
-            float z = centerOfMass.Z;
+            var x = centerOfMass.X;
+            var y = centerOfMass.Y;
+            var z = centerOfMass.Z;
 
             // now translate the inertia by the center of mass
-            JMatrix t = new JMatrix(
+            var t = new JMatrix(
                 -mass * (y * y + z * z), mass * x * y, mass * x * z,
                 mass * y * x, -mass * (z * z + x * x), mass * y * z,
                 mass * z * x, mass * z * y, -mass * (x * x + y * y));
@@ -340,8 +336,7 @@ namespace Jitter.Collision.Shapes
 
             return mass;
         }
-        #endregion
-        
+
         /// <summary>
         /// Numerically calculates the inertia, mass and geometric center of the shape.
         /// This gets a good value for "normal" shapes. The algorithm isn't very accurate
@@ -349,7 +344,7 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         public virtual void CalculateMassInertia()
         {
-            this.mass = Shape.CalculateMassInertia(this, out geomCen, out inertia);
+            mass = CalculateMassInertia(this, out geomCen, out inertia);
         }
 
         /// <summary>
@@ -367,7 +362,7 @@ namespace Jitter.Collision.Shapes
         /// <param name="geomCenter">The center of the SupportMap.</param>
         public void SupportCenter(out JVector geomCenter)
         {
-            geomCenter = this.geomCen;
+            geomCenter = geomCen;
         }
 
     }

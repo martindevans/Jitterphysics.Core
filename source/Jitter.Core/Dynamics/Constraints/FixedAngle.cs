@@ -17,19 +17,11 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
 using System;
-using System.Collections.Generic;
-
-using Jitter.Dynamics;
 using Jitter.LinearMath;
-using Jitter.Collision.Shapes;
-#endregion
 
 namespace Jitter.Dynamics.Constraints
 {
-
-    #region Constraint Equations
     // Constraint formulation:
     // 
     // C_1 = R1_x - R2_x
@@ -57,7 +49,6 @@ namespace Jitter.Dynamics.Constraints
     // Effective Mass:
     //
     // 1/m_eff = [J^T * M^-1 * J] = I1^(-1) + I2^(-1)
-    #endregion
 
     /// <summary>
     /// The AngleConstraint constraints two bodies to always have the same relative
@@ -68,7 +59,7 @@ namespace Jitter.Dynamics.Constraints
     {
 
         private float biasFactor = 0.05f;
-        private float softness = 0.0f;
+        private float softness;
 
         private JVector accumulatedImpulse;
 
@@ -88,20 +79,28 @@ namespace Jitter.Dynamics.Constraints
             //orientationDifference = JMatrix.Transpose(orientationDifference);
         }
 
-        public JVector AppliedImpulse { get { return accumulatedImpulse; } }
+        public JVector AppliedImpulse => accumulatedImpulse;
 
-        public JMatrix InitialOrientationBody1 { get { return initialOrientation1; } set { initialOrientation1 = value; } }
-        public JMatrix InitialOrientationBody2 { get { return initialOrientation2; } set { initialOrientation2 = value; } }
+        public JMatrix InitialOrientationBody1 { get => initialOrientation1;
+            set => initialOrientation1 = value;
+        }
+        public JMatrix InitialOrientationBody2 { get => initialOrientation2;
+            set => initialOrientation2 = value;
+        }
 
         /// <summary>
         /// Defines how big the applied impulses can get.
         /// </summary>
-        public float Softness { get { return softness; } set { softness = value; } }
+        public float Softness { get => softness;
+            set => softness = value;
+        }
 
         /// <summary>
         /// Defines how big the applied impulses can get which correct errors.
         /// </summary>
-        public float BiasFactor { get { return biasFactor; } set { biasFactor = value; } }
+        public float BiasFactor { get => biasFactor;
+            set => biasFactor = value;
+        }
 
         JMatrix effectiveMass;
         JVector bias;
@@ -123,21 +122,20 @@ namespace Jitter.Dynamics.Constraints
 
             JMatrix.Inverse(ref effectiveMass, out effectiveMass);
 
-            JMatrix orientationDifference;
-            JMatrix.Multiply(ref initialOrientation1, ref initialOrientation2, out orientationDifference);
+            JMatrix.Multiply(ref initialOrientation1, ref initialOrientation2, out var orientationDifference);
             JMatrix.Transpose(ref orientationDifference, out orientationDifference);
 
-            JMatrix q = orientationDifference * body2.invOrientation * body1.orientation;
+            var q = orientationDifference * body2.invOrientation * body1.orientation;
             JVector axis;
 
-            float x = q.M32 - q.M23;
-            float y = q.M13 - q.M31;
-            float z = q.M21 - q.M12;
+            var x = q.M32 - q.M23;
+            var y = q.M13 - q.M31;
+            var z = q.M21 - q.M12;
 
-            float r = JMath.Sqrt(x * x + y * y + z * z);
-            float t = q.M11 + q.M22 + q.M33;
+            var r = MathF.Sqrt(x * x + y * y + z * z);
+            var t = q.M11 + q.M22 + q.M33;
 
-            float angle = (float)Math.Atan2(r, t - 1);
+            var angle = MathF.Atan2(r, t - 1);
             axis = new JVector(x, y, z) * angle;
 
             if (r != 0.0f) axis = axis * (1.0f / r);
@@ -154,11 +152,11 @@ namespace Jitter.Dynamics.Constraints
         /// </summary>
         public override void Iterate()
         {
-            JVector jv = body1.angularVelocity - body2.angularVelocity;
+            var jv = body1.angularVelocity - body2.angularVelocity;
 
-            JVector softnessVector = accumulatedImpulse * softnessOverDt;
+            var softnessVector = accumulatedImpulse * softnessOverDt;
 
-            JVector lambda = -1.0f * JVector.Transform(jv+bias+softnessVector, effectiveMass);
+            var lambda = -1.0f * JVector.Transform(jv+bias+softnessVector, effectiveMass);
 
             accumulatedImpulse += lambda;
 

@@ -17,14 +17,9 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
 using System;
 using System.Collections.Generic;
-
-using Jitter.Dynamics;
 using Jitter.LinearMath;
-using Jitter.Collision.Shapes;
-#endregion
 
 namespace Jitter.Collision
 {
@@ -32,7 +27,6 @@ namespace Jitter.Collision
     /// <summary>
     /// structure used to set up the mesh
     /// </summary>
-    #region public struct TriangleVertexIndices
     public struct TriangleVertexIndices
     {
         /// <summary>
@@ -56,9 +50,9 @@ namespace Jitter.Collision
         /// <param name="i2">The index of the third vertex.</param>
         public TriangleVertexIndices(int i0, int i1, int i2)
         {
-            this.I0 = i0;
-            this.I1 = i1;
-            this.I2 = i2;
+            I0 = i0;
+            I1 = i1;
+            I2 = i2;
         }
 
         /// <summary>
@@ -72,7 +66,6 @@ namespace Jitter.Collision
             I0 = i0; I1 = i1; I2 = i2;
         }
     }
-    #endregion
 
 
     /// <summary>
@@ -125,12 +118,11 @@ namespace Jitter.Collision
         /// <summary>
         /// Gets the root node box containing the whole octree.
         /// </summary>
-        public JBBox RootNodeBox { get { return rootNodeBox; } }
-       
+        public JBBox RootNodeBox => rootNodeBox;
+
         /// <summary>
         /// Clears the octree.
         /// </summary>
-        #region public void Clear()
         public void Clear()
         {
             positions = null;
@@ -139,14 +131,12 @@ namespace Jitter.Collision
             nodes = null;
             nodeStackPool.ResetResourcePool();
         }
-        #endregion
 
         /// <summary>
         /// Sets new triangles.
         /// </summary>
         /// <param name="positions">Vertices.</param>
         /// <param name="tris">Indices.</param>
-        #region public void AddTriangles(List<JVector> positions, List<TriangleVertexIndices> tris)
         public void SetTriangles(List<JVector> positions, List<TriangleVertexIndices> tris)
         {
             // copy the position data into a array
@@ -157,12 +147,10 @@ namespace Jitter.Collision
             this.tris = new TriangleVertexIndices[tris.Count];
             tris.CopyTo(this.tris);
         }
-        #endregion
 
         /// <summary>
         /// Builds the octree.
         /// </summary>
-        #region public void BuildOctree()
         public void BuildOctree()
         {
             // create tri and tri bounding box arrays
@@ -173,33 +161,33 @@ namespace Jitter.Collision
                                            new JVector(float.NegativeInfinity, float.NegativeInfinity, float.NegativeInfinity));
 
 
-            for (int i = 0; i < tris.Length; i++)
+            for (var i = 0; i < tris.Length; i++)
             {
-                JVector.Min(ref positions[tris[i].I1], ref positions[tris[i].I2], out triBoxes[i].Min);
-                JVector.Min(ref positions[tris[i].I0], ref triBoxes[i].Min, out triBoxes[i].Min);
+                triBoxes[i].Min = JVector.Min(positions[tris[i].I1], positions[tris[i].I2]);
+                triBoxes[i].Min = JVector.Min(positions[tris[i].I0], triBoxes[i].Min);
 
-                JVector.Max(ref positions[tris[i].I1], ref positions[tris[i].I2], out triBoxes[i].Max);
-                JVector.Max(ref positions[tris[i].I0], ref triBoxes[i].Max, out triBoxes[i].Max);
+                triBoxes[i].Max = JVector.Max(positions[tris[i].I1], positions[tris[i].I2]);
+                triBoxes[i].Max = JVector.Max(positions[tris[i].I0], triBoxes[i].Max);
 
                 // get size of the root box
-                JVector.Min(ref rootNodeBox.Min, ref triBoxes[i].Min, out rootNodeBox.Min);
-                JVector.Max(ref rootNodeBox.Max, ref triBoxes[i].Max, out rootNodeBox.Max);
+                rootNodeBox.Min = JVector.Min(rootNodeBox.Min, triBoxes[i].Min);
+                rootNodeBox.Max = JVector.Max(rootNodeBox.Max, triBoxes[i].Max);
             }
 
-            List<BuildNode> buildNodes = new List<BuildNode>();
+            var buildNodes = new List<BuildNode>();
             buildNodes.Add(new BuildNode());
             buildNodes[0].box = rootNodeBox;
 
-            JBBox[] children = new JBBox[8];
-            for (int triNum = 0; triNum < tris.Length; triNum++)
+            var children = new JBBox[8];
+            for (var triNum = 0; triNum < tris.Length; triNum++)
             {
-                int nodeIndex = 0;
-                JBBox box = rootNodeBox;
+                var nodeIndex = 0;
+                var box = rootNodeBox;
 
                 while (box.Contains(ref triBoxes[triNum]) == JBBox.ContainmentType.Contains)
                 {
-                    int childCon = -1;
-                    for (int i = 0; i < 8; ++i)
+                    var childCon = -1;
+                    for (var i = 0; i < 8; ++i)
                     {
                         CreateAABox(ref box, (EChild)i,out children[i]);
                         if (children[i].Contains(ref triBoxes[triNum]) == JBBox.ContainmentType.Contains)
@@ -220,8 +208,8 @@ namespace Jitter.Collision
                     else
                     {
                         // do we already have this child
-                        int childIndex = -1;
-                        for (int index = 0; index < buildNodes[nodeIndex].nodeIndices.Count; ++index)
+                        var childIndex = -1;
+                        for (var index = 0; index < buildNodes[nodeIndex].nodeIndices.Count; ++index)
                         {
                             if (buildNodes[buildNodes[nodeIndex].nodeIndices[index]].childType == childCon)
                             {
@@ -232,8 +220,8 @@ namespace Jitter.Collision
                         if (childIndex == -1)
                         {
                             // nope create child
-                            BuildNode parentNode = buildNodes[nodeIndex];
-                            BuildNode newNode = new BuildNode();
+                            var parentNode = buildNodes[nodeIndex];
+                            var newNode = new BuildNode();
                             newNode.childType = childCon;
                             newNode.box = children[childCon];
                             buildNodes.Add(newNode);
@@ -255,10 +243,10 @@ namespace Jitter.Collision
             nodes = new Node[buildNodes.Count];
             nodeStackPool = new ArrayResourcePool<ushort>(buildNodes.Count);
             //nodeStack = new UInt16[buildNodes.Count];
-            for (int i = 0; i < nodes.Length; i++)
+            for (var i = 0; i < nodes.Length; i++)
             {
                 nodes[i].nodeIndices = new UInt16[buildNodes[i].nodeIndices.Count];
-                for (int index = 0; index < nodes[i].nodeIndices.Length; ++index)
+                for (var index = 0; index < nodes[i].nodeIndices.Length; ++index)
                 {
                     nodes[i].nodeIndices[index] = (UInt16)buildNodes[i].nodeIndices[index];
                 }
@@ -269,20 +257,17 @@ namespace Jitter.Collision
             }
             buildNodes.Clear(); buildNodes = null;
         }
-        #endregion
 
         /// <summary>
         /// Initializes a new instance of the Octree class.
         /// </summary>
         /// <param name="positions">Vertices.</param>
         /// <param name="tris">Indices.</param>
-        #region Constructor
         public Octree(List<JVector> positions, List<TriangleVertexIndices> tris)
         {
             SetTriangles(positions, tris);
             BuildOctree();
         }
-        #endregion
 
         /// <summary>
         /// Create a bounding box appropriate for a child, based on a parents AABox
@@ -290,14 +275,12 @@ namespace Jitter.Collision
         /// <param name="aabb"></param>
         /// <param name="child"></param>
         /// <param name="result"></param>
-        #region  private void CreateAABox(ref JBBox aabb, EChild child,out JBBox result)
         private void CreateAABox(ref JBBox aabb, EChild child,out JBBox result)
         {
-            JVector dims;
-            JVector.Subtract(ref aabb.Max, ref aabb.Min, out dims);
-            JVector.Multiply(ref dims, 0.5f, out dims);
+            var dims = JVector.Subtract(aabb.Max, aabb.Min);
+            dims = JVector.Multiply(dims, 0.5f);
 
-            JVector offset = JVector.Zero;
+            var offset = JVector.Zero;
 
             switch (child)
             {
@@ -317,34 +300,31 @@ namespace Jitter.Collision
 
             result = new JBBox();
             result.Min = new JVector(offset.X * dims.X, offset.Y * dims.Y, offset.Z * dims.Z);
-            JVector.Add(ref result.Min, ref aabb.Min, out result.Min);
+            result.Min = JVector.Add(result.Min, aabb.Min);
 
-            JVector.Add(ref result.Min, ref dims, out result.Max);
+            result.Max = JVector.Add(result.Min, dims);
 
             // expand it just a tiny bit just to be safe!
-            float extra = 0.00001f;
+            var extra = 0.00001f;
 
-            JVector temp; JVector.Multiply(ref dims, extra, out temp);
-            JVector.Subtract(ref result.Min, ref temp, out result.Min);
-            JVector.Add(ref result.Max, ref temp, out result.Max);
+            var temp = JVector.Multiply(dims, extra);
+            result.Min = JVector.Subtract(result.Min, temp);
+            result.Max = JVector.Add(result.Max, temp);
         }
-        #endregion
 
-        #region private void GatherTriangles(int nodeIndex, ref List<int> tris)
         private void GatherTriangles(int nodeIndex, ref List<int> tris)
         {
             // add this nodes triangles
             tris.AddRange(nodes[nodeIndex].triIndices);
 
             // recurse into this nodes children
-            int numChildren = nodes[nodeIndex].nodeIndices.Length;
-            for (int i = 0; i < numChildren; ++i)
+            var numChildren = nodes[nodeIndex].nodeIndices.Length;
+            for (var i = 0; i < numChildren; ++i)
             {
                 int childNodeIndex = nodes[nodeIndex].nodeIndices[i];
                 GatherTriangles(childNodeIndex, ref tris);
             }
         }
-        #endregion
 
 
         /// <summary>
@@ -353,27 +333,26 @@ namespace Jitter.Collision
         /// <param name="triangles">The list to add the triangles to.</param>
         /// <param name="testBox">The axis alignes bounding box.</param>
         /// <returns></returns>
-        #region public int GetTrianglesIntersectingtAABox(List<int> triangles, ref JBBox testBox)
         public int GetTrianglesIntersectingtAABox(List<int> triangles, ref JBBox testBox)
         {
             if (nodes.Length == 0)
                 return 0;
-            int curStackIndex = 0;
-            int endStackIndex = 1;
+            var curStackIndex = 0;
+            var endStackIndex = 1;
 
-            UInt16[] nodeStack = nodeStackPool.GetNew();
+            var nodeStack = nodeStackPool.GetNew();
 
             nodeStack[0] = 0;
 
-            int triCount = 0;
+            var triCount = 0;
 
             while (curStackIndex < endStackIndex)
             {
-                UInt16 nodeIndex = nodeStack[curStackIndex];
+                var nodeIndex = nodeStack[curStackIndex];
                 curStackIndex++;
                 if (nodes[nodeIndex].box.Contains(ref testBox) != JBBox.ContainmentType.Disjoint)
                 {
-                    for (int i = 0; i < nodes[nodeIndex].triIndices.Length; ++i)
+                    for (var i = 0; i < nodes[nodeIndex].triIndices.Length; ++i)
                     {
                         if (triBoxes[nodes[nodeIndex].triIndices[i]].Contains(ref testBox) != JBBox.ContainmentType.Disjoint)
                         {
@@ -382,8 +361,8 @@ namespace Jitter.Collision
                         }
                     }
 
-                    int numChildren = nodes[nodeIndex].nodeIndices.Length;
-                    for (int i = 0; i < numChildren; ++i)
+                    var numChildren = nodes[nodeIndex].nodeIndices.Length;
+                    for (var i = 0; i < numChildren; ++i)
                     {
                         nodeStack[endStackIndex++] = nodes[nodeIndex].nodeIndices[i];
                     }
@@ -394,7 +373,6 @@ namespace Jitter.Collision
 
             return triCount;
         }
-        #endregion
 
         private ArrayResourcePool<UInt16> nodeStackPool;
 
@@ -405,26 +383,25 @@ namespace Jitter.Collision
         /// <param name="rayDelta"></param>
         /// <param name="triangles"></param>
         /// <returns></returns>
-        #region public int GetTrianglesIntersectingtRay(JVector rayOrigin, JVector rayDelta)
         public int GetTrianglesIntersectingRay(List<int> triangles, JVector rayOrigin, JVector rayDelta)
         {
             if (nodes.Length == 0)
                 return 0;
-            int curStackIndex = 0;
-            int endStackIndex = 1;
+            var curStackIndex = 0;
+            var endStackIndex = 1;
 
-            UInt16[] nodeStack = nodeStackPool.GetNew();
+            var nodeStack = nodeStackPool.GetNew();
             nodeStack[0] = 0;
 
-            int triCount = 0;
+            var triCount = 0;
 
             while (curStackIndex < endStackIndex)
             {
-                UInt16 nodeIndex = nodeStack[curStackIndex];
+                var nodeIndex = nodeStack[curStackIndex];
                 curStackIndex++;
                 if (nodes[nodeIndex].box.SegmentIntersect(ref rayOrigin, ref rayDelta))
                 {
-                    for (int i = 0; i < nodes[nodeIndex].triIndices.Length; ++i)
+                    for (var i = 0; i < nodes[nodeIndex].triIndices.Length; ++i)
                     {
                         if (triBoxes[nodes[nodeIndex].triIndices[i]].SegmentIntersect(ref rayOrigin, ref rayDelta))
                         {
@@ -433,8 +410,8 @@ namespace Jitter.Collision
                         }
                     }
 
-                    int numChildren = nodes[nodeIndex].nodeIndices.Length;
-                    for (int i = 0; i < numChildren; ++i)
+                    var numChildren = nodes[nodeIndex].nodeIndices.Length;
+                    for (var i = 0; i < numChildren; ++i)
                     {
                         nodeStack[endStackIndex++] = nodes[nodeIndex].nodeIndices[i];
                     }
@@ -444,26 +421,22 @@ namespace Jitter.Collision
             nodeStackPool.GiveBack(nodeStack);
             return triCount;
         }
-        #endregion
 
         /// <summary>
         /// Gets the indices of a triangle by index.
         /// </summary>
         /// <param name="index">The index.</param>
         /// <returns>The indices of a triangle.</returns>
-        #region public TriangleVertexIndices GetTriangleVertexIndex(int index)
         public TriangleVertexIndices GetTriangleVertexIndex(int index)
         {
             return tris[index];
         }
-        #endregion
 
         /// <summary>
         /// Gets a vertex from the vertex list.
         /// </summary>
         /// <param name="vertex">The index of the vertex</param>
         /// <returns></returns>
-        #region public JVector GetVertex(int vertex)
         public JVector GetVertex(int vertex)
         {
             return positions[vertex];
@@ -478,18 +451,13 @@ namespace Jitter.Collision
         {
             result = positions[vertex];
         }
-        #endregion
 
         /// <summary>
         /// Gets the number of triangles within this octree.
         /// </summary>
-        #region public int NumTriangles
         public int NumTriangles
         {
             get { return tris.Length; }
         }
-        #endregion
-
-
     }
 }

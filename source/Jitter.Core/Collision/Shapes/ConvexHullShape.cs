@@ -17,14 +17,8 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
-using System;
 using System.Collections.Generic;
-
-using Jitter.Dynamics;
 using Jitter.LinearMath;
-using Jitter.Collision.Shapes;
-#endregion
 
 namespace Jitter.Collision.Shapes
 {
@@ -34,7 +28,7 @@ namespace Jitter.Collision.Shapes
     /// </summary>
     public class ConvexHullShape : Shape
     {
-        List<JVector> vertices = null;
+        List<JVector> vertices;
 
         JVector shifted;
 
@@ -49,11 +43,11 @@ namespace Jitter.Collision.Shapes
             UpdateShape();
         }
 
-        public JVector Shift { get { return -1 * this.shifted; } }
+        public JVector Shift => -1 * shifted;
 
         public override void CalculateMassInertia()
         {
-            this.mass = Shape.CalculateMassInertia(this, out shifted, out inertia);
+            mass = Shape.CalculateMassInertia(this, out shifted, out inertia);
         }
 
         /// <summary>
@@ -65,11 +59,11 @@ namespace Jitter.Collision.Shapes
         /// <param name="result">The result.</param>
         public override void SupportMapping(ref JVector direction, out JVector result)
         {
-            float maxDotProduct = float.MinValue;
-            int maxIndex = 0;
+            var maxDotProduct = float.MinValue;
+            var maxIndex = 0;
             float dotProduct;
 
-            for (int i = 0; i < vertices.Count; i++)
+            for (var i = 0; i < vertices.Count; i++)
             {
                 dotProduct = JVector.Dot(vertices[i], direction);
                 if (dotProduct > maxDotProduct)
@@ -79,7 +73,7 @@ namespace Jitter.Collision.Shapes
                 }
             }
 
-            result = vertices[maxIndex] - this.shifted;
+            result = vertices[maxIndex] - shifted;
         }
     }
 }

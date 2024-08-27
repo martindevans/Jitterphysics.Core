@@ -17,14 +17,8 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
-using System;
 using System.Collections.Generic;
-
-using Jitter.Dynamics;
 using Jitter.LinearMath;
-using Jitter.Collision.Shapes;
-#endregion
 
 namespace Jitter.Collision.Shapes
 {
@@ -35,7 +29,7 @@ namespace Jitter.Collision.Shapes
     public class TriangleMeshShape : Multishape
     {
         private List<int> potentialTriangles = new List<int>();
-        private Octree octree = null;
+        private Octree octree;
 
         private float sphericalExpansion = 0.05f;
 
@@ -45,8 +39,8 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         public float SphericalExpansion 
         { 
-            get { return sphericalExpansion; } 
-            set { sphericalExpansion = value; } 
+            get => sphericalExpansion;
+            set => sphericalExpansion = value;
         }
 
         /// <summary>
@@ -65,8 +59,8 @@ namespace Jitter.Collision.Shapes
  
         protected override Multishape CreateWorkingClone()
         {
-            TriangleMeshShape clone = new TriangleMeshShape(this.octree);
-            clone.sphericalExpansion = this.sphericalExpansion;
+            var clone = new TriangleMeshShape(octree);
+            clone.sphericalExpansion = sphericalExpansion;
             return clone;
         }
 
@@ -82,8 +76,7 @@ namespace Jitter.Collision.Shapes
         {
             potentialTriangles.Clear();
 
-            #region Expand Spherical
-            JBBox exp = box;
+            var exp = box;
 
             exp.Min.X -= sphericalExpansion;
             exp.Min.Y -= sphericalExpansion;
@@ -91,7 +84,6 @@ namespace Jitter.Collision.Shapes
             exp.Max.X += sphericalExpansion;
             exp.Max.Y += sphericalExpansion;
             exp.Max.Z += sphericalExpansion;
-            #endregion
 
             octree.GetTrianglesIntersectingtAABox(potentialTriangles, ref exp);
 
@@ -100,12 +92,12 @@ namespace Jitter.Collision.Shapes
 
         public override void MakeHull(ref List<JVector> triangleList, int generationThreshold)
         {
-            JBBox large = JBBox.LargeBox;
+            var large = JBBox.LargeBox;
 
-            List<int> indices = new List<int>();
+            var indices = new List<int>();
             octree.GetTrianglesIntersectingtAABox(indices, ref large);
 
-            for (int i = 0; i < indices.Count; i++)
+            for (var i = 0; i < indices.Count; i++)
             {
                 triangleList.Add(octree.GetVertex(octree.GetTriangleVertexIndex(i).I0));
                 triangleList.Add(octree.GetVertex(octree.GetTriangleVertexIndex(i).I1));
@@ -124,11 +116,8 @@ namespace Jitter.Collision.Shapes
         {
             potentialTriangles.Clear();
 
-            #region Expand Spherical
-            JVector expDelta;
-            JVector.Normalize(ref rayDelta, out expDelta);
+            JVector.Normalize(ref rayDelta, out var expDelta);
             expDelta = rayDelta + expDelta * sphericalExpansion;
-            #endregion
 
             octree.GetTrianglesIntersectingRay(potentialTriangles, rayOrigin, expDelta);
 
@@ -146,19 +135,18 @@ namespace Jitter.Collision.Shapes
         /// <param name="result">The result.</param>
         public override void SupportMapping(ref JVector direction, out JVector result)
         {
-            JVector exp;
-            JVector.Normalize(ref direction, out exp);
+            JVector.Normalize(ref direction, out var exp);
             exp *= sphericalExpansion;
 
-            float min = JVector.Dot(ref vecs[0], ref direction);
-            int minIndex = 0;
-            float dot = JVector.Dot(ref vecs[1], ref direction);
+            var min = JVector.Dot(vecs[0], direction);
+            var minIndex = 0;
+            var dot = JVector.Dot(vecs[1], direction);
             if (dot > min)
             {
                 min = dot;
                 minIndex = 1;
             }
-            dot = JVector.Dot(ref vecs[2], ref direction);
+            dot = JVector.Dot(vecs[2], direction);
             if (dot > min)
             {
                 min = dot;
@@ -178,20 +166,20 @@ namespace Jitter.Collision.Shapes
         {
             box = octree.rootNodeBox;
 
-            #region Expand Spherical
             box.Min.X -= sphericalExpansion;
             box.Min.Y -= sphericalExpansion;
             box.Min.Z -= sphericalExpansion;
             box.Max.X += sphericalExpansion;
             box.Max.Y += sphericalExpansion;
             box.Max.Z += sphericalExpansion;
-            #endregion
 
             box.Transform(ref orientation);
         }
 
-        private bool flipNormal = false;
-        public bool FlipNormals { get { return flipNormal; } set { flipNormal = value; } }
+        private bool flipNormal;
+        public bool FlipNormals { get => flipNormal;
+            set => flipNormal = value;
+        }
 
         /// <summary>
         /// Sets the current shape. First <see cref="Prepare"/> has to be called.
@@ -204,17 +192,17 @@ namespace Jitter.Collision.Shapes
             vecs[1] = octree.GetVertex(octree.tris[potentialTriangles[index]].I1);
             vecs[2] = octree.GetVertex(octree.tris[potentialTriangles[index]].I2);
 
-            JVector sum = vecs[0];
-            JVector.Add(ref sum, ref vecs[1], out sum);
-            JVector.Add(ref sum, ref vecs[2], out sum);
-            JVector.Multiply(ref sum, 1.0f / 3.0f, out sum);
+            var sum = vecs[0];
+            sum = JVector.Add(sum, vecs[1]);
+            sum = JVector.Add(sum, vecs[2]);
+            sum = JVector.Multiply(sum, 1.0f / 3.0f);
 
       
             geomCen = sum;
 
-            JVector.Subtract(ref vecs[1], ref vecs[0], out sum);
-            JVector.Subtract(ref vecs[2], ref vecs[0], out normal);
-            JVector.Cross(ref sum, ref normal, out normal);
+            sum = JVector.Subtract(vecs[1], vecs[0]);
+            normal = JVector.Subtract(vecs[2], vecs[0]);
+            normal = JVector.Cross(sum, normal);
 
             if (flipNormal) normal.Negate();
         }

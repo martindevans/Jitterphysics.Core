@@ -17,14 +17,8 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-#region Using Statements
 using System;
-using System.Collections.Generic;
-
-using Jitter.Dynamics;
 using Jitter.LinearMath;
-using Jitter.Collision.Shapes;
-#endregion
 
 namespace Jitter.Collision.Shapes
 {
@@ -40,7 +34,7 @@ namespace Jitter.Collision.Shapes
         /// The sidelength of the box.
         /// </summary>
         public JVector Size { 
-            get { return size; }
+            get => size;
             set { size = value; UpdateShape(); }
         }
         
@@ -51,7 +45,7 @@ namespace Jitter.Collision.Shapes
         public BoxShape(JVector size)
         {
             this.size = size;
-            this.UpdateShape();
+            UpdateShape();
         }
 
         /// <summary>
@@ -62,10 +56,10 @@ namespace Jitter.Collision.Shapes
         /// <param name="width">The width of the box</param>
         public BoxShape(float length, float height, float width)
         {
-            this.size.X = length;
-            this.size.Y = height;
-            this.size.Z = width;
-            this.UpdateShape();
+            size.X = length;
+            size.Y = height;
+            size.Z = width;
+            UpdateShape();
         }
 
         private JVector halfSize = JVector.Zero;
@@ -78,7 +72,7 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         public override void UpdateShape()
         {
-            this.halfSize = size * 0.5f;
+            halfSize = size * 0.5f;
             base.UpdateShape();
         }
 
@@ -89,9 +83,8 @@ namespace Jitter.Collision.Shapes
         /// <param name="box">The axis aligned bounding box of the shape.</param>
         public override void GetBoundingBox(ref JMatrix orientation, out JBBox box)
         {
-            JMatrix abs; JMath.Absolute(ref orientation, out abs);
-            JVector temp;
-            JVector.Transform(ref halfSize, ref abs, out temp);
+            var abs = orientation.Absolute();
+            JVector.Transform(ref halfSize, ref abs, out var temp);
 
             box.Max = temp;
             JVector.Negate(ref temp, out box.Min);
@@ -108,11 +101,11 @@ namespace Jitter.Collision.Shapes
             mass = size.X * size.Y * size.Z;
 
             inertia = JMatrix.Identity;
-            inertia.M11 = (1.0f / 12.0f) * mass * (size.Y * size.Y + size.Z * size.Z);
-            inertia.M22 = (1.0f / 12.0f) * mass * (size.X * size.X + size.Z * size.Z);
-            inertia.M33 = (1.0f / 12.0f) * mass * (size.X * size.X + size.Y * size.Y);
+            inertia.M11 = 1.0f / 12.0f * mass * (size.Y * size.Y + size.Z * size.Z);
+            inertia.M22 = 1.0f / 12.0f * mass * (size.X * size.X + size.Z * size.Z);
+            inertia.M33 = 1.0f / 12.0f * mass * (size.X * size.X + size.Y * size.Y);
 
-            this.geomCen = JVector.Zero;
+            geomCen = JVector.Zero;
         }
 
         /// <summary>
@@ -124,9 +117,9 @@ namespace Jitter.Collision.Shapes
         /// <param name="result">The result.</param>
         public override void SupportMapping(ref JVector direction, out JVector result)
         {
-            result.X = (float)Math.Sign(direction.X) * halfSize.X;
-            result.Y = (float)Math.Sign(direction.Y) * halfSize.Y;
-            result.Z = (float)Math.Sign(direction.Z) * halfSize.Z;
+            result.X = Math.Sign(direction.X) * halfSize.X;
+            result.Y = Math.Sign(direction.Y) * halfSize.Y;
+            result.Z = Math.Sign(direction.Z) * halfSize.Z;
         }
     }
 }
