@@ -322,7 +322,7 @@ namespace Jitter.Dynamics
             }
             else
             {
-                JVector.Transform(ref realRelPos1, ref body1.orientation, out p1);
+                p1 = JVectorExtensions.Transform(realRelPos1, body1.orientation);
                 p1 = p1 + body1.position;
             }
 
@@ -332,7 +332,7 @@ namespace Jitter.Dynamics
             }
             else
             {
-                JVector.Transform(ref realRelPos2, ref body2.orientation, out p2);
+                p2 = JVectorExtensions.Transform(realRelPos2, body2.orientation);
                 p2 = p2 + body2.position;
             }
 
@@ -504,7 +504,7 @@ namespace Jitter.Dynamics
                     rantra.Y = relativePos1.Z * normal.X - relativePos1.X * normal.Z;
                     rantra.Z = relativePos1.X * normal.Y - relativePos1.Y * normal.X;
 
-                    // JVector.Transform(ref rantra, ref body1.invInertiaWorld, out rantra);
+                    // JVectorExtensions.Transform(ref rantra, ref body1.invInertiaWorld, out rantra);
                     var num0 = rantra.X * body1.invInertiaWorld.M11 + rantra.Y * body1.invInertiaWorld.M21 + rantra.Z * body1.invInertiaWorld.M31;
                     var num1 = rantra.X * body1.invInertiaWorld.M12 + rantra.Y * body1.invInertiaWorld.M22 + rantra.Z * body1.invInertiaWorld.M32;
                     var num2 = rantra.X * body1.invInertiaWorld.M13 + rantra.Y * body1.invInertiaWorld.M23 + rantra.Z * body1.invInertiaWorld.M33;
@@ -533,7 +533,7 @@ namespace Jitter.Dynamics
                     rbntrb.Y = relativePos2.Z * normal.X - relativePos2.X * normal.Z;
                     rbntrb.Z = relativePos2.X * normal.Y - relativePos2.Y * normal.X;
 
-                    // JVector.Transform(ref rantra, ref body1.invInertiaWorld, out rantra);
+                    // JVectorExtensions.Transform(ref rantra, ref body1.invInertiaWorld, out rantra);
                     var num0 = rbntrb.X * body2.invInertiaWorld.M11 + rbntrb.Y * body2.invInertiaWorld.M21 + rbntrb.Z * body2.invInertiaWorld.M31;
                     var num1 = rbntrb.X * body2.invInertiaWorld.M12 + rbntrb.Y * body2.invInertiaWorld.M22 + rbntrb.Z * body2.invInertiaWorld.M32;
                     var num2 = rbntrb.X * body2.invInertiaWorld.M13 + rbntrb.Y * body2.invInertiaWorld.M23 + rbntrb.Z * body2.invInertiaWorld.M33;
@@ -585,7 +585,7 @@ namespace Jitter.Dynamics
                     rantra.Y = relativePos1.Z * tangent.X - relativePos1.X * tangent.Z;
                     rantra.Z = relativePos1.X * tangent.Y - relativePos1.Y * tangent.X;
 
-                    // JVector.Transform(ref rantra, ref body1.invInertiaWorld, out rantra);
+                    // JVectorExtensions.Transform(ref rantra, ref body1.invInertiaWorld, out rantra);
                     var num0 = rantra.X * body1.invInertiaWorld.M11 + rantra.Y * body1.invInertiaWorld.M21 + rantra.Z * body1.invInertiaWorld.M31;
                     var num1 = rantra.X * body1.invInertiaWorld.M12 + rantra.Y * body1.invInertiaWorld.M22 + rantra.Z * body1.invInertiaWorld.M32;
                     var num2 = rantra.X * body1.invInertiaWorld.M13 + rantra.Y * body1.invInertiaWorld.M23 + rantra.Z * body1.invInertiaWorld.M33;
@@ -615,7 +615,7 @@ namespace Jitter.Dynamics
                     rbntrb.Y = relativePos2.Z * tangent.X - relativePos2.X * tangent.Z;
                     rbntrb.Z = relativePos2.X * tangent.Y - relativePos2.Y * tangent.X;
 
-                    // JVector.Transform(ref rantra, ref body1.invInertiaWorld, out rantra);
+                    // JVectorExtensions.Transform(ref rantra, ref body1.invInertiaWorld, out rantra);
                     var num0 = rbntrb.X * body2.invInertiaWorld.M11 + rbntrb.Y * body2.invInertiaWorld.M21 + rbntrb.Z * body2.invInertiaWorld.M31;
                     var num1 = rbntrb.X * body2.invInertiaWorld.M12 + rbntrb.Y * body2.invInertiaWorld.M22 + rbntrb.Z * body2.invInertiaWorld.M32;
                     var num2 = rbntrb.X * body2.invInertiaWorld.M13 + rbntrb.Y * body2.invInertiaWorld.M23 + rbntrb.Z * body2.invInertiaWorld.M33;
@@ -792,8 +792,8 @@ namespace Jitter.Dynamics
 
             relativePos1 = p1 - body1.position;
             relativePos2 = p2 - body2.position;
-            JVector.Transform(ref relativePos1, ref body1.invOrientation, out realRelPos1);
-            JVector.Transform(ref relativePos2, ref body2.invOrientation, out realRelPos2);
+            realRelPos1 = JVectorExtensions.Transform(relativePos1, body1.invOrientation);
+            realRelPos2 = JVectorExtensions.Transform(relativePos2, body2.invOrientation);
 
             initialPen = penetration;
             this.penetration = penetration;

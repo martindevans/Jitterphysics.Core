@@ -33,9 +33,9 @@ namespace Jitter.Collision
 
         private static void SupportMapTransformed(ISupportMappable support, ref JMatrix orientation, ref JVector position, ref JVector direction, out JVector result)
         {
-            //JVector.Transform(ref direction, ref invOrientation, out result);
+            //JVectorExtensions.Transform(ref direction, ref invOrientation, out result);
             //support.SupportMapping(ref result, out result);
-            //JVector.Transform(ref result, ref orientation, out result);
+            //JVectorExtensions.Transform(ref result, ref orientation, out result);
             //JVector.Add(ref result, ref position, out result);
 
             result.X = direction.X * orientation.M11 + direction.Y * orientation.M12 + direction.Z * orientation.M13;
@@ -68,7 +68,7 @@ namespace Jitter.Collision
             arbitraryPoint = point - arbitraryPoint;
 
             support.SupportCenter(out var r);
-            JVector.Transform(ref r, ref orientation, out r);
+            r = JVectorExtensions.Transform(r, orientation);
             r = position + r;
             r = point - r;
 

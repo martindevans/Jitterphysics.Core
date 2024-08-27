@@ -274,7 +274,7 @@ namespace Jitter.Dynamics
             linearVelocity = linearVelocity + temp;
 
             temp = JVector.Cross(relativePosition, impulse);
-            JVector.Transform(ref temp, ref invInertiaWorld, out temp);
+            temp = JVectorExtensions.Transform(temp, invInertiaWorld);
             angularVelocity = angularVelocity + temp;
         }
 
@@ -653,13 +653,13 @@ namespace Jitter.Dynamics
                 pos2 = hullPoints[i + 1];
                 pos3 = hullPoints[i + 2];
 
-                JVector.Transform(ref pos1, ref orientation, out pos1);
+                pos1 = JVectorExtensions.Transform(pos1, orientation);
                 pos1 = pos1 + position;
 
-                JVector.Transform(ref pos2, ref orientation, out pos2);
+                pos2 = JVectorExtensions.Transform(pos2, orientation);
                 pos2 = pos2 + position;
 
-                JVector.Transform(ref pos3, ref orientation, out pos3);
+                pos3 = JVectorExtensions.Transform(pos3, orientation);
                 pos3 = pos3 + position;
 
                 drawer.DrawTriangle(pos1, pos2, pos3);

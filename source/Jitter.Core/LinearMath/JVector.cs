@@ -33,6 +33,40 @@ namespace Jitter.LinearMath
         {
             return vector.LengthSquared() < ZeroEpsilonSq;
         }
+
+        /// <summary>
+        /// Transforms a vector by the given matrix.
+        /// </summary>
+        /// <param name="position">The vector to transform.</param>
+        /// <param name="matrix">The transform matrix.</param>
+        /// <returns>The transformed vector.</returns>
+        public static JVector Transform(JVector position, JMatrix matrix)
+        {
+            var num0 = position.X * matrix.M11 + position.Y * matrix.M21 + position.Z * matrix.M31;
+            var num1 = position.X * matrix.M12 + position.Y * matrix.M22 + position.Z * matrix.M32;
+            var num2 = position.X * matrix.M13 + position.Y * matrix.M23 + position.Z * matrix.M33;
+
+            return new JVector
+            {
+                X = num0,
+                Y = num1,
+                Z = num2
+            };
+        }
+
+        public static JVector TransposedTransform(JVector position, JMatrix matrix)
+        {
+            var num0 = position.X * matrix.M11 + position.Y * matrix.M12 + position.Z * matrix.M13;
+            var num1 = position.X * matrix.M21 + position.Y * matrix.M22 + position.Z * matrix.M23;
+            var num2 = position.X * matrix.M31 + position.Y * matrix.M32 + position.Z * matrix.M33;
+
+            return new JVector
+            {
+                X = num0,
+                Y = num1,
+                Z = num2,
+            };
+        }
     }
 
     /// <summary>
@@ -81,16 +115,6 @@ namespace Jitter.LinearMath
         /// A vector with components (1,1,1);
         /// </summary>
         public static readonly JVector One;
-        /// <summary>
-        /// A vector with components 
-        /// (float.MinValue,float.MinValue,float.MinValue);
-        /// </summary>
-        public static readonly JVector MinValue;
-        /// <summary>
-        /// A vector with components 
-        /// (float.MaxValue,float.MaxValue,float.MaxValue);
-        /// </summary>
-        public static readonly JVector MaxValue;
 
         static JVector()
         {
@@ -102,8 +126,6 @@ namespace Jitter.LinearMath
             Down = new JVector(0, -1, 0);
             Backward = new JVector(0, 0, 1);
             Forward = new JVector(0, 0, -1);
-            MinValue = new JVector(float.MinValue);
-            MaxValue = new JVector(float.MaxValue);
         }
 
         /// <summary>
@@ -206,52 +228,6 @@ namespace Jitter.LinearMath
             result.Y = value1.Y > value2.Y ? value1.Y : value2.Y;
             result.Z = value1.Z > value2.Z ? value1.Z : value2.Z;
             return result;
-        }
-
-        /// <summary>
-        /// Transforms a vector by the given matrix.
-        /// </summary>
-        /// <param name="position">The vector to transform.</param>
-        /// <param name="matrix">The transform matrix.</param>
-        /// <returns>The transformed vector.</returns>
-        public static JVector Transform(JVector position, JMatrix matrix)
-        {
-            Transform(ref position, ref matrix, out var result);
-            return result;
-        }
-
-        /// <summary>
-        /// Transforms a vector by the given matrix.
-        /// </summary>
-        /// <param name="position">The vector to transform.</param>
-        /// <param name="matrix">The transform matrix.</param>
-        /// <param name="result">The transformed vector.</param>
-        public static void Transform(ref JVector position, ref JMatrix matrix, out JVector result)
-        {
-            var num0 = position.X * matrix.M11 + position.Y * matrix.M21 + position.Z * matrix.M31;
-            var num1 = position.X * matrix.M12 + position.Y * matrix.M22 + position.Z * matrix.M32;
-            var num2 = position.X * matrix.M13 + position.Y * matrix.M23 + position.Z * matrix.M33;
-
-            result.X = num0;
-            result.Y = num1;
-            result.Z = num2;
-        }
-
-        /// <summary>
-        /// Transforms a vector by the transposed of the given Matrix.
-        /// </summary>
-        /// <param name="position">The vector to transform.</param>
-        /// <param name="matrix">The transform matrix.</param>
-        /// <param name="result">The transformed vector.</param>
-        public static void TransposedTransform(ref JVector position, ref JMatrix matrix, out JVector result)
-        {
-            var num0 = position.X * matrix.M11 + position.Y * matrix.M12 + position.Z * matrix.M13;
-            var num1 = position.X * matrix.M21 + position.Y * matrix.M22 + position.Z * matrix.M23;
-            var num2 = position.X * matrix.M31 + position.Y * matrix.M32 + position.Z * matrix.M33;
-
-            result.X = num0;
-            result.Y = num1;
-            result.Z = num2;
         }
 
         /// <summary>

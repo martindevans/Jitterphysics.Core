@@ -56,8 +56,8 @@ namespace Jitter.Dynamics.Constraints
             localAnchor1 = lineStartPointBody1 - body1.position;
             localAnchor2 = pointBody2 - body2.position;
 
-            JVector.Transform(ref localAnchor1, ref body1.invOrientation, out localAnchor1);
-            JVector.Transform(ref localAnchor2, ref body2.invOrientation, out localAnchor2);
+            localAnchor1 = JVectorExtensions.Transform(localAnchor1, body1.invOrientation);
+            localAnchor2 = JVectorExtensions.Transform(localAnchor2, body2.invOrientation);
 
             lineNormal = JVector.Normalize(lineStartPointBody1 - pointBody2);
         }
@@ -91,8 +91,8 @@ namespace Jitter.Dynamics.Constraints
         /// <param name="timestep">The simulation timestep</param>
         public override void PrepareForIteration(float timestep)
         {
-            JVector.Transform(ref localAnchor1, ref body1.orientation, out r1);
-            JVector.Transform(ref localAnchor2, ref body2.orientation, out r2);
+            r1 = JVectorExtensions.Transform(localAnchor1, body1.orientation);
+            r2 = JVectorExtensions.Transform(localAnchor2, body2.orientation);
 
             JVector dp;
             var p1 = body1.position + r1;
@@ -100,7 +100,7 @@ namespace Jitter.Dynamics.Constraints
 
             dp = p2 - p1;
 
-            var l = JVector.Transform(lineNormal, body1.orientation);
+            var l = JVectorExtensions.Transform(lineNormal, body1.orientation);
             l = JVector.Normalize(l);
 
             var t = JVector.Cross(p1 - p2, l);
@@ -113,8 +113,8 @@ namespace Jitter.Dynamics.Constraints
             jacobian[3] = -1.0f * JVector.Cross(r2, t);         // angularVel Body2
 
             effectiveMass = body1.inverseMass + body2.inverseMass
-                + JVector.Dot(JVector.Transform(jacobian[1], body1.invInertiaWorld), jacobian[1])
-                                              + JVector.Dot(JVector.Transform(jacobian[3], body2.invInertiaWorld), jacobian[3]);
+                + JVector.Dot(JVectorExtensions.Transform(jacobian[1], body1.invInertiaWorld), jacobian[1])
+                                              + JVector.Dot(JVectorExtensions.Transform(jacobian[3], body2.invInertiaWorld), jacobian[3]);
 
             softnessOverDt = softness / timestep;
             effectiveMass += softnessOverDt;
@@ -126,13 +126,13 @@ namespace Jitter.Dynamics.Constraints
             if (!body1.isStatic)
             {
                 body1.linearVelocity += body1.inverseMass * accumulatedImpulse * jacobian[0];
-                body1.angularVelocity += JVector.Transform(accumulatedImpulse * jacobian[1], body1.invInertiaWorld);
+                body1.angularVelocity += JVectorExtensions.Transform(accumulatedImpulse * jacobian[1], body1.invInertiaWorld);
             }
 
             if (!body2.isStatic)
             {
                 body2.linearVelocity += body2.inverseMass * accumulatedImpulse * jacobian[2];
-                body2.angularVelocity += JVector.Transform(accumulatedImpulse * jacobian[3], body2.invInertiaWorld);
+                body2.angularVelocity += JVectorExtensions.Transform(accumulatedImpulse * jacobian[3], body2.invInertiaWorld);
             }
         }
 
@@ -156,20 +156,20 @@ namespace Jitter.Dynamics.Constraints
             if (!body1.isStatic)
             {
                 body1.linearVelocity += body1.inverseMass * lambda * jacobian[0];
-                body1.angularVelocity += JVector.Transform(lambda * jacobian[1], body1.invInertiaWorld);
+                body1.angularVelocity += JVectorExtensions.Transform(lambda * jacobian[1], body1.invInertiaWorld);
             }
 
             if (!body2.isStatic)
             {
                 body2.linearVelocity += body2.inverseMass * lambda * jacobian[2];
-                body2.angularVelocity += JVector.Transform(lambda * jacobian[3], body2.invInertiaWorld);
+                body2.angularVelocity += JVectorExtensions.Transform(lambda * jacobian[3], body2.invInertiaWorld);
             }
         }
 
         public override void DebugDraw(IDebugDrawer drawer)
         {
             drawer.DrawLine(body1.position + r1,
-                body1.position + r1 + JVector.Transform(lineNormal, body1.orientation) * 100.0f);
+                body1.position + r1 + JVectorExtensions.Transform(lineNormal, body1.orientation) * 100.0f);
         }
 
     }

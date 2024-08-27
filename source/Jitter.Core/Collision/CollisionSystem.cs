@@ -302,7 +302,7 @@ namespace Jitter.Collision
                         if (useTriangleMeshNormal && ms is TriangleMeshShape)
                         {
                             (ms as TriangleMeshShape).CollisionNormal(out normal);
-                            JVector.Transform(ref normal, ref b1.orientation, out normal);
+                            normal = JVectorExtensions.Transform(normal, b1.orientation);
                         }
 
                         RaiseCollisionDetected(b1, b2, ref point1, ref point2, ref normal, penetration);
@@ -356,9 +356,9 @@ namespace Jitter.Collision
 
         private void SupportMapping(RigidBody body, Shape workingShape, ref JVector direction, out JVector result)
         {
-            JVector.Transform(ref direction, ref body.invOrientation, out result);
+            result = JVectorExtensions.Transform(direction, body.invOrientation);
             workingShape.SupportMapping(ref result, out result);
-            JVector.Transform(ref result, ref body.orientation, out result);
+            result = JVectorExtensions.Transform(result, body.orientation);
             result = result + body.position;
         }
 

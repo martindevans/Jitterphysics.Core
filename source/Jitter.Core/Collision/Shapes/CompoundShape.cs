@@ -155,7 +155,8 @@ namespace Jitter.Collision.Shapes
                 for (var e = 0; e < triangles.Count; e++)
                 {
                     var pos = triangles[e];
-                    JVector.Transform(ref pos,ref shapes[i].orientation,out pos);
+                    JMatrix matrix = shapes[i].orientation;
+                    pos = JVectorExtensions.Transform(pos, matrix);
                     JVector value2 = shapes[i].position;
                     pos = pos + value2;
                     triangleList.Add(pos);
@@ -227,9 +228,11 @@ namespace Jitter.Collision.Shapes
         /// <param name="result">The result.</param>
         public override void SupportMapping(ref JVector direction, out JVector result)
         {
-            JVector.Transform(ref direction, ref shapes[currentShape].invOrientation, out result);
+            JMatrix matrix = shapes[currentShape].invOrientation;
+            result = JVectorExtensions.Transform(direction, matrix);
             shapes[currentShape].Shape.SupportMapping(ref direction, out result);
-            JVector.Transform(ref result, ref shapes[currentShape].orientation, out result);
+            JMatrix matrix1 = shapes[currentShape].orientation;
+            result = JVectorExtensions.Transform(result, matrix1);
             JVector value2 = shapes[currentShape].position;
             result = result + value2;
         }
@@ -248,10 +251,12 @@ namespace Jitter.Collision.Shapes
             var localHalfExtents = 0.5f * (box.Max - box.Min);
             var localCenter = 0.5f * (box.Max + box.Min);
 
-            JVector.Transform(ref localCenter, ref orientation, out var center);
+            JVector center;
+            center = JVectorExtensions.Transform(localCenter, orientation);
 
             var abs = orientation.Absolute();
-            JVector.Transform(ref localHalfExtents, ref abs, out var temp);
+            JVector temp;
+            temp = JVectorExtensions.Transform(localHalfExtents, abs);
 
             box.Max = center + temp;
             box.Min = center - temp;

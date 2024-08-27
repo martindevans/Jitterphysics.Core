@@ -143,8 +143,8 @@ namespace Jitter.Dynamics.Constraints
             bias = axis * biasFactor * (-1.0f / timestep);
 
             // Apply previous frame solution as initial guess for satisfying the constraint.
-            if (!body1.IsStatic) body1.angularVelocity += JVector.Transform(accumulatedImpulse, body1.invInertiaWorld);
-            if (!body2.IsStatic) body2.angularVelocity += JVector.Transform(-1.0f * accumulatedImpulse, body2.invInertiaWorld);
+            if (!body1.IsStatic) body1.angularVelocity += JVectorExtensions.Transform(accumulatedImpulse, body1.invInertiaWorld);
+            if (!body2.IsStatic) body2.angularVelocity += JVectorExtensions.Transform(-1.0f * accumulatedImpulse, body2.invInertiaWorld);
         }
 
         /// <summary>
@@ -156,12 +156,12 @@ namespace Jitter.Dynamics.Constraints
 
             var softnessVector = accumulatedImpulse * softnessOverDt;
 
-            var lambda = -1.0f * JVector.Transform(jv+bias+softnessVector, effectiveMass);
+            var lambda = -1.0f * JVectorExtensions.Transform(jv+bias+softnessVector, effectiveMass);
 
             accumulatedImpulse += lambda;
 
-            if(!body1.IsStatic) body1.angularVelocity += JVector.Transform(lambda, body1.invInertiaWorld);
-            if(!body2.IsStatic) body2.angularVelocity += JVector.Transform(-1.0f * lambda, body2.invInertiaWorld);
+            if(!body1.IsStatic) body1.angularVelocity += JVectorExtensions.Transform(lambda, body1.invInertiaWorld);
+            if(!body2.IsStatic) body2.angularVelocity += JVectorExtensions.Transform(-1.0f * lambda, body2.invInertiaWorld);
         }
 
     }
