@@ -96,6 +96,13 @@ namespace Jitter.Dynamics
 
         public Dictionary<ArbiterKey, Arbiter>.ValueCollection Arbiters => dictionary.Values;
 
+        internal Arbiter Add(RigidBody a, RigidBody b)
+        {
+            var arbiter = Arbiter.Create(a, b);
+            dictionary.Add(new ArbiterKey(a, b), arbiter);
+            return arbiter;
+        }
+
         internal void Add(ArbiterKey key, Arbiter arbiter)
         {
             dictionary.Add(key, arbiter);
@@ -108,7 +115,7 @@ namespace Jitter.Dynamics
 
         internal bool Remove(Arbiter arbiter)
         {
-            return dictionary.Remove(new(arbiter.Body1, arbiter.Body2));
+            return dictionary.Remove(new ArbiterKey(arbiter.Body1, arbiter.Body2));
         }
 
         /// <summary>

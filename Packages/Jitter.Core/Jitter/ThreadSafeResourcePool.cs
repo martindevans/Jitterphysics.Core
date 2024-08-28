@@ -29,14 +29,17 @@ namespace Jitter
     /// <typeparam name="T">The type of the object to cache. The type T must
     /// have a parameterless constructor.</typeparam>
     public class ThreadSafeResourcePool<T>
+        where T : class
     {
+        private readonly Func<T> create;
         private readonly Stack<T> stack = new();
 
         /// <summary>
         /// Creates a new instance of the ThreadSafeResourcePool class.
         /// </summary>
-        public ThreadSafeResourcePool()
+        public ThreadSafeResourcePool(Func<T>? create = null)
         {
+            this.create = create;
         }
 
         /// <summary>
@@ -75,7 +78,7 @@ namespace Jitter
             {
                 if (stack.Count == 0)
                 {
-                    freeObj = Activator.CreateInstance<T>();
+                    freeObj = create?.Invoke() ?? Activator.CreateInstance<T>();
                     stack.Push(freeObj);
                 }
 

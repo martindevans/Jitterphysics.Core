@@ -221,7 +221,7 @@ namespace Jitter.Collision
 
     //                if (VdotR >= -JMath.Epsilon)
     //                {
-    //                    simplexSolverPool.GiveBack(simplexSolver);
+    //                    simplexSolverPool.Destroy(simplexSolver);
     //                    return false;
     //                }
     //                else
@@ -258,7 +258,7 @@ namespace Jitter.Collision
     //        p1 = p1 - lambda * sweptA;
     //        p2 = p2 - lambda * sweptB;
 
-    //        simplexSolverPool.GiveBack(simplexSolver);
+    //        simplexSolverPool.Destroy(simplexSolver);
 
     //        return true;
 

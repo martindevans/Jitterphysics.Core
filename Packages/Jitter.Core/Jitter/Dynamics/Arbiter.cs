@@ -66,22 +66,48 @@ namespace Jitter.Dynamics
     {
         /// <summary>
         /// </summary>
-        public static readonly ThreadSafeResourcePool<Arbiter> Pool = new();
+        private static readonly ThreadSafeResourcePool<Arbiter> Pool = new(() => new Arbiter());
 
         /// <summary>
         /// The first body.
         /// </summary>
-        public RigidBody Body1 { get; internal set; }
+        public RigidBody Body1 { get; private set; }
 
         /// <summary>
         /// The second body.
         /// </summary>
-        public RigidBody Body2 { get; internal set; }
+        public RigidBody Body2 { get; private set; }
 
         /// <summary>
         /// The contact list containing all contacts of both bodies.
         /// </summary>
         public ContactList ContactList { get; } = new();
+
+        private Arbiter()
+        {
+            Body1 = null!;
+            Body2 = null!;
+        }
+
+        internal static Arbiter Create(RigidBody body1, RigidBody body2)
+        {
+            var a = Pool.GetNew();
+            a.Body1 = body1;
+            a.Body2 = body2;
+            return a;
+        }
+
+        internal static void Destroy(Arbiter arbiter)
+        {
+            arbiter.Body1 = null!;
+            arbiter.Body2 = null!;
+            Pool.GiveBack(arbiter);
+        }
+
+        internal static void ResetResourcePool()
+        {
+            Pool.ResetResourcePool();
+        }
 
         /// <summary>
         /// Removes all contacts from this arbiter.

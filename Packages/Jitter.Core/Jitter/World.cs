@@ -203,7 +203,7 @@ namespace Jitter
         public void ResetResourcePools()
         {
             IslandManager.Pool.ResetResourcePool();
-            Arbiter.Pool.ResetResourcePool();
+            Arbiter.ResetResourcePool();
             Contact.Pool.ResetResourcePool();
         }
 
@@ -474,7 +474,13 @@ namespace Jitter
             sw.Stop(); debugTimes[(int)DebugType.UpdateContacts] = sw.Elapsed.TotalMilliseconds;
 
             sw.Reset(); sw.Start();
-            while (removedArbiterQueue.Count > 0) islands.ArbiterRemoved(removedArbiterQueue.Dequeue());
+            while (removedArbiterQueue.Count > 0)
+            {
+                var arbiter = removedArbiterQueue.Dequeue();
+                islands.ArbiterRemoved(arbiter);
+                Arbiter.Destroy(arbiter);
+            }
+
             sw.Stop();
             var ms = sw.Elapsed.TotalMilliseconds;
 
@@ -595,7 +601,6 @@ namespace Jitter
             while (removedArbiterStack.Count > 0)
             {
                 var arbiter = removedArbiterStack.Pop();
-                Arbiter.Pool.GiveBack(arbiter);
                 ArbiterMap.Remove(arbiter);
 
                 removedArbiterQueue.Enqueue(arbiter);
@@ -746,9 +751,7 @@ namespace Jitter
                 ArbiterMap.LookUpArbiter(body1, body2, out arbiter);
                 if (arbiter == null)
                 {
-                    arbiter = Arbiter.Pool.GetNew();
-                    arbiter.Body1 = body1; arbiter.Body2 = body2;
-                    ArbiterMap.Add(new(body1, body2), arbiter);
+                    arbiter = ArbiterMap.Add(body1, body2);
 
                     addedArbiterQueue.Enqueue(arbiter);
 
