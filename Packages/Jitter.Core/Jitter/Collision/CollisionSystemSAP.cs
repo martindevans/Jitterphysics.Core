@@ -35,16 +35,17 @@ namespace Jitter.Collision
         private readonly List<RigidBody> bodyList = new();
         private readonly List<RigidBody> active = new();
 
-        private class RigidBodyXCompare : IComparer<RigidBody>
+        private class RigidBodyXCompare
+            : IComparer<RigidBody>
         {
             public int Compare(RigidBody body1, RigidBody body2)
             {
-                var f = body1.BoundingBox.Min.X - body2.BoundingBox.Min.X;
-                return f < 0 ? -1 : f > 0 ? 1 : 0;
+                var x1 = body1?.BoundingBox.Min.X ?? float.MinValue;
+                var x2 = body2?.BoundingBox.Min.X ?? float.MinValue;
+                return x1.CompareTo(x2);
             }
         }
-
-        private RigidBodyXCompare xComparer;
+        private static readonly RigidBodyXCompare xComparer= new RigidBodyXCompare();
 
         private bool swapOrder;
 
@@ -53,7 +54,6 @@ namespace Jitter.Collision
         /// </summary>
         public CollisionSystemSAP()
         {
-            xComparer = new();
         }
 
         /// <summary>
@@ -88,13 +88,10 @@ namespace Jitter.Collision
         public override void Detect()
         {
             bodyList.Sort(xComparer);
-
             active.Clear();
 
-            {
-                for (var i = 0; i < bodyList.Count; i++)
-                    AddToActive(bodyList[i]);
-            }
+            for (var i = 0; i < bodyList.Count; i++)
+                AddToActive(bodyList[i]);
         }
 
         private void AddToActive(RigidBody body)
@@ -104,12 +101,10 @@ namespace Jitter.Collision
 
             var thisInactive = body.IsStaticOrInactive;
 
-            JBBox acBox, bodyBox;
-
             for (var i = 0; i != n; )
             {
                 var ac = active[i];
-                acBox = ac.BoundingBox;
+                var acBox = ac.BoundingBox;
 
                 if (acBox.Max.X < xmin)
                 {
@@ -118,7 +113,7 @@ namespace Jitter.Collision
                 }
                 else
                 {
-                    bodyBox = body.BoundingBox;
+                    var bodyBox = body.BoundingBox;
 
                     if (!(thisInactive && ac.IsStaticOrInactive) &&
                         bodyBox.Max.Z >= acBox.Min.Z && bodyBox.Min.Z <= acBox.Max.Z &&
@@ -126,8 +121,10 @@ namespace Jitter.Collision
                     {
                         if (RaisePassedBroadphase(ac, body))
                         {
-                            if (swapOrder) Detect(body, ac);
-                            else Detect(ac, body);
+                            if (swapOrder)
+                                Detect(body, ac);
+                            else
+                                Detect(ac, body);
                             swapOrder = !swapOrder;
                         }
                     }
@@ -175,7 +172,7 @@ namespace Jitter.Collision
 
 
         /// <summary>
-        /// Raycasts a single body. NOTE: For performance reasons terrain and trianglemeshshape aren't checked
+        /// Raycasts a single body. NOTE: For performance reasons trianglemeshshape isn't checked
         /// against rays (rays are of infinite length). They are checked against segments
         /// which start at rayOrigin and end in rayOrigin + rayDirection.
         /// </summary>
@@ -186,43 +183,51 @@ namespace Jitter.Collision
 
             if (!body.BoundingBox.RayIntersect(rayOrigin, rayDirection)) return false;
 
-            if (body.Shape is Multishape)
+            if (body.Shape is Multishape ms)
             {
-                var ms = (body.Shape as Multishape).RequestWorkingClone();
+                ms = ms.RequestWorkingClone();
+                var tms = ms as TriangleMeshShape;
 
-                var multiShapeCollides = false;
-
-                var transformedOrigin = rayOrigin - body.position;
-                transformedOrigin = JVectorExtensions.Transform(transformedOrigin, body.invOrientation);
-                var transformedDirection = JVectorExtensions.Transform(rayDirection, body.invOrientation);
-
-                var msLength = ms.Prepare(ref transformedOrigin, ref transformedDirection);
-
-                for (var i = 0; i < msLength; i++)
+                try
                 {
-                    ms.SetCurrentShape(i);
 
-                    if (GJKCollide.Raycast(ms, ref body.orientation, ref body.position,
-                        ref rayOrigin, ref rayDirection, out var tempFraction, out var tempNormal))
+                    var multiShapeCollides = false;
+
+                    var transformedOrigin = rayOrigin - body.position;
+                    transformedOrigin = JVectorExtensions.Transform(transformedOrigin, body.invOrientation);
+                    var transformedDirection = JVectorExtensions.Transform(rayDirection, body.invOrientation);
+
+                    var msLength = ms.Prepare(ref transformedOrigin, ref transformedDirection);
+
+                    for (var i = 0; i < msLength; i++)
                     {
-                        if (tempFraction < fraction)
-                        {
-                            if (useTriangleMeshNormal && ms is TriangleMeshShape shape)
-                            {
-                                shape.CollisionNormal(out tempNormal);
-                                tempNormal = JVectorExtensions.Transform(tempNormal, body.orientation);
-                                tempNormal = -tempNormal;
-                            }
+                        ms.SetCurrentShape(i);
 
-                            normal = tempNormal;
-                            fraction = tempFraction;
-                            multiShapeCollides = true;
+                        if (GJKCollide.Raycast(ms, ref body.orientation, ref body.position,
+                                ref rayOrigin, ref rayDirection, out var tempFraction, out var tempNormal))
+                        {
+                            if (tempFraction < fraction)
+                            {
+                                if (useTriangleMeshNormal && tms != null)
+                                {
+                                    tms.CollisionNormal(out tempNormal);
+                                    tempNormal = JVectorExtensions.Transform(tempNormal, body.orientation);
+                                    tempNormal = -tempNormal;
+                                }
+
+                                normal = tempNormal;
+                                fraction = tempFraction;
+                                multiShapeCollides = true;
+                            }
                         }
                     }
-                }
 
-                ms.ReturnWorkingClone();
-                return multiShapeCollides;
+                    return multiShapeCollides;
+                }
+                finally
+                {
+                    ms.ReturnWorkingClone();
+                }
             }
             else
             {

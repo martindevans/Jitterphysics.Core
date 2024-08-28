@@ -58,43 +58,38 @@ namespace Jitter.Collision.Shapes
 
         protected abstract Multishape CreateWorkingClone();
 
-        internal bool isClone;
-
-        public bool IsClone => isClone;
+        public bool IsClone { get; private set; }
 
         private Stack<Multishape> workingCloneStack = new();
         public Multishape RequestWorkingClone()
         {
             Debug.Assert(workingCloneStack.Count<10, "Unusual size of the workingCloneStack. Forgot to call ReturnWorkingClone?");
-            Debug.Assert(!isClone, "Can't clone clones! Something wrong here!");
+            Debug.Assert(!IsClone, "Can't clone clones! Something wrong here!");
 
             Multishape multiShape;
 
-            lock (workingCloneStack)
+            if (workingCloneStack.Count == 0)
             {
-                if (workingCloneStack.Count == 0)
-                {
-                    multiShape = CreateWorkingClone();
-                    multiShape.workingCloneStack = workingCloneStack;
-                    workingCloneStack.Push(multiShape);
-                }
-                multiShape = workingCloneStack.Pop();
-                multiShape.isClone = true;
+                multiShape = CreateWorkingClone();
+                multiShape.workingCloneStack = workingCloneStack;
+                workingCloneStack.Push(multiShape);
             }
+            multiShape = workingCloneStack.Pop();
+            multiShape.IsClone = true;
 
             return multiShape;
         }
 
         public override void UpdateShape()
         {
-            lock(workingCloneStack) workingCloneStack.Clear();
+            workingCloneStack.Clear();
             base.UpdateShape();
         }
 
         public void ReturnWorkingClone()
         {
-            Debug.Assert(isClone, "Only clones can be returned!");
-            lock (workingCloneStack) { workingCloneStack.Push(this); }
+            Debug.Assert(IsClone, "Only clones can be returned!");
+            workingCloneStack.Push(this);
         }
 
         /// <summary>
@@ -102,7 +97,7 @@ namespace Jitter.Collision.Shapes
         /// the whole shape.
         /// </summary>
         /// <param name="orientation">The orientation of the shape.</param>
-        /// <param name="box">The axis aligned bounding box of the shape.</param>
+        /// <returns>The axis aligned bounding box of the shape.</returns>
         public override JBBox GetBoundingBox(JMatrix orientation)
         {
             var helpBox = JBBox.LargeBox;

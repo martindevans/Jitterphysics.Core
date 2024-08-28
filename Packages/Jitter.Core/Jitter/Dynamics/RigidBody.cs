@@ -122,7 +122,7 @@ namespace Jitter.Dynamics
         /// </summary>
         /// <param name="shape"></param>
         public RigidBody(BaseShape shape)
-            : this(shape, new())
+            : this(shape, Material.Default)
         {
         }
 
@@ -310,13 +310,13 @@ namespace Jitter.Dynamics
         /// of the torque depends on the time it is applied to a body - so
         /// the timestep influences the energy added to the body.
         /// </summary>
-        /// <param name="torque">The torque to add next <see cref="World.Step"/>.</param>
+        /// <param name="torque">The torque to add next <see cref="World.Step(float)"/>.</param>
         public void AddTorque(Vector3 torque)
         {
             AccumulatedTorque = torque + AccumulatedTorque;
         }
 
-        protected bool useShapeMassProperties = true;
+        private bool useShapeMassProperties = true;
 
         /// <summary>
         /// By calling this method the shape inertia and mass is used.

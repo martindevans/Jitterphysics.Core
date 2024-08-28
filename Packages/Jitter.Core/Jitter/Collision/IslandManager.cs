@@ -5,8 +5,6 @@ using System.Collections.ObjectModel;
 
 namespace Jitter.Collision
 {
-
-
     /// <summary>
     /// bodies have: connections - bodies they are connected with (via constraints or arbiters)
     ///              arbiters    - all arbiters they are involved
@@ -15,10 +13,10 @@ namespace Jitter.Collision
     /// static bodies dont have any connections. Think of the islands as a graph:
     /// nodes are the bodies, and edges are the connections
     /// </summary>
-    internal class IslandManager : ReadOnlyCollection<CollisionIsland>
+    internal class IslandManager
+        : ReadOnlyCollection<CollisionIsland>
     {
-
-        public static ResourcePool<CollisionIsland> Pool = new();
+        public static readonly ThreadSafeResourcePool<CollisionIsland> Pool = new();
 
         private List<CollisionIsland> islands;
 
@@ -30,28 +28,28 @@ namespace Jitter.Collision
 
         public void ArbiterCreated(Arbiter arbiter)
         {
-            AddConnection(arbiter.body1, arbiter.body2);
+            AddConnection(arbiter.Body1, arbiter.Body2);
 
-            arbiter.body1.arbiters.Add(arbiter);
-            arbiter.body2.arbiters.Add(arbiter);
+            arbiter.Body1.arbiters.Add(arbiter);
+            arbiter.Body2.arbiters.Add(arbiter);
 
-            if (arbiter.body1.island != null)
-                arbiter.body1.island.arbiter.Add(arbiter);
+            if (arbiter.Body1.island != null)
+                arbiter.Body1.island.arbiter.Add(arbiter);
             else
-                arbiter.body2.island?.arbiter.Add(arbiter);
+                arbiter.Body2.island?.arbiter.Add(arbiter);
         }
 
         public void ArbiterRemoved(Arbiter arbiter)
         {
-            arbiter.body1.arbiters.Remove(arbiter);
-            arbiter.body2.arbiters.Remove(arbiter);
+            arbiter.Body1.arbiters.Remove(arbiter);
+            arbiter.Body2.arbiters.Remove(arbiter);
 
-            if (arbiter.body1.island != null)
-                arbiter.body1.island.arbiter.Remove(arbiter);
+            if (arbiter.Body1.island != null)
+                arbiter.Body1.island.arbiter.Remove(arbiter);
             else
-                arbiter.body2.island?.arbiter.Remove(arbiter);
+                arbiter.Body2.island?.arbiter.Remove(arbiter);
 
-            RemoveConnection(arbiter.body1, arbiter.body2);
+            RemoveConnection(arbiter.Body1, arbiter.Body2);
         }
 
         public void ConstraintCreated(Constraint constraint)

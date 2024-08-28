@@ -34,7 +34,7 @@ namespace Jitter
     /// This class brings 'dynamics' and 'collisions' together. It handles
     /// all bodies and constraints.
     /// </summary>
-    public class World
+    public sealed class World
     {
         /// <summary>
         /// Callback on every world step
@@ -150,17 +150,14 @@ namespace Jitter
         /// Holds a list of <see cref="Arbiter"/>. All currently
         /// active arbiter in the <see cref="World"/> are stored in this map.
         /// </summary>
-        public ArbiterMap ArbiterMap => arbiterMap;
-
-        private readonly ArbiterMap arbiterMap;
+        public ArbiterMap ArbiterMap { get; }
 
         private readonly Queue<Arbiter> removedArbiterQueue = new();
         private readonly Queue<Arbiter> addedArbiterQueue = new();
 
         private Vector3 gravity = new(0, 0, 0);
 
-        private readonly ContactSettings contactSettings = new();
-        public ContactSettings ContactSettings => contactSettings;
+        public ContactSettings ContactSettings { get; } = new();
 
         /// <summary>
         /// Gets a read only collection of the <see cref="Jitter.Collision.CollisionIsland"/> objects managed by
@@ -185,7 +182,7 @@ namespace Jitter
 
             CollisionSystem.CollisionDetected += collisionDetectionHandler;
 
-            arbiterMap = new();
+            ArbiterMap = new();
 
             AllowDeactivation = true;
         }
@@ -247,7 +244,7 @@ namespace Jitter
             islands.RemoveAll();
 
             // delete the arbiters
-            arbiterMap.Clear();
+            ArbiterMap.Clear();
 
             ResetResourcePools();
         }
@@ -360,8 +357,8 @@ namespace Jitter
             // Remove all connected constraints and arbiters
             foreach (var arbiter in body.arbiters)
             {
-                arbiterMap.Remove(arbiter);
-                events.RaiseBodiesEndCollide(arbiter.body1, arbiter.body2);
+                ArbiterMap.Remove(arbiter);
+                events.RaiseBodiesEndCollide(arbiter.Body1, arbiter.Body2);
             }
 
             foreach (var constraint in body.constraints)
@@ -550,21 +547,21 @@ namespace Jitter
 
         private void UpdateArbiterContacts(Arbiter arbiter)
         {
-            if (arbiter.contactList.Count == 0)
+            if (arbiter.ContactList.Count == 0)
             {
                 removedArbiterStack.Push(arbiter);
                 return;
             }
 
-            for (var i = arbiter.contactList.Count - 1; i >= 0; i--)
+            for (var i = arbiter.ContactList.Count - 1; i >= 0; i--)
             {
-                var c = arbiter.contactList[i];
+                var c = arbiter.ContactList[i];
                 c.UpdatePosition();
 
-                if (c.penetration < -contactSettings.BreakThreshold)
+                if (c.penetration < -ContactSettings.BreakThreshold)
                 {
                     Contact.Pool.GiveBack(c);
-                    arbiter.contactList.RemoveAt(i);
+                    arbiter.ContactList.RemoveAt(i);
                 }
                 else
                 {
@@ -576,10 +573,10 @@ namespace Jitter
 
                     // hack (multiplication by factor 100) in the
                     // following line.
-                    if (distance > contactSettings.BreakThreshold * contactSettings.BreakThreshold * 100)
+                    if (distance > ContactSettings.BreakThreshold * ContactSettings.BreakThreshold * 100)
                     {
                         Contact.Pool.GiveBack(c);
-                        arbiter.contactList.RemoveAt(i);
+                        arbiter.ContactList.RemoveAt(i);
                     }
                 }
 
@@ -590,7 +587,7 @@ namespace Jitter
 
         private void UpdateContacts()
         {
-            foreach (var arbiter in arbiterMap.Arbiters)
+            foreach (var arbiter in ArbiterMap.Arbiters)
             {
                 UpdateArbiterContacts(arbiter);
             }
@@ -599,10 +596,10 @@ namespace Jitter
             {
                 var arbiter = removedArbiterStack.Pop();
                 Arbiter.Pool.GiveBack(arbiter);
-                arbiterMap.Remove(arbiter);
+                ArbiterMap.Remove(arbiter);
 
                 removedArbiterQueue.Enqueue(arbiter);
-                events.RaiseBodiesEndCollide(arbiter.body1, arbiter.body2);
+                events.RaiseBodiesEndCollide(arbiter.Body1, arbiter.Body2);
             }
 
         }
@@ -620,11 +617,11 @@ namespace Jitter
                 // Contact and Collision
                 foreach (var arbiter in island.arbiter)
                 {
-                    var contactCount = arbiter.contactList.Count;
+                    var contactCount = arbiter.ContactList.Count;
                     for (var e = 0; e < contactCount; e++)
                     {
-                        if (i == -1) arbiter.contactList[e].PrepareForIteration(timestep);
-                        else arbiter.contactList[e].Iterate();
+                        if (i == -1) arbiter.ContactList[e].PrepareForIteration(timestep);
+                        else arbiter.ContactList[e].Iterate();
                     }
                 }
 
@@ -744,14 +741,14 @@ namespace Jitter
         {
             Arbiter arbiter;
 
-            lock (arbiterMap)
+            lock (ArbiterMap)
             {
-                arbiterMap.LookUpArbiter(body1, body2, out arbiter);
+                ArbiterMap.LookUpArbiter(body1, body2, out arbiter);
                 if (arbiter == null)
                 {
                     arbiter = Arbiter.Pool.GetNew();
-                    arbiter.body1 = body1; arbiter.body2 = body2;
-                    arbiterMap.Add(new(body1, body2), arbiter);
+                    arbiter.Body1 = body1; arbiter.Body2 = body2;
+                    ArbiterMap.Add(new(body1, body2), arbiter);
 
                     addedArbiterQueue.Enqueue(arbiter);
 
@@ -761,14 +758,14 @@ namespace Jitter
 
             Contact contact;
 
-            if (arbiter.body1 == body1)
+            if (arbiter.Body1 == body1)
             {
                 normal = -normal;
-                contact = arbiter.AddContact(point1, point2, normal, penetration, contactSettings);
+                contact = arbiter.AddContact(point1, point2, normal, penetration, ContactSettings);
             }
             else
             {
-                contact = arbiter.AddContact(point2, point1, normal, penetration, contactSettings);
+                contact = arbiter.AddContact(point2, point1, normal, penetration, ContactSettings);
             }
 
             if (contact != null) events.RaiseContactCreated(contact);

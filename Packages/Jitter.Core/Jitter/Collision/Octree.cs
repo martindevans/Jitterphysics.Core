@@ -377,7 +377,7 @@ namespace Jitter.Collision
             return triCount;
         }
 
-        private ArrayResourcePool<UInt16> nodeStackPool;
+        private ThreadSafeArrayResourcePool<UInt16> nodeStackPool;
 
         /// <summary>
         /// Returns all triangles which intersect the given axis aligned bounding box.

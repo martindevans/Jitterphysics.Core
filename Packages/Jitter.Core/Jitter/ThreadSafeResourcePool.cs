@@ -28,14 +28,14 @@ namespace Jitter
     /// </summary>
     /// <typeparam name="T">The type of the object to cache. The type T must
     /// have a parameterless constructor.</typeparam>
-    public class ResourcePool<T>
+    public class ThreadSafeResourcePool<T>
     {
         private readonly Stack<T> stack = new();
 
         /// <summary>
-        /// Creates a new instance of the ResourcePool class.
+        /// Creates a new instance of the ThreadSafeResourcePool class.
         /// </summary>
-        public ResourcePool()
+        public ThreadSafeResourcePool()
         {
         }
 
@@ -45,7 +45,10 @@ namespace Jitter
         /// </summary>
         public void ResetResourcePool()
         {
-            lock (stack) { stack.Clear(); }
+            lock (stack)
+            {
+                stack.Clear();
+            }
         }
 
         /// <summary>
@@ -54,7 +57,10 @@ namespace Jitter
         /// <param name="obj">The resource to give back</param>
         public void GiveBack(T obj)
         {
-            lock (stack) { stack.Push(obj); }
+            lock (stack)
+            {
+                stack.Push(obj);
+            }
         }
 
         /// <summary>
@@ -86,7 +92,7 @@ namespace Jitter
     /// </summary>
     /// <typeparam name="T">The type of the array of objects to cache. The type T must
     /// have a parameterless constructor.  Do not specify [].</typeparam>
-    public class ArrayResourcePool<T>
+    public class ThreadSafeArrayResourcePool<T>
     {
         private readonly Stack<T[]> stack = new();
 
@@ -96,9 +102,9 @@ namespace Jitter
         private readonly int arrayLength;
 
         /// <summary>
-        /// Creates a new instance of the ResourcePool class.
+        /// Creates a new instance of the ThreadSafeResourcePool class.
         /// </summary>
-        public ArrayResourcePool(int arrayLength)
+        public ThreadSafeArrayResourcePool(int arrayLength)
         {
             this.arrayLength = arrayLength;
         }
@@ -109,7 +115,10 @@ namespace Jitter
         /// </summary>
         public void ResetResourcePool()
         {
-            lock (stack) { stack.Clear(); }
+            lock (stack)
+            {
+                stack.Clear();
+            }
         }
 
         /// <summary>
@@ -118,7 +127,10 @@ namespace Jitter
         /// <param name="obj">The resource to give back</param>
         public void GiveBack(T[] obj)
         {
-            lock (stack) { stack.Push(obj); }
+            lock (stack)
+            {
+                stack.Push(obj);
+            }
         }
 
         /// <summary>

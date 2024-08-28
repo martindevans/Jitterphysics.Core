@@ -21,7 +21,6 @@ using System.Numerics;
 
 namespace Jitter
 {
-
     public interface IDebugDrawable
     {
         void DebugDraw(IDebugDrawer drawer);
@@ -33,11 +32,8 @@ namespace Jitter
     /// </summary>
     public interface IDebugDrawer
     {
-
         void DrawLine(Vector3 start, Vector3 end);
         void DrawPoint(Vector3 pos);
         void DrawTriangle(Vector3 pos1,Vector3 pos2,Vector3 pos3);
-
-        
     }
 }

@@ -30,7 +30,7 @@ namespace Jitter.Collision
     {
         private const int MaxIterations = 15;
 
-        private static readonly ResourcePool<VoronoiSimplexSolver> simplexSolverPool = new();
+        private static readonly ThreadSafeResourcePool<VoronoiSimplexSolver> simplexSolverPool = new();
 
         private static void SupportMapTransformed(ISupportMappable support, ref JMatrix orientation, ref Vector3 position, ref Vector3 direction, out Vector3 result)
         {

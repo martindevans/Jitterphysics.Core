@@ -37,10 +37,12 @@ namespace Jitter.LinearMath
             /// The objects don't intersect.
             /// </summary>
             Disjoint,
+
             /// <summary>
             /// One object is within the other.
             /// </summary>
             Contains,
+
             /// <summary>
             /// The two objects intersect.
             /// </summary>
@@ -60,20 +62,12 @@ namespace Jitter.LinearMath
         /// <summary>
         /// Returns the largest box possible.
         /// </summary>
-        public static readonly JBBox LargeBox;
+        public static readonly JBBox LargeBox = new JBBox(new(float.MinValue), new(float.MaxValue));
 
         /// <summary>
         /// Returns the smalltest box possible.
         /// </summary>
-        public static readonly JBBox SmallBox;
-
-        static JBBox()
-        {
-            LargeBox.Min = new(float.MinValue);
-            LargeBox.Max = new(float.MaxValue);
-            SmallBox.Min = new(float.MaxValue);
-            SmallBox.Max = new(float.MinValue);
-        }
+        public static readonly JBBox SmallBox = new JBBox(new(float.MaxValue), new(float.MinValue));
 
         /// <summary>
         /// Constructor
@@ -193,7 +187,9 @@ namespace Jitter.LinearMath
         {
             return Min.X <= point.X && point.X <= Max.X &&
                    Min.Y <= point.Y && point.Y <= Max.Y &&
-                   Min.Z <= point.Z && point.Z <= Max.Z ? ContainmentType.Contains : ContainmentType.Disjoint;
+                   Min.Z <= point.Z && point.Z <= Max.Z
+                 ? ContainmentType.Contains
+                 : ContainmentType.Disjoint;
         }
 
         /// <summary>

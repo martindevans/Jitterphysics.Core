@@ -26,7 +26,26 @@ namespace Jitter.Dynamics
 {
     public class ContactSettings
     {
-        public enum MaterialCoefficientMixingType { TakeMaximum, TakeMinimum, UseAverage }
+        /// <summary>
+        /// Determines how to mix coefficients from two dissimilar materials
+        /// </summary>
+        public enum MaterialCoefficientMixingType
+        {
+            /// <summary>
+            /// Take the largest coefficient
+            /// </summary>
+            Maximum,
+
+            /// <summary>
+            /// Take the small coefficient
+            /// </summary>
+            Minimum,
+
+            /// <summary>
+            /// Take the average of the coefficients
+            /// </summary>
+            Average,
+        }
 
         public float MaximumBias { get; set; } = 10.0f;
 
@@ -38,7 +57,7 @@ namespace Jitter.Dynamics
 
         public float BreakThreshold { get; set; } = 0.01f;
 
-        public MaterialCoefficientMixingType MaterialCoefficientMixing { get; set; } = MaterialCoefficientMixingType.UseAverage;
+        public MaterialCoefficientMixingType MaterialCoefficientMixing { get; set; } = MaterialCoefficientMixingType.Average;
     }
 
 
@@ -83,7 +102,7 @@ namespace Jitter.Dynamics
         /// <summary>
         /// A contact resource pool.
         /// </summary>
-        public static readonly ResourcePool<Contact> Pool = new();
+        public static readonly ThreadSafeResourcePool<Contact> Pool = new();
 
         private float lastTimeStep = float.PositiveInfinity;
 
@@ -131,7 +150,7 @@ namespace Jitter.Dynamics
         /// <summary>
         /// Calculates relative velocity of body contact points on the bodies.
         /// </summary>
-        /// <param name="relVel">The relative velocity of body contact points on the bodies.</param>
+        /// <returns>The relative velocity of body contact points on the bodies.</returns>
         public Vector3 CalculateRelativeVelocity()
         {
             var x = body2.angularVelocity.Y * relativePos2.Z - body2.angularVelocity.Z * relativePos2.Y + body2.linearVelocity.X;
@@ -770,21 +789,26 @@ namespace Jitter.Dynamics
 
                 switch (settings.MaterialCoefficientMixing)
                 {
-                    case ContactSettings.MaterialCoefficientMixingType.TakeMaximum:
+                    case ContactSettings.MaterialCoefficientMixingType.Maximum:
                         StaticFriction = Math.Max(body1.Material.StaticFriction, body2.Material.StaticFriction);
                         DynamicFriction = Math.Max(body1.Material.KineticFriction, body2.Material.KineticFriction);
                         Restitution = Math.Max(body1.Material.Restitution, body2.Material.Restitution);
                         break;
-                    case ContactSettings.MaterialCoefficientMixingType.TakeMinimum:
+
+                    case ContactSettings.MaterialCoefficientMixingType.Minimum:
                         StaticFriction = Math.Min(body1.Material.StaticFriction, body2.Material.StaticFriction);
                         DynamicFriction = Math.Min(body1.Material.KineticFriction, body2.Material.KineticFriction);
                         Restitution = Math.Min(body1.Material.Restitution, body2.Material.Restitution);
                         break;
-                    case ContactSettings.MaterialCoefficientMixingType.UseAverage:
+
+                    case ContactSettings.MaterialCoefficientMixingType.Average:
                         StaticFriction = (body1.Material.StaticFriction + body2.Material.StaticFriction) / 2.0f;
                         DynamicFriction = (body1.Material.KineticFriction + body2.Material.KineticFriction) / 2.0f;
                         Restitution = (body1.Material.Restitution + body2.Material.Restitution) / 2.0f;
                         break;
+
+                    default:
+                        throw new InvalidOperationException($"Unknown mixing type '{settings.MaterialCoefficientMixing}'");
                 }
 
             }

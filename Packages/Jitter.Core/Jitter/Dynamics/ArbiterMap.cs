@@ -17,8 +17,8 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
+using System;
 using System.Collections.Generic;
-using System.Collections;
 
 namespace Jitter.Dynamics
 {
@@ -27,10 +27,11 @@ namespace Jitter.Dynamics
     /// To find the Arbiter fortwo RigidBodies, build an ArbiterKey for the two bodies
     /// and use it as the lookup key for the ArbiterMap.
     /// </summary>
-    public struct ArbiterKey
+    public readonly struct ArbiterKey
+        : IEquatable<ArbiterKey>
     {
-        // internal values for faster access within the engine
-        internal RigidBody body1, body2;
+        public readonly RigidBody Body1;
+        public readonly RigidBody Body2;
 
         /// <summary>
         /// Initializes a new instance of the ArbiterKey class.
@@ -39,20 +40,14 @@ namespace Jitter.Dynamics
         /// <param name="body2"></param>
         public ArbiterKey(RigidBody body1, RigidBody body2)
         {
-            this.body1 = body1;
-            this.body2 = body2;
+            Body1 = body1;
+            Body2 = body2;
         }
 
-        /// <summary>
-        /// Don't call this, while the key is used in the arbitermap.
-        /// It changes the hashcode of this object.
-        /// </summary>
-        /// <param name="body1">The first body.</param>
-        /// <param name="body2">The second body.</param>
-        internal void SetBodies(RigidBody body1, RigidBody body2)
+        public bool Equals(ArbiterKey other)
         {
-            this.body1 = body1;
-            this.body2 = body2;
+            return other.Body1.Equals(Body1) && other.Body2.Equals(Body2) ||
+                   other.Body1.Equals(Body2) && other.Body2.Equals(Body1);
         }
 
         /// <summary>
@@ -60,11 +55,11 @@ namespace Jitter.Dynamics
         /// </summary>
         /// <param name="obj">The object to check against.</param>
         /// <returns>Returns true if they are equal, otherwise false.</returns>
-        public readonly override bool Equals(object obj)
+        public override bool Equals(object obj)
         {
-            var other = (ArbiterKey)obj;
-            return other.body1.Equals(body1) && other.body2.Equals(body2) ||
-                   other.body1.Equals(body2) && other.body2.Equals(body1);
+            if (obj is not ArbiterKey key)
+                return false;
+            return Equals(key);
         }
 
         /// <summary>
@@ -72,55 +67,31 @@ namespace Jitter.Dynamics
         /// The hashcode is the same if an ArbiterKey contains the same bodies.
         /// </summary>
         /// <returns></returns>
-        public readonly override int GetHashCode()
+        public override int GetHashCode()
         {
-            return body1.GetHashCode() + body2.GetHashCode();
-        }
-    }
-
-    internal class ArbiterKeyComparer : IEqualityComparer<ArbiterKey>
-    {
-        public bool Equals(ArbiterKey x, ArbiterKey y)
-        {
-            return x.body1.Equals(y.body1) && x.body2.Equals(y.body2) ||
-                   x.body1.Equals(y.body2) && x.body2.Equals(y.body1);
-        }
-
-        public int GetHashCode(ArbiterKey obj)
-        {
-            return obj.body1.GetHashCode() + obj.body2.GetHashCode();
+            // This hash is intentionally order invariant!
+            return unchecked(Body1.GetHashCode() + Body2.GetHashCode());
         }
     }
 
     /// <summary>
     /// The ArbiterMap is a dictionary which stores all arbiters.
     /// </summary>
-    public class ArbiterMap : IEnumerable
+    public class ArbiterMap
     {
-        private Dictionary<ArbiterKey, Arbiter> dictionary = new(2048, arbiterKeyComparer);
-
-        private ArbiterKey lookUpKey;
-        private static ArbiterKeyComparer arbiterKeyComparer = new();
+        private readonly Dictionary<ArbiterKey, Arbiter> dictionary = new();
 
         /// <summary>
-        /// Initializes a new instance of the ArbiterMap class.
-        /// </summary>
-        public ArbiterMap()
-        {
-            lookUpKey = new(null,null);
-        }
-
-        /// <summary>
-        /// Gets an arbiter by it's bodies. Not threadsafe.
+        /// Gets an arbiter by it's bodies.
         /// </summary>
         /// <param name="body1">The first body.</param>
         /// <param name="body2">The second body.</param>
         /// <param name="arbiter">The arbiter which was found.</param>
         /// <returns>Returns true if the arbiter could be found, otherwise false.</returns>
-        public bool LookUpArbiter(RigidBody body1, RigidBody body2,out Arbiter arbiter)
+        public bool LookUpArbiter(RigidBody body1, RigidBody body2, out Arbiter arbiter)
         {
-            lookUpKey.SetBodies(body1, body2);
-            return dictionary.TryGetValue(lookUpKey, out arbiter);
+            var key = new ArbiterKey(body1, body2);
+            return dictionary.TryGetValue(key, out arbiter);
         }
 
         public Dictionary<ArbiterKey, Arbiter>.ValueCollection Arbiters => dictionary.Values;
@@ -135,10 +106,9 @@ namespace Jitter.Dynamics
             dictionary.Clear();
         }
 
-        internal void Remove(Arbiter arbiter)
+        internal bool Remove(Arbiter arbiter)
         {
-            lookUpKey.SetBodies(arbiter.body1, arbiter.body2);
-            dictionary.Remove(lookUpKey);
+            return dictionary.Remove(new(arbiter.Body1, arbiter.Body2));
         }
 
         /// <summary>
@@ -149,13 +119,8 @@ namespace Jitter.Dynamics
         /// <returns>Returns true if the arbiter could be found, otherwise false.</returns>
         public bool ContainsArbiter(RigidBody body1, RigidBody body2)
         {
-            lookUpKey.SetBodies(body1, body2);
-            return dictionary.ContainsKey(lookUpKey);
-        }
-
-        public IEnumerator GetEnumerator()
-        {
-            return dictionary.Values.GetEnumerator();
+            var key = new ArbiterKey(body1, body2);
+            return dictionary.ContainsKey(key);
         }
     }
 
