@@ -1,0 +1,8 @@
+{
+  "name": "me.martindevans.jitter.core",
+  "version": "1.0.0",
+  "displayName": "Jitter.Core",
+  "unity": "2022.3",
+  "dependencies": {
+  }
+}
