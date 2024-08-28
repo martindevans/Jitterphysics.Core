@@ -259,7 +259,9 @@ namespace Jitter.LinearMath
             var result = ContainmentType.Disjoint;
             if (Max.X >= box.Min.X && Min.X <= box.Max.X && Max.Y >= box.Min.Y && Min.Y <= box.Max.Y && Max.Z >= box.Min.Z && Min.Z <= box.Max.Z)
             {
-                result = Min.X <= box.Min.X && box.Max.X <= Max.X && Min.Y <= box.Min.Y && box.Max.Y <= Max.Y && Min.Z <= box.Min.Z && box.Max.Z <= Max.Z ? ContainmentType.Contains : ContainmentType.Intersects;
+                result = Min.X <= box.Min.X && box.Max.X <= Max.X && Min.Y <= box.Min.Y && box.Max.Y <= Max.Y && Min.Z <= box.Min.Z && box.Max.Z <= Max.Z
+                       ? ContainmentType.Contains
+                       : ContainmentType.Intersects;
             }
 
             return result;
@@ -271,24 +273,12 @@ namespace Jitter.LinearMath
         /// <param name="original">First box.</param>
         /// <param name="additional">Second box.</param>
         /// <returns>A JBBox containing the two given boxes.</returns>
-        public static JBBox CreateMerged(JBBox original, JBBox additional)
+        public static JBBox CreateMerged(in JBBox original, in JBBox additional)
         {
-            CreateMerged(ref original, ref additional, out var result);
-            return result;
-        }
-
-        /// <summary>
-        /// Creates a new box containing the two given ones.
-        /// </summary>
-        /// <param name="original">First box.</param>
-        /// <param name="additional">Second box.</param>
-        /// <param name="result">A JBBox containing the two given boxes.</param>
-        public static void CreateMerged(ref JBBox original, ref JBBox additional, out JBBox result)
-        {
-            var vector2 = Vector3.Min(original.Min, additional.Min);
-            var vector = Vector3.Max(original.Max, additional.Max);
-            result.Min = vector2;
-            result.Max = vector;
+            return new JBBox(
+                Vector3.Min(original.Min, additional.Min),
+                Vector3.Max(original.Max, additional.Max)
+            );
         }
 
         public readonly Vector3 Center => (Min + Max) * 0.5f;

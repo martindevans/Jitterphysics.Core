@@ -29,7 +29,8 @@ namespace Jitter.Collision.Shapes
     /// A <see cref="BaseShape"/> representing a compoundShape consisting
     /// of several 'sub' shapes.
     /// </summary>
-    public class CompoundShape : Multishape
+    public class CompoundShape
+        : Multishape
     {
         /// <summary>
         /// Holds a 'sub' shape and it's transformation. This TransformedShape can
@@ -340,7 +341,7 @@ namespace Jitter.Collision.Shapes
             {
                 shapes[i].UpdateBoundingBox();
 
-                JBBox.CreateMerged(ref mInternalBBox, ref shapes[i].boundingBox, out mInternalBBox);
+                mInternalBBox = JBBox.CreateMerged(in mInternalBBox, in shapes[i].boundingBox);
             }
         }
     }

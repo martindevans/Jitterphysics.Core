@@ -22,11 +22,10 @@ using Jitter.LinearMath;
 
 namespace Jitter.Collision
 {
-
     /// <summary>
     /// GJK based implementation of Raycasting.
     /// </summary>
-    public sealed class GJKCollide
+    public static class GJKCollide
     {
         private const int MaxIterations = 15;
 
@@ -335,8 +334,7 @@ namespace Jitter.Collision
             // but is inaccurate against large objects:
             // fraction = lambda;
 
-            Vector3 p1;
-            simplexSolver.ComputePoints(out p1, out var p2);
+            simplexSolver.ComputePoints(out _, out var p2);
 
             p2 -= origin;
             fraction = p2.Length() / direction.Length();
@@ -400,40 +398,28 @@ namespace Jitter.Collision
 
         private class SubSimplexClosestResult
         {
-            private Vector3 _closestPointOnSimplex;
+            public Vector3 ClosestPointOnSimplex { get; set; }
 
             //MASK for m_usedVertices
             //stores the simplex vertex-usage, using the MASK, 
             // if m_usedVertices & MASK then the related vertex is used
-            private UsageBitfield _usedVertices = new();
-            private float[] _barycentricCoords = new float[4];
-            private bool _degenerate;
+            public UsageBitfield UsedVertices { get; set; } = new();
 
-            public Vector3 ClosestPointOnSimplex { get => _closestPointOnSimplex;
-                set => _closestPointOnSimplex = value;
-            }
-            public UsageBitfield UsedVertices { get => _usedVertices;
-                set => _usedVertices = value;
-            }
-            public float[] BarycentricCoords { get => _barycentricCoords;
-                set => _barycentricCoords = value;
-            }
-            public bool Degenerate { get => _degenerate;
-                set => _degenerate = value;
-            }
+            public float[] BarycentricCoords { get; } = new float[4];
+            public bool Degenerate { get; set; }
 
             public void Reset()
             {
-                _degenerate = false;
+                Degenerate = false;
                 SetBarycentricCoordinates();
-                _usedVertices.Reset();
+                UsedVertices.Reset();
             }
 
             public bool IsValid =>
-                _barycentricCoords[0] >= 0f &&
-                _barycentricCoords[1] >= 0f &&
-                _barycentricCoords[2] >= 0f &&
-                _barycentricCoords[3] >= 0f;
+                BarycentricCoords[0] >= 0f &&
+                BarycentricCoords[1] >= 0f &&
+                BarycentricCoords[2] >= 0f &&
+                BarycentricCoords[3] >= 0f;
 
             public void SetBarycentricCoordinates()
             {
@@ -442,10 +428,10 @@ namespace Jitter.Collision
 
             public void SetBarycentricCoordinates(float a, float b, float c, float d)
             {
-                _barycentricCoords[0] = a;
-                _barycentricCoords[1] = b;
-                _barycentricCoords[2] = c;
-                _barycentricCoords[3] = d;
+                BarycentricCoords[0] = a;
+                BarycentricCoords[1] = b;
+                BarycentricCoords[2] = c;
+                BarycentricCoords[3] = d;
             }
         }
 

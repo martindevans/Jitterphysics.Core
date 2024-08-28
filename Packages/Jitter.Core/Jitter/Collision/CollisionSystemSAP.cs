@@ -151,18 +151,14 @@ namespace Jitter.Collision
             // TODO: This can be done better in CollisionSystemPersistenSAP
             foreach (var e in bodyList)
             {
+                if (Raycast(e, rayOrigin, rayDirection, out var tempNormal, out var tempFraction))
                 {
-                    var b = e as RigidBody;
-
-                    if (Raycast(b, rayOrigin, rayDirection, out var tempNormal, out var tempFraction))
+                    if (tempFraction < fraction && (raycast == null || raycast(e, tempNormal, tempFraction)))
                     {
-                        if (tempFraction < fraction && (raycast == null || raycast(b, tempNormal, tempFraction)))
-                        {
-                            body = b;
-                            normal = tempNormal;
-                            fraction = tempFraction;
-                            result = true;
-                        }
+                        body = e;
+                        normal = tempNormal;
+                        fraction = tempFraction;
+                        result = true;
                     }
                 }
             }

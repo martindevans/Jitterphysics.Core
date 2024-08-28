@@ -31,15 +31,17 @@ namespace Jitter.Collision
     /// <summary>
     /// Full 3-Axis SweepAndPrune using persistent updates.
     /// </summary>
-    public class CollisionSystemPersistentSAP : CollisionSystem
+    public class CollisionSystemPersistentSAP
+        : CollisionSystem
     {
         private const int AddedObjectsBruteForceIsUsed = 250;
 
         private class SweepPoint
+            : IComparable<SweepPoint>
         {
-            public RigidBody Body;
-            public bool Begin;
-            public int Axis;
+            public readonly RigidBody Body;
+            public readonly bool Begin;
+            public readonly int Axis;
 
             public SweepPoint(RigidBody body, bool begin, int axis)
             {
@@ -54,26 +56,34 @@ namespace Jitter.Collision
                 {
                     if (Begin)
                     {
-                        if (Axis == 0) return Body.BoundingBox.Min.X;
-                        else if (Axis == 1) return Body.BoundingBox.Min.Y;
-                        else return Body.BoundingBox.Min.Z;
+                        return Axis switch
+                        {
+                            0 => Body.BoundingBox.Min.X,
+                            1 => Body.BoundingBox.Min.Y,
+                            _ => Body.BoundingBox.Min.Z
+                        };
                     }
-                    else
+
+                    return Axis switch
                     {
-                        if (Axis == 0) return Body.BoundingBox.Max.X;
-                        else if (Axis == 1) return Body.BoundingBox.Max.Y;
-                        else return Body.BoundingBox.Max.Z;
-                    }
+                        0 => Body.BoundingBox.Max.X,
+                        1 => Body.BoundingBox.Max.Y,
+                        _ => Body.BoundingBox.Max.Z
+                    };
                 }
             }
 
-
+            public int CompareTo(SweepPoint other)
+            {
+                return Value.CompareTo(other.Value);
+            }
         }
 
-        private struct OverlapPair
+        private readonly struct OverlapPair
+            : IEquatable<OverlapPair>
         {
-            // internal values for faster access within the engine
-            public RigidBody Entity1, Entity2;
+            public readonly RigidBody Entity1;
+            public readonly RigidBody Entity2;
 
             /// <summary>
             /// Initializes a new instance of the BodyPair class.
@@ -86,16 +96,10 @@ namespace Jitter.Collision
                 Entity2 = entity2;
             }
 
-            /// <summary>
-            /// Don't call this, while the key is used in the arbitermap.
-            /// It changes the hashcode of this object.
-            /// </summary>
-            /// <param name="entity1">The first body.</param>
-            /// <param name="entity2">The second body.</param>
-            internal void SetBodies(RigidBody entity1, RigidBody entity2)
+            public bool Equals(OverlapPair other)
             {
-                Entity1 = entity1;
-                Entity2 = entity2;
+                return other.Entity1.Equals(Entity1) && other.Entity2.Equals(Entity2) ||
+                       other.Entity1.Equals(Entity2) && other.Entity2.Equals(Entity1);
             }
 
             /// <summary>
@@ -103,14 +107,12 @@ namespace Jitter.Collision
             /// </summary>
             /// <param name="obj">The object to check against.</param>
             /// <returns>Returns true if they are equal, otherwise false.</returns>
-            public readonly override bool Equals(object? obj)
+            public override bool Equals(object? obj)
             {
-                if (obj == null)
+                if (obj is not OverlapPair pair)
                     return false;
 
-                var other = (OverlapPair)obj;
-                return other.Entity1.Equals(Entity1) && other.Entity2.Equals(Entity2) ||
-                       other.Entity1.Equals(Entity2) && other.Entity2.Equals(Entity1);
+                return Equals(pair);
             }
 
             /// <summary>
@@ -118,9 +120,10 @@ namespace Jitter.Collision
             /// The hashcode is the same if an BodyPair contains the same bodies.
             /// </summary>
             /// <returns></returns>
-            public readonly override int GetHashCode()
+            public override int GetHashCode()
             {
-                return HashCode.Combine(Entity1, Entity2);
+                // Intentional order invariant hash
+                return unchecked(Entity1.GetHashCode() + Entity2.GetHashCode());
             }
         }
 
@@ -133,28 +136,11 @@ namespace Jitter.Collision
 
         private readonly HashSet<OverlapPair> fullOverlaps = new();
 
-        private Action<object> sortCallback;
-
-        public CollisionSystemPersistentSAP()
-        {
-            sortCallback = SortCallback;
-        }
-
-        private int QuickSort(SweepPoint sweepPoint1, SweepPoint sweepPoint2)
-        {
-            var val1 = sweepPoint1.Value;
-            var val2 = sweepPoint2.Value;
-
-            if (val1 > val2) return 1;
-            else if (val2 > val1) return -1;
-            else return 0;
-        }
-
-        private List<RigidBody> activeList = new();
+        private readonly List<RigidBody> activeList = new();
 
         private void DirtySortAxis(List<SweepPoint> axis)
         {
-            axis.Sort(QuickSort);
+            axis.Sort();
             activeList.Clear();
 
             for (var i = 0; i < axis.Count; i++)
@@ -164,10 +150,8 @@ namespace Jitter.Collision
                 if (keyelement.Begin)
                 {
                     foreach (var body in activeList)
-                    {
                         if (CheckBoundingBoxes(body,keyelement.Body)) 
                             fullOverlaps.Add(new(body, keyelement.Body));
-                    }
 
                     activeList.Add(keyelement.Body);
                 }
@@ -194,15 +178,11 @@ namespace Jitter.Collision
                     if (keyelement.Begin && !swapper.Begin)
                     {
                         if (CheckBoundingBoxes(swapper.Body, keyelement.Body))
-                        {
-                            lock (fullOverlaps) fullOverlaps.Add(new(swapper.Body, keyelement.Body));
-                        }
+                            fullOverlaps.Add(new(swapper.Body, keyelement.Body));
                     }
 
                     if (!keyelement.Begin && swapper.Begin)
-                    {
-                        lock (fullOverlaps) fullOverlaps.Remove(new(swapper.Body, keyelement.Body));
-                    }
+                        fullOverlaps.Remove(new(swapper.Body, keyelement.Body));
 
                     axis[i + 1] = swapper;
                     i -= 1;
@@ -216,9 +196,14 @@ namespace Jitter.Collision
         {
             bodyList.Add(body);
 
-            axis1.Add(new(body, true, 0)); axis1.Add(new(body, false, 0));
-            axis2.Add(new(body, true, 1)); axis2.Add(new(body, false, 1));
-            axis3.Add(new(body, true, 2)); axis3.Add(new(body, false, 2));
+            axis1.Add(new(body, true, 0));
+            axis1.Add(new(body, false, 0));
+
+            axis2.Add(new(body, true, 1));
+            axis2.Add(new(body, false, 1));
+
+            axis3.Add(new(body, true, 2));
+            axis3.Add(new(body, false, 2));
 
             addCounter++;
         }
@@ -296,12 +281,9 @@ namespace Jitter.Collision
             }
             else
             {
-
-                {
-                    sortCallback(axis1);
-                    sortCallback(axis2);
-                    sortCallback(axis3);
-                }
+                SortAxis(axis1);
+                SortAxis(axis2);
+                SortAxis(axis3);
             }
 
             addCounter = 0;
@@ -320,11 +302,6 @@ namespace Jitter.Collision
                     swapOrder = !swapOrder;
                 }
             }
-        }
-
-        private void SortCallback(object obj)
-        {
-            SortAxis((List<SweepPoint>)obj);
         }
 
         // okay, people often say raycasting can be made faster using the sweep

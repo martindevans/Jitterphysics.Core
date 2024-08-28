@@ -68,12 +68,16 @@ namespace Jitter.Dynamics
     {
         private ContactSettings settings;
 
-        internal RigidBody body1, body2;
+        internal RigidBody body1;
+        internal RigidBody body2;
 
-        internal Vector3 normal, tangent;
+        internal Vector3 normal;
+        internal Vector3 tangent;
 
-        internal Vector3 realRelPos1, realRelPos2;
-        internal Vector3 relativePos1, relativePos2;
+        internal Vector3 realRelPos1;
+        internal Vector3 realRelPos2;
+        internal Vector3 relativePos1;
+        internal Vector3 relativePos2;
         internal Vector3 p1, p2;
 
         internal float accumulatedNormalImpulse;

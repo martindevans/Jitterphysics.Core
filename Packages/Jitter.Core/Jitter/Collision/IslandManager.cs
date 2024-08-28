@@ -13,17 +13,28 @@ namespace Jitter.Collision
     /// static bodies dont have any connections. Think of the islands as a graph:
     /// nodes are the bodies, and edges are the connections
     /// </summary>
-    internal class IslandManager
-        : ReadOnlyCollection<CollisionIsland>
+    internal sealed class IslandManager
     {
         public static readonly ThreadSafeResourcePool<CollisionIsland> Pool = new();
 
-        private List<CollisionIsland> islands;
+        private readonly List<CollisionIsland> _islands = new();
+
+        public CollisionIsland this[int index] => _islands[index];
+        public int Count => _islands.Count;
+        public ReadOnlyCollection<CollisionIsland> Readonly { get; }
+
+        private readonly Stack<RigidBody> _rmStackRb = new();
+        private readonly Stack<Arbiter> _rmStackArb = new();
+        private readonly Stack<Constraint> _rmStackCstr = new();
+
+        private readonly Queue<RigidBody> _leftSearchQueue = new();
+        private readonly Queue<RigidBody> _rightSearchQueue = new();
+        private readonly List<RigidBody> _visitedBodiesLeft = new();
+        private readonly List<RigidBody> _visitedBodiesRight = new();
 
         public IslandManager()
-            : base(new List<CollisionIsland>())
         {
-            islands = Items as List<CollisionIsland>;
+            Readonly = new ReadOnlyCollection<CollisionIsland>(_islands);
         }
 
         public void ArbiterCreated(Arbiter arbiter)
@@ -82,8 +93,8 @@ namespace Jitter.Collision
         public void MakeBodyStatic(RigidBody body)
         {
 
-            foreach (var b in body.connections) rmStackRb.Push(b);
-            while (rmStackRb.Count > 0) RemoveConnection(body,rmStackRb.Pop());
+            foreach (var b in body.connections) _rmStackRb.Push(b);
+            while (_rmStackRb.Count > 0) RemoveConnection(body,_rmStackRb.Pop());
 
             // A static body doesn't have any connections.
             body.connections.Clear();
@@ -102,18 +113,14 @@ namespace Jitter.Collision
             body.island = null;
         }
 
-        private Stack<RigidBody> rmStackRb = new();
-        private Stack<Arbiter> rmStackArb = new();
-        private Stack<Constraint> rmStackCstr = new();
-
         public void RemoveBody(RigidBody body)
         {
             // Remove everything.
-            foreach (var arbiter in body.arbiters) rmStackArb.Push(arbiter);
-            while (rmStackArb.Count > 0) ArbiterRemoved(rmStackArb.Pop());
+            foreach (var arbiter in body.arbiters) _rmStackArb.Push(arbiter);
+            while (_rmStackArb.Count > 0) ArbiterRemoved(_rmStackArb.Pop());
 
-            foreach (var constraint in body.constraints) rmStackCstr.Push(constraint);
-            while (rmStackCstr.Count > 0) ConstraintRemoved(rmStackCstr.Pop());
+            foreach (var constraint in body.constraints) _rmStackCstr.Push(constraint);
+            while (_rmStackCstr.Count > 0) ConstraintRemoved(_rmStackCstr.Pop());
 
             body.arbiters.Clear();
             body.constraints.Clear();
@@ -133,7 +140,7 @@ namespace Jitter.Collision
                 body.island.ClearLists();
                 Pool.GiveBack(body.island);
 
-                islands.Remove(body.island);
+                _islands.Remove(body.island);
 
                 body.island = null;
             }
@@ -143,7 +150,7 @@ namespace Jitter.Collision
 
         public void RemoveAll()
         {
-            foreach (var island in islands)
+            foreach (var island in _islands)
             {
                 foreach (var body in island.bodies)
                 {
@@ -154,7 +161,7 @@ namespace Jitter.Collision
                 }
                 island.ClearLists();
             }
-            islands.Clear();
+            _islands.Clear();
         }
 
         private void AddConnection(RigidBody body1, RigidBody body2)
@@ -171,7 +178,7 @@ namespace Jitter.Collision
 
                     body2.island = newIsland;
                     body2.island.bodies.Add(body2);
-                    islands.Add(newIsland);
+                    _islands.Add(newIsland);
                 }
             }
             else if (body2 == null || body2.IsStatic) // <- only body2 is static
@@ -183,7 +190,7 @@ namespace Jitter.Collision
 
                     body1.island = newIsland;
                     body1.island.bodies.Add(body1);
-                    islands.Add(newIsland);
+                    _islands.Add(newIsland);
                 }
             }
             else // both are !static
@@ -229,30 +236,24 @@ namespace Jitter.Collision
             }
         }
 
-
-        private readonly Queue<RigidBody> leftSearchQueue = new();
-        private readonly Queue<RigidBody> rightSearchQueue = new();
-
-        private readonly List<RigidBody> visitedBodiesLeft = new();
-        private readonly List<RigidBody> visitedBodiesRight = new();
-
+        
         private void SplitIslands(RigidBody body0, RigidBody body1)
         {
             System.Diagnostics.Debug.Assert(body0.island != null && body0.island == body1.island,
                 "Islands not the same or null.");
 
-            leftSearchQueue.Enqueue(body0);
-            rightSearchQueue.Enqueue(body1);
+            _leftSearchQueue.Enqueue(body0);
+            _rightSearchQueue.Enqueue(body1);
 
-            visitedBodiesLeft.Add(body0);
-            visitedBodiesRight.Add(body1);
+            _visitedBodiesLeft.Add(body0);
+            _visitedBodiesRight.Add(body1);
 
             body0.marker = 1;
             body1.marker = 2;
 
-            while (leftSearchQueue.Count > 0 && rightSearchQueue.Count > 0)
+            while (_leftSearchQueue.Count > 0 && _rightSearchQueue.Count > 0)
             {
-                var currentNode = leftSearchQueue.Dequeue();
+                var currentNode = _leftSearchQueue.Dequeue();
                 if (!currentNode.IsStatic)
                 {
                     for (var i = 0; i < currentNode.connections.Count; i++)
@@ -261,20 +262,20 @@ namespace Jitter.Collision
 
                         if (connectedNode.marker == 0)
                         {
-                            leftSearchQueue.Enqueue(connectedNode);
-                            visitedBodiesLeft.Add(connectedNode);
+                            _leftSearchQueue.Enqueue(connectedNode);
+                            _visitedBodiesLeft.Add(connectedNode);
                             connectedNode.marker = 1;
                         }
                         else if (connectedNode.marker == 2)
                         {
-                            leftSearchQueue.Clear();
-                            rightSearchQueue.Clear();
+                            _leftSearchQueue.Clear();
+                            _rightSearchQueue.Clear();
                             goto ResetSearchStates;
                         }
                     }
                 }
 
-                currentNode = rightSearchQueue.Dequeue();
+                currentNode = _rightSearchQueue.Dequeue();
                 if (!currentNode.IsStatic)
                 {
 
@@ -284,14 +285,14 @@ namespace Jitter.Collision
 
                         if (connectedNode.marker == 0)
                         {
-                            rightSearchQueue.Enqueue(connectedNode);
-                            visitedBodiesRight.Add(connectedNode);
+                            _rightSearchQueue.Enqueue(connectedNode);
+                            _visitedBodiesRight.Add(connectedNode);
                             connectedNode.marker = 2;
                         }
                         else if (connectedNode.marker == 1)
                         {
-                            leftSearchQueue.Clear();
-                            rightSearchQueue.Clear();
+                            _leftSearchQueue.Clear();
+                            _rightSearchQueue.Clear();
                             goto ResetSearchStates;
                         }
                     }
@@ -301,13 +302,13 @@ namespace Jitter.Collision
             var island = Pool.GetNew();
             island.islandManager = this;
 
-            islands.Add(island);
+            _islands.Add(island);
 
-            if (leftSearchQueue.Count == 0)
+            if (_leftSearchQueue.Count == 0)
             {
-                for (var i = 0; i < visitedBodiesLeft.Count; i++)
+                for (var i = 0; i < _visitedBodiesLeft.Count; i++)
                 {
-                    var body = visitedBodiesLeft[i];
+                    var body = _visitedBodiesLeft[i];
                     body1.island.bodies.Remove(body);
                     island.bodies.Add(body);
                     body.island = island;
@@ -325,13 +326,13 @@ namespace Jitter.Collision
                     }
                 }
 
-                rightSearchQueue.Clear();
+                _rightSearchQueue.Clear();
             }
-            else if (rightSearchQueue.Count == 0)
+            else if (_rightSearchQueue.Count == 0)
             {
-                for (var i = 0; i < visitedBodiesRight.Count; i++)
+                for (var i = 0; i < _visitedBodiesRight.Count; i++)
                 {
-                    var body = visitedBodiesRight[i];
+                    var body = _visitedBodiesRight[i];
                     body0.island.bodies.Remove(body);
                     island.bodies.Add(body);
                     body.island = island;
@@ -349,23 +350,23 @@ namespace Jitter.Collision
                     }
                 }
 
-                leftSearchQueue.Clear();
+                _leftSearchQueue.Clear();
             }
 
         ResetSearchStates:
 
-            for (var i = 0; i < visitedBodiesLeft.Count; i++)
+            for (var i = 0; i < _visitedBodiesLeft.Count; i++)
             {
-                visitedBodiesLeft[i].marker = 0;
+                _visitedBodiesLeft[i].marker = 0;
             }
 
-            for (var i = 0; i < visitedBodiesRight.Count; i++)
+            for (var i = 0; i < _visitedBodiesRight.Count; i++)
             {
-                visitedBodiesRight[i].marker = 0;
+                _visitedBodiesRight[i].marker = 0;
             }
 
-            visitedBodiesLeft.Clear();
-            visitedBodiesRight.Clear();
+            _visitedBodiesLeft.Clear();
+            _visitedBodiesRight.Clear();
         }
 
         // Boths bodies must be !static
@@ -402,7 +403,7 @@ namespace Jitter.Collision
                     var giveBackIsland = smallIslandOwner.island;
 
                     Pool.GiveBack(giveBackIsland);
-                    islands.Remove(giveBackIsland);
+                    _islands.Remove(giveBackIsland);
 
                     foreach (var b in giveBackIsland.bodies)
                     {
@@ -434,13 +435,16 @@ namespace Jitter.Collision
                 body0.island.bodies.Add(body0);
                 body0.island.bodies.Add(body1);
 
-                islands.Add(island);
+                _islands.Add(island);
             }
 
         }
 
 
-
+        public List<CollisionIsland>.Enumerator GetEnumerator()
+        {
+            return _islands.GetEnumerator();
+        }
 
     }
 }

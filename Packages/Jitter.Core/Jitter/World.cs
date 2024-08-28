@@ -162,7 +162,7 @@ namespace Jitter
         /// Gets a read only collection of the <see cref="Jitter.Collision.CollisionIsland"/> objects managed by
         /// this class.
         /// </summary>
-        public ReadOnlyCollection<CollisionIsland> Islands => islands;
+        public ReadOnlyCollection<CollisionIsland> Islands => islands.Readonly;
 
         /// <summary>
         /// Gets the <see cref="CollisionSystem"/> used

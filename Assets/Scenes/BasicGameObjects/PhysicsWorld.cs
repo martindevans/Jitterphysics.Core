@@ -12,7 +12,7 @@ namespace Assets.Scenes.BasicGameObjects
     public class PhysicsWorld
         : MonoBehaviour, IPhysicsWorld
     {
-        public World World { get; } = new World(new CollisionSystemSAP());
+        public World World { get; } = new World(new CollisionSystemPersistentSAP());
         public Vector3 Gravity = new Vector3(0, -9.8f, 0);
 
         public void OnEnable()

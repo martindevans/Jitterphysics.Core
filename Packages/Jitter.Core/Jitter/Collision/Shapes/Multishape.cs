@@ -109,7 +109,7 @@ namespace Jitter.Collision.Shapes
             {
                 SetCurrentShape(i);
                 helpBox = base.GetBoundingBox(orientation);
-                JBBox.CreateMerged(ref box, ref helpBox, out box);
+                box = JBBox.CreateMerged(in box, in helpBox);
             }
 
             return box;
