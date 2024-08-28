@@ -28,7 +28,7 @@ namespace Jitter.Collision.Shapes
     /// </summary>
     public class ConvexHullShape : BaseShape
     {
-        private List<Vector3> vertices;
+        private readonly List<Vector3> _vertices;
 
         private Vector3 shifted;
 
@@ -39,7 +39,7 @@ namespace Jitter.Collision.Shapes
         /// the convex hull.</param>
         public ConvexHullShape(List<Vector3> vertices)
         {
-            this.vertices = vertices;
+            _vertices = vertices;
             UpdateShape();
         }
 
@@ -47,7 +47,7 @@ namespace Jitter.Collision.Shapes
 
         public override void CalculateMassInertia()
         {
-            mass = BaseShape.CalculateMassInertia(this, out shifted, out inertia);
+            (Mass, Inertia) = BaseShape.CalculateMassInertia(this, out shifted);
         }
 
         /// <summary>
@@ -56,16 +56,14 @@ namespace Jitter.Collision.Shapes
         /// until the plane does not intersect the shape. The last intersection point is the result.
         /// </summary>
         /// <param name="direction">The direction.</param>
-        /// <param name="result">The result.</param>
         public override Vector3 SupportMapping(Vector3 direction)
         {
             var maxDotProduct = float.MinValue;
             var maxIndex = 0;
-            float dotProduct;
 
-            for (var i = 0; i < vertices.Count; i++)
+            for (var i = 0; i < _vertices.Count; i++)
             {
-                dotProduct = Vector3.Dot(vertices[i], direction);
+                var dotProduct = Vector3.Dot(_vertices[i], direction);
                 if (dotProduct > maxDotProduct)
                 {
                     maxDotProduct = dotProduct;
@@ -73,7 +71,7 @@ namespace Jitter.Collision.Shapes
                 }
             }
 
-            var result = vertices[maxIndex] - shifted;
+            var result = _vertices[maxIndex] - shifted;
             return result;
         }
     }

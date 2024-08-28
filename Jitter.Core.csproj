@@ -60,53 +60,52 @@
     <Analyzer Include="D:\Unity\2022.3.27f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Packages\Jitter.Core\Jitter\IDebugDraw.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\LinearMath\JMath.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Joints\LimitedHingeJoint.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\LinearMath\JVectorExtensions.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Collision\Shapes\CapsuleShape.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Constraints\SingleBody\PointOnPoint.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Collision\Shapes\BaseShape.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Collision\Shapes\Multishape.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Collision\Shapes\TriangleMeshShape.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Collision\IslandManager.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Constraints\FixedAngle.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\LinearMath\JMatrix.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Polyfill\IsExternalInit.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Collision\CollisionSystemSAP.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Joints\PrismaticJoint.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Collision\Shapes\CompoundShape.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Contact.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Joints\HingeJoint.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Collision\Shapes\TerrainShape.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Material.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\ArbiterMap.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Constraints\Constraint.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Collision\GJKCollide.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Collision\IslandManager.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter\Collision\Shapes\BoxShape.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Constraints\PointPointDistance.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Constraints\SingleBody\FixedAngle.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Joints\Joint.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\IDebugDraw.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Constraints\FixedAngle.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter\LinearMath\JBBox.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter\Collision\CollisionSystem.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Collision\CollisionSystemBrute.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Constraints\PointOnPoint.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\LinearMath\JMath.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\LinearMath\JMatrix.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Joints\LimitedHingeJoint.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Polyfill\IsExternalInit.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter\World.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter\Collision\Shapes\MinkowskiSumShape.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Collision\XenoCollide.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Constraints\SingleBody\PointOnLine.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\LinearMath\JVectorExtensions.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Collision\CollisionSystemSAP.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Joints\PrismaticJoint.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter\ThreadSafeResourcePool.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Collision\Shapes\CompoundShape.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Contact.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Collision\Shapes\CapsuleShape.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Collision\CollisionSystemPersistentSAP.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\RigidBody.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Constraints\IConstraint.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Constraints\SingleBody\PointOnPoint.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Joints\HingeJoint.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Collision\Shapes\BaseShape.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter\Collision\Shapes\ConvexHullShape.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Arbiter.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter\Collision\Octree.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Constraints\PointOnLine.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Collision\CollisionIsland.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Collision\Shapes\CylinderShape.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Collision\GJKCollide.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Constraints\PointPointDistance.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Joints\Joint.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Collision\CollisionSystemBrute.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Constraints\PointOnPoint.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Collision\XenoCollide.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Constraints\SingleBody\PointOnLine.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Collision\CollisionSystemPersistentSAP.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Collision\Shapes\Multishape.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Collision\Shapes\TriangleMeshShape.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Material.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter\Collision\Shapes\SphereShape.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Constraints\PointOnLine.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter\Collision\Shapes\ConeShape.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Collision\CollisionIsland.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\ArbiterMap.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Collision\Shapes\CylinderShape.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Packages\Jitter.Core\Jitter\Jitter.Core.asmdef" />
@@ -458,6 +457,14 @@
     </Reference>
     <Reference Include="ReportGeneratorMerged">
       <HintPath>Library\PackageCache\com.unity.testtools.codecoverage@1.2.5\lib\ReportGenerator\ReportGeneratorMerged.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Myriad.ECS">
+      <HintPath>Assets\Packages\Myriad.ECS.22.0.0\lib\netstandard2.1\Myriad.ECS.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="NuGetForUnity.PluginAPI">
+      <HintPath>Library\PackageCache\com.github-glitchenzo.nugetforunity@a011c51ed6\Editor\PluginAPI\NuGetForUnity.PluginAPI.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Android.Types">

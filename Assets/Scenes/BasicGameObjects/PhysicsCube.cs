@@ -1,21 +1,27 @@
+using System.Collections.Generic;
+using System.Linq;
+using Jitter.Collision;
 using Jitter.Collision.Shapes;
 using Jitter.Dynamics;
 using Jitter.LinearMath;
 using UnityEngine;
 
-namespace Assets.Scenes
+namespace Assets.Scenes.BasicGameObjects
 {
     public class PhysicsCube
         : MonoBehaviour
     {
         public bool IsFixed;
 
-        private PhysicsWorld _world;
+        private IPhysicsWorld _world;
         private RigidBody _body;
+
+        private static Dictionary<CollisionIsland, Color> _islands = new();
 
         private void Awake()
         {
-            _world = FindObjectOfType<PhysicsWorld>();
+            // Yes, this is evil. No, I don't care.
+            _world = FindObjectsOfType<MonoBehaviour>().OfType<IPhysicsWorld>().First();
         }
 
         private void OnEnable()
@@ -40,11 +46,36 @@ namespace Assets.Scenes
 
         private void Update()
         {
+            var material = GetComponent<MeshRenderer>().material;
+            if (_body.IsStaticOrInactive)
+                material.color = Color.gray;
+            else
+                material.color = GetColor(_body.CollisionIsland);
+
             var pos = _body.Position;
             var q = _body.Orientation.ToQuaternion();
 
             transform.position = new Vector3(pos.X, pos.Y, pos.Z);
             transform.rotation = new Quaternion(q.X, q.Y, q.Z, q.W);
+        }
+
+        private void LateUpdate()
+        {
+            //_islands.Clear();
+        }
+
+        private static Color GetColor(CollisionIsland island)
+        {
+            if (island == null)
+                return Color.white;
+
+            if (!_islands.TryGetValue(island, out var color))
+            {
+                color = Color.HSVToRGB(Random.value, 0.9f, 0.8f);
+                _islands[island] = color;
+            }
+
+            return color;
         }
     }
 }

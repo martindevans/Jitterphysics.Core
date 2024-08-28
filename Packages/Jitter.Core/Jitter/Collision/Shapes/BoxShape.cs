@@ -106,12 +106,13 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         public override void CalculateMassInertia()
         {
-            mass = size.X * size.Y * size.Z;
+            Mass = size.X * size.Y * size.Z;
 
-            inertia = JMatrix.Identity;
-            inertia.M11 = 1.0f / 12.0f * mass * (size.Y * size.Y + size.Z * size.Z);
-            inertia.M22 = 1.0f / 12.0f * mass * (size.X * size.X + size.Z * size.Z);
-            inertia.M33 = 1.0f / 12.0f * mass * (size.X * size.X + size.Y * size.Y);
+            var i = JMatrix.Identity;
+            i.M11 = 1.0f / 12.0f * Mass * (size.Y * size.Y + size.Z * size.Z);
+            i.M22 = 1.0f / 12.0f * Mass * (size.X * size.X + size.Z * size.Z);
+            i.M33 = 1.0f / 12.0f * Mass * (size.X * size.X + size.Y * size.Y);
+            Inertia = i;
 
             geomCen = default;
         }
@@ -122,7 +123,6 @@ namespace Jitter.Collision.Shapes
         /// until the plane does not intersect the shape. The last intersection point is the result.
         /// </summary>
         /// <param name="direction">The direction.</param>
-        /// <param name="result">The result.</param>
         public override Vector3 SupportMapping(Vector3 direction)
         {
             Vector3 result;

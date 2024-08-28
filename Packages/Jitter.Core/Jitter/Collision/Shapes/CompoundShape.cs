@@ -184,8 +184,8 @@ namespace Jitter.Collision.Shapes
 
         public override void CalculateMassInertia()
         {
-            inertia = default;
-            mass = 0.0f;
+            var inertia = default(JMatrix);
+            Mass = 0.0f;
 
             for (var i = 0; i < Shapes.Length; i++)
             {
@@ -207,8 +207,10 @@ namespace Jitter.Collision.Shapes
                 currentInertia.M23 += -p.Y * p.Z * m;
 
                 inertia += currentInertia;
-                mass += m;
+                Mass += m;
             }
+
+            Inertia = inertia;
         }
 
 

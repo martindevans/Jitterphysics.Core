@@ -17,6 +17,8 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -322,7 +324,7 @@ namespace Jitter.Collision
 
         private void SortCallback(object obj)
         {
-            SortAxis(obj as List<SweepPoint>);
+            SortAxis((List<SweepPoint>)obj);
         }
 
         // okay, people often say raycasting can be made faster using the sweep
@@ -431,7 +433,9 @@ namespace Jitter.Collision
         /// </summary>
         public override bool Raycast(Vector3 rayOrigin, Vector3 rayDirection, RaycastCallback raycast, out RigidBody body, out Vector3 normal, out float fraction)
         {
-            body = null; normal = default; fraction = float.MaxValue;
+            body = null!;
+            normal = default;
+            fraction = float.MaxValue;
 
             var result = false;
 
@@ -468,43 +472,48 @@ namespace Jitter.Collision
 
             if (!body.BoundingBox.RayIntersect(rayOrigin, rayDirection)) return false;
 
-            if (body.Shape is Multishape)
+            if (body.Shape is Multishape ms)
             {
-                var ms = (body.Shape as Multishape).RequestWorkingClone();
-
-                var multiShapeCollides = false;
-
-                var transformedOrigin = rayOrigin - body.position;
-                transformedOrigin = JVectorExtensions.Transform(transformedOrigin, body.invOrientation);
-                var transformedDirection = JVectorExtensions.Transform(rayDirection, body.invOrientation);
-
-                var msLength = ms.Prepare(ref transformedOrigin, ref transformedDirection);
-
-                for (var i = 0; i < msLength; i++)
+                ms = ms.RequestWorkingClone();
+                try
                 {
-                    ms.SetCurrentShape(i);
+                    var multiShapeCollides = false;
 
-                    if (GJKCollide.Raycast(ms, ref body.orientation, ref body.position,
-                        ref rayOrigin, ref rayDirection, out var tempFraction, out var tempNormal))
+                    var transformedOrigin = rayOrigin - body.position;
+                    transformedOrigin = JVectorExtensions.Transform(transformedOrigin, body.invOrientation);
+                    var transformedDirection = JVectorExtensions.Transform(rayDirection, body.invOrientation);
+
+                    var msLength = ms.Prepare(ref transformedOrigin, ref transformedDirection);
+
+                    for (var i = 0; i < msLength; i++)
                     {
-                        if (tempFraction < fraction)
-                        {
-                            if (useTriangleMeshNormal && ms is TriangleMeshShape shape)
-                            {
-                                shape.CollisionNormal(out tempNormal);
-                                tempNormal = JVectorExtensions.Transform(tempNormal, body.orientation);
-                                tempNormal = -tempNormal;
-                            }
+                        ms.SetCurrentShape(i);
 
-                            normal = tempNormal;
-                            fraction = tempFraction;
-                            multiShapeCollides = true;
+                        if (GJKCollide.Raycast(ms, ref body.orientation, ref body.position,
+                                ref rayOrigin, ref rayDirection, out var tempFraction, out var tempNormal))
+                        {
+                            if (tempFraction < fraction)
+                            {
+                                if (useTriangleMeshNormal && ms is TriangleMeshShape shape)
+                                {
+                                    shape.CollisionNormal(out tempNormal);
+                                    tempNormal = JVectorExtensions.Transform(tempNormal, body.orientation);
+                                    tempNormal = -tempNormal;
+                                }
+
+                                normal = tempNormal;
+                                fraction = tempFraction;
+                                multiShapeCollides = true;
+                            }
                         }
                     }
-                }
 
-                ms.ReturnWorkingClone();
-                return multiShapeCollides;
+                    return multiShapeCollides;
+                }
+                finally
+                {
+                    ms.ReturnWorkingClone();
+                }
             }
             else
             {

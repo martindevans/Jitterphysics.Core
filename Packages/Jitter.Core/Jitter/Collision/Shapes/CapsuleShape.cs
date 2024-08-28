@@ -19,6 +19,7 @@
 
 using System;
 using System.Numerics;
+using Jitter.LinearMath;
 
 namespace Jitter.Collision.Shapes
 {
@@ -62,11 +63,13 @@ namespace Jitter.Collision.Shapes
             var massSphere = 3.0f / 4.0f * MathF.PI * radius * radius * radius;
             var massCylinder = MathF.PI * radius * radius * length;
 
-            mass = massCylinder + massSphere;
+            Mass = massCylinder + massSphere;
 
-            inertia.M11 = 1.0f / 4.0f * massCylinder * radius * radius + 1.0f / 12.0f * massCylinder * length * length + 2.0f / 5.0f * massSphere * radius * radius + 1.0f / 4.0f * length * length * massSphere;
-            inertia.M22 = 1.0f / 2.0f * massCylinder * radius * radius + 2.0f / 5.0f * massSphere * radius * radius;
-            inertia.M33 = 1.0f / 4.0f * massCylinder * radius * radius + 1.0f / 12.0f * massCylinder * length * length + 2.0f / 5.0f * massSphere * radius * radius + 1.0f / 4.0f * length * length * massSphere;
+            var i = JMatrix.Identity;
+            i.M11 = 1.0f / 4.0f * massCylinder * radius * radius + 1.0f / 12.0f * massCylinder * length * length + 2.0f / 5.0f * massSphere * radius * radius + 1.0f / 4.0f * length * length * massSphere;
+            i.M22 = 1.0f / 2.0f * massCylinder * radius * radius + 2.0f / 5.0f * massSphere * radius * radius;
+            i.M33 = 1.0f / 4.0f * massCylinder * radius * radius + 1.0f / 12.0f * massCylinder * length * length + 2.0f / 5.0f * massSphere * radius * radius + 1.0f / 4.0f * length * length * massSphere;
+            Inertia = i;
 
             //this.inertia.M11 = (1.0f / 4.0f) * mass * radius * radius + (1.0f / 12.0f) * mass * height * height;
             //this.inertia.M22 = (1.0f / 2.0f) * mass * radius * radius;

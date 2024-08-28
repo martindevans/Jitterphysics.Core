@@ -19,28 +19,36 @@
 
 using System;
 using System.Numerics;
+using Jitter.LinearMath;
 
 namespace Jitter.Collision.Shapes
 {
-
     /// <summary>
     /// A <see cref="BaseShape"/> representing a cylinder.
     /// </summary>
-    public class CylinderShape : BaseShape
+    public class CylinderShape
+        : BaseShape
     {
-        private float height, radius;
+        private float _height;
+        private float _radius;
 
         /// <summary>
         /// Sets the height of the cylinder.
         /// </summary>
-        public float Height { get => height;
-            set { height = value; UpdateShape(); } }
+        public float Height
+        { 
+            get => _height;
+            set { _height = value; UpdateShape(); }
+        }
 
         /// <summary>
         /// Sets the radius of the cylinder.
         /// </summary>
-        public float Radius { get => radius;
-            set { radius = value; UpdateShape(); } }
+        public float Radius 
+        { 
+            get => _radius;
+            set { _radius = value; UpdateShape(); }
+        }
 
         /// <summary>
         /// Initializes a new instance of the CylinderShape class.
@@ -49,8 +57,8 @@ namespace Jitter.Collision.Shapes
         /// <param name="radius">The radius of the cylinder.</param>
         public CylinderShape(float height, float radius)
         {
-            this.height = height;
-            this.radius = radius;
+            _height = height;
+            _radius = radius;
             UpdateShape();
         }
 
@@ -59,10 +67,13 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         public override void CalculateMassInertia()
         {
-            mass = MathF.PI * radius * radius * height;
-            inertia.M11 = 1.0f / 4.0f * mass * radius * radius + 1.0f / 12.0f * mass * height * height;
-            inertia.M22 = 1.0f / 2.0f * mass * radius * radius;
-            inertia.M33 = 1.0f / 4.0f * mass * radius * radius + 1.0f / 12.0f * mass * height * height;
+            Mass = MathF.PI * Radius * Radius * Height;
+
+            var i = JMatrix.Identity;
+            i.M11 = 1.0f / 4.0f * Mass * Radius * Radius + 1.0f / 12.0f * Mass * Height * Height;
+            i.M22 = 1.0f / 2.0f * Mass * Radius * Radius;
+            i.M33 = 1.0f / 4.0f * Mass * Radius * Radius + 1.0f / 12.0f * Mass * Height * Height;
+            Inertia = i;
         }
 
         /// <summary>
@@ -71,7 +82,6 @@ namespace Jitter.Collision.Shapes
         /// until the plane does not intersect the shape. The last intersection point is the result.
         /// </summary>
         /// <param name="direction">The direction.</param>
-        /// <param name="result">The result.</param>
         public override Vector3 SupportMapping(Vector3 direction)
         {
             Vector3 result;
@@ -79,14 +89,14 @@ namespace Jitter.Collision.Shapes
 
             if (sigma > 0.0f)
             {
-                result.X = direction.X / sigma * radius;
-                result.Y = Math.Sign(direction.Y) * height * 0.5f;
-                result.Z = direction.Z / sigma * radius;
+                result.X = direction.X / sigma * Radius;
+                result.Y = Math.Sign(direction.Y) * Height * 0.5f;
+                result.Z = direction.Z / sigma * Radius;
             }
             else
             {
                 result.X = 0.0f;
-                result.Y = Math.Sign(direction.Y) * height * 0.5f;
+                result.Y = Math.Sign(direction.Y) * Height * 0.5f;
                 result.Z = 0.0f;
             }
 

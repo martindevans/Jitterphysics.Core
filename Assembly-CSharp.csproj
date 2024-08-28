@@ -60,11 +60,18 @@
     <Analyzer Include="D:\Unity\2022.3.27f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scenes\PhysicsCube.cs" />
-    <Compile Include="Assets\Scenes\PhysicsWorld.cs" />
-    <Compile Include="Assets\Scenes\PhysicsSphere.cs" />
-    <Compile Include="Assets\Scenes\PhysicsSweepCube.cs" />
-    <Compile Include="Assets\Scenes\Spawner.cs" />
+    <Compile Include="Assets\Scenes\BasicGameObjects\PhysicsSweepCube.cs" />
+    <Compile Include="Assets\Scenes\BasicGameObjects\Spawner.cs" />
+    <Compile Include="Assets\Scenes\MyriadSharedWorld\UnitySystems.cs" />
+    <Compile Include="Assets\Scenes\MyriadSharedWorld\PhysicsSystems.cs" />
+    <Compile Include="Assets\Scenes\BasicGameObjects\PhysicsWorld.cs" />
+    <Compile Include="Assets\Scenes\BasicGameObjects\PhysicsCube.cs" />
+    <Compile Include="Assets\Scenes\MyriadSharedWorld\Spawner.cs" />
+    <Compile Include="Assets\Scenes\MyriadSharedWorld\PhysicsComponents.cs" />
+    <Compile Include="Assets\Scenes\BasicGameObjects\PhysicsSphere.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Assets\Packages\Myriad.ECS.22.0.0\lib\netstandard2.1\Myriad.ECS.dll" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
@@ -401,6 +408,10 @@
     </Reference>
     <Reference Include="ReportGeneratorMerged">
       <HintPath>Library\PackageCache\com.unity.testtools.codecoverage@1.2.5\lib\ReportGenerator\ReportGeneratorMerged.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Myriad.ECS">
+      <HintPath>Assets\Packages\Myriad.ECS.22.0.0\lib\netstandard2.1\Myriad.ECS.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Android.Types">
@@ -903,6 +914,14 @@
       <HintPath>D:\Unity\2022.3.27f1\Editor\Data\NetStandard\compat\2.1.0\shims\netfx\System.Xml.Serialization.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Placeholder.Editor.UI.Editor">
+      <HintPath>Library\ScriptAssemblies\Placeholder.Editor.UI.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="NuGetForUnity">
+      <HintPath>Library\ScriptAssemblies\NuGetForUnity.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.TestTools.CodeCoverage.Editor.OpenCover.Mono.Reflection">
       <HintPath>Library\ScriptAssemblies\Unity.TestTools.CodeCoverage.Editor.OpenCover.Mono.Reflection.dll</HintPath>
       <Private>False</Private>
@@ -923,6 +942,10 @@
       <HintPath>Library\ScriptAssemblies\Unity.TestTools.CodeCoverage.Editor.OpenCover.Model.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Myriad.Unity.Editor">
+      <HintPath>Library\ScriptAssemblies\Myriad.Unity.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.VisualStudio.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.VisualStudio.Editor.dll</HintPath>
       <Private>False</Private>
@@ -931,8 +954,16 @@
       <HintPath>Library\ScriptAssemblies\Unity.Rider.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Placeholder.Editor.UI.Core">
+      <HintPath>Library\ScriptAssemblies\Placeholder.Editor.UI.Core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.VSCode.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.VSCode.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Myriad.Unity.Runtime">
+      <HintPath>Library\ScriptAssemblies\Myriad.Unity.Runtime.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>

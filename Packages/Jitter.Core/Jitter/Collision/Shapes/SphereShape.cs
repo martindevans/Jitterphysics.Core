@@ -23,19 +23,21 @@ using Jitter.LinearMath;
 
 namespace Jitter.Collision.Shapes
 {
-
     /// <summary>
     /// A <see cref="BaseShape"/> representing a sphere.
     /// </summary>
     public class SphereShape : BaseShape
     {
-        private float radius = 1.0f;
+        private float _radius;
 
         /// <summary>
         /// The radius of the sphere.
         /// </summary>
-        public float Radius { get => radius;
-            set { radius = value; UpdateShape(); } }
+        public float Radius
+        {
+            get => _radius;
+            set { _radius = value; UpdateShape(); }
+        }
 
         /// <summary>
         /// Creates a new instance of the SphereShape class.
@@ -43,8 +45,7 @@ namespace Jitter.Collision.Shapes
         /// <param name="radius">The radius of the sphere</param>
         public SphereShape(float radius)
         {
-            this.radius = radius;
-            UpdateShape();
+            Radius = radius;
         }
 
         /// <summary>
@@ -53,13 +54,12 @@ namespace Jitter.Collision.Shapes
         /// until the plane does not intersect the shape. The last intersection point is the result.
         /// </summary>
         /// <param name="direction">The direction.</param>
-        /// <param name="result">The result.</param>
         public override Vector3 SupportMapping(Vector3 direction)
         {
             var result = direction;
             result = Vector3.Normalize(result);
 
-            result *= radius;
+            result *= Radius;
             return result;
         }
 
@@ -67,35 +67,31 @@ namespace Jitter.Collision.Shapes
         /// Calculates the bounding box of the sphere.
         /// </summary>
         /// <param name="orientation">The orientation of the shape.</param>
-        /// <param name="box">The resulting axis aligned bounding box.</param>
+        /// <returns>The resulting axis aligned bounding box.</returns>
         public override JBBox GetBoundingBox(JMatrix orientation)
         {
             JBBox box;
-            box.Min.X = -radius;
-            box.Min.Y = -radius;
-            box.Min.Z = -radius;
-            box.Max.X = radius;
-            box.Max.Y = radius;
-            box.Max.Z = radius;
+            box.Min.X = -Radius;
+            box.Min.Y = -Radius;
+            box.Min.Z = -Radius;
+            box.Max.X = Radius;
+            box.Max.Y = Radius;
+            box.Max.Z = Radius;
             return box;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <inheritdoc />
         public override void CalculateMassInertia()
         {
-            mass = 4.0f / 3.0f * MathF.PI * radius * radius * radius;
+            Mass = 4.0f / 3.0f * MathF.PI * Radius * Radius * Radius;
 
             // (0,0,0) is the center of mass, so only
             // the main matrix elements are != 0
-            inertia = JMatrix.Identity;
-            inertia.M11 = 0.4f * mass * radius * radius;
-            inertia.M22 = 0.4f * mass * radius * radius;
-            inertia.M33 = 0.4f * mass * radius * radius;
+            var i = JMatrix.Identity;
+            i.M11 = 0.4f * Mass * Radius * Radius;
+            i.M22 = 0.4f * Mass * Radius * Radius;
+            i.M33 = 0.4f * Mass * Radius * Radius;
+            Inertia = i;
         }
-
-
     }
-    
 }

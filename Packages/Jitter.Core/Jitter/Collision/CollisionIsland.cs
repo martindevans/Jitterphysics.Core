@@ -28,7 +28,6 @@ namespace Jitter.Collision
     /// </summary>
     public class CollisionIsland
     {
-
         internal IslandManager islandManager;
 
         internal readonly HashSet<RigidBody> bodies = new();
@@ -76,15 +75,16 @@ namespace Jitter.Collision
             foreach (var body in bodies)
             {
                 body.IsActive = active;
-                if (active && !body.IsActive) body.inactiveTime = 0.0f;
+                if (active && !body.IsActive)
+                    body.inactiveTime = 0.0f;
             }
-
         }
 
         internal void ClearLists()
         {
-            arbiter.Clear(); bodies.Clear(); constraints.Clear();
+            arbiter.Clear();
+            bodies.Clear();
+            constraints.Clear();
         }
-
     }
 }

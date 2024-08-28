@@ -1,12 +1,16 @@
 using Jitter;
 using Jitter.Collision;
-using Jitter.LinearMath;
 using UnityEngine;
 
-namespace Assets.Scenes
+namespace Assets.Scenes.BasicGameObjects
 {
+    public interface IPhysicsWorld
+    {
+        Jitter.World World { get; }
+    }
+
     public class PhysicsWorld
-        : MonoBehaviour
+        : MonoBehaviour, IPhysicsWorld
     {
         public World World { get; } = new World(new CollisionSystemSAP());
         public Vector3 Gravity = new Vector3(0, -9.8f, 0);

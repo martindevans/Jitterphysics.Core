@@ -323,9 +323,9 @@ namespace Jitter.Dynamics
         /// </summary>
         public void SetMassProperties()
         {
-            inertia = Shape.inertia;
+            inertia = Shape.Inertia;
             invInertia = inertia.Inverse();
-            inverseMass = 1.0f / Shape.mass;
+            inverseMass = 1.0f / Shape.Mass;
             useShapeMassProperties = true;
         }
 
@@ -494,7 +494,7 @@ namespace Jitter.Dynamics
                 // scale inertia
                 if (!_isParticle)
                 {
-                    JMatrix.Multiply(ref Shape.inertia, value / Shape.mass, out inertia);
+                    inertia = JMatrix.Multiply(Shape.Inertia, value / Shape.Mass);
                     invInertia = inertia.Inverse();
                 }
 
@@ -583,7 +583,7 @@ namespace Jitter.Dynamics
             return other?.instance.CompareTo(instance) ?? 1;
         }
 
-        public bool IsStaticOrInactive => !_isActive || _isStatic;
+        public bool IsStaticOrInactive => !IsActive || IsStatic;
 
         private bool enableDebugDraw;
         public bool EnableDebugDraw

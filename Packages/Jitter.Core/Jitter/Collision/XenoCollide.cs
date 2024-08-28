@@ -22,7 +22,6 @@ using Jitter.LinearMath;
 
 namespace Jitter.Collision
 {
-
     /// <summary>
     /// The implementation of the ISupportMappable interface defines the form
     /// of a shape. <seealso cref="GJKCollide"/> <seealso cref="XenoCollide"/>
@@ -35,13 +34,11 @@ namespace Jitter.Collision
         /// until the plane does not intersect the shape. The last intersection point is the result.
         /// </summary>
         /// <param name="direction">The direction.</param>
-        /// <param name="result">The result.</param>
         Vector3 SupportMapping(Vector3 direction);
 
         /// <summary>
         /// The center of the SupportMap.
         /// </summary>
-        /// <param name="center"></param>
         Vector3 SupportCenter();
     }
 
@@ -50,9 +47,8 @@ namespace Jitter.Collision
     /// Narrowphase collision detection highly optimized for C#.
     /// http://xenocollide.snethen.com/
     /// </summary>
-    public sealed class XenoCollide
+    public static class XenoCollide
     {
-
         private const float CollideEpsilon = 1e-4f;
         private const int MaximumIterations = 34;
 
@@ -375,6 +371,5 @@ namespace Jitter.Collision
             }
 
         }
-
     }
 }

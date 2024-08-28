@@ -29,19 +29,34 @@ namespace Jitter.Collision.Shapes
     /// </summary>
     public class ConeShape : BaseShape
     {
-        private float height,radius;
+        private float _height;
+        private float _radius;
 
         /// <summary>
         /// The height of the cone.
         /// </summary>
-        public float Height { get => height;
-            set { height = value; UpdateShape(); } }
+        public float Height
+        {
+            get => _height;
+            set
+            {
+                _height = value;
+                UpdateShape();
+            }
+        }
 
         /// <summary>
         /// The radius of the cone base.
         /// </summary>
-        public float Radius { get => radius;
-            set { radius = value; UpdateShape(); } }
+        public float Radius
+        {
+            get => _radius;
+            set
+            {
+                _radius = value;
+                UpdateShape();
+            }
+        }
 
         /// <summary>
         /// Initializes a new instance of the ConeShape class.
@@ -50,15 +65,15 @@ namespace Jitter.Collision.Shapes
         /// <param name="radius">The radius of the cone base.</param>
         public ConeShape(float height, float radius)
         {
-            this.height = height;
-            this.radius = radius;
+            this._height = height;
+            this._radius = radius;
 
             UpdateShape();
         }
 
         public override void UpdateShape()
         {
-            sina = radius / (float)Math.Sqrt(radius * radius + height * height);
+            sina = _radius / (float)Math.Sqrt(_radius * _radius + _height * _height);
             base.UpdateShape();
         }
 
@@ -69,13 +84,14 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         public override void CalculateMassInertia()
         {
-            mass = 1.0f / 3.0f * MathF.PI * radius * radius * height;
+            Mass = 1.0f / 3.0f * MathF.PI * _radius * _radius * _height;
 
             // inertia through center of mass axis.
-            inertia = JMatrix.Identity;
-            inertia.M11 = 3.0f / 80.0f * mass * (radius * radius + 4 * height * height);
-            inertia.M22 = 3.0f / 10.0f * mass * radius * radius;
-            inertia.M33 = 3.0f / 80.0f * mass * (radius * radius + 4 * height * height);
+            var i = JMatrix.Identity;
+            i.M11 = 3.0f / 80.0f * Mass * (_radius * _radius + 4 * _height * _height);
+            i.M22 = 3.0f / 10.0f * Mass * _radius * _radius;
+            i.M33 = 3.0f / 80.0f * Mass * (_radius * _radius + 4 * _height * _height);
+            Inertia = i;
 
             // J_x=J_y=3/20 M (R^2+4 H^2)
 
@@ -98,19 +114,19 @@ namespace Jitter.Collision.Shapes
             if (direction.Y > direction.Length() * sina)
             {
                 result.X = 0.0f;
-                result.Y = 2.0f / 3.0f * height;
+                result.Y = 2.0f / 3.0f * _height;
                 result.Z = 0.0f;
             }
             else if (sigma > 0.0f)
             {
-                result.X = radius * direction.X / sigma;
-                result.Y = -(1.0f / 3.0f) * height;
-                result.Z = radius * direction.Z / sigma;
+                result.X = _radius * direction.X / sigma;
+                result.Y = -(1.0f / 3.0f) * _height;
+                result.Z = _radius * direction.Z / sigma;
             }
             else
             {
                 result.X = 0.0f;
-                result.Y = -(1.0f / 3.0f) * height;
+                result.Y = -(1.0f / 3.0f) * _height;
                 result.Z = 0.0f;
             }
 

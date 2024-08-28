@@ -67,17 +67,17 @@ namespace Jitter.Collision.Shapes
 
         public override void CalculateMassInertia()
         {
-            mass = BaseShape.CalculateMassInertia(this, out shifted, out inertia);
+            (Mass, Inertia) = BaseShape.CalculateMassInertia(this, out shifted);
         }
 
         public override Vector3 SupportMapping(Vector3 direction)
         {
-            Vector3 temp1, temp2 = default;
+            Vector3 temp2 = default;
 
             for (var i = 0; i < shapes.Count; i++)
             {
-                temp1 = shapes[i].SupportMapping(direction);
-                temp2 = temp1 + temp2;
+                var temp1 = shapes[i].SupportMapping(direction);
+                temp2 += temp1;
             }
 
             var result = temp2 - shifted;

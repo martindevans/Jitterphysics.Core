@@ -129,15 +129,17 @@ namespace Jitter.Collision.Shapes
             geomCen = default;
 
             // TODO: calc this right
-            inertia = JMatrix.Identity;
+            var i = JMatrix.Identity;
 
             var size = boundingBox.Max - boundingBox.Min;
 
-            mass = size.X * size.Y * size.Z;
+            Mass = size.X * size.Y * size.Z;
 
-            inertia.M11 = 1.0f / 12.0f * mass * (size.Y * size.Y + size.Z * size.Z);
-            inertia.M22 = 1.0f / 12.0f * mass * (size.X * size.X + size.Z * size.Z);
-            inertia.M33 = 1.0f / 12.0f * mass * (size.X * size.X + size.Y * size.Y);
+            i.M11 = 1.0f / 12.0f * Mass * (size.Y * size.Y + size.Z * size.Z);
+            i.M22 = 1.0f / 12.0f * Mass * (size.X * size.X + size.Z * size.Z);
+            i.M33 = 1.0f / 12.0f * Mass * (size.X * size.X + size.Y * size.Y);
+
+            Inertia = i;
         }
 
     }

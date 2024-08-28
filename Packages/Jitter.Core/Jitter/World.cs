@@ -143,14 +143,13 @@ namespace Jitter
         private readonly HashSet<Constraint> constraints = new();
         public IReadOnlyCollection<Constraint> Constraints => constraints;
 
-        private readonly WorldEvents events = new();
-        public WorldEvents Events => events;
+        public WorldEvents Events { get; } = new();
 
         /// <summary>
         /// Holds a list of <see cref="Arbiter"/>. All currently
         /// active arbiter in the <see cref="World"/> are stored in this map.
         /// </summary>
-        public ArbiterMap ArbiterMap { get; }
+        public ArbiterMap ArbiterMap { get; } = new();
 
         private readonly Queue<Arbiter> removedArbiterQueue = new();
         private readonly Queue<Arbiter> addedArbiterQueue = new();
@@ -165,7 +164,27 @@ namespace Jitter
         /// </summary>
         public ReadOnlyCollection<CollisionIsland> Islands => islands;
 
-        private CollisionDetectedHandler collisionDetectionHandler;
+        /// <summary>
+        /// Gets the <see cref="CollisionSystem"/> used
+        /// to detect collisions.
+        /// </summary>
+        public CollisionSystem CollisionSystem { set; get; }
+
+        /// <summary>
+        /// Gets or sets the gravity in this <see cref="World"/>. The default gravity is (0,0,0)
+        /// </summary>
+        public Vector3 Gravity
+        {
+            get => gravity;
+            set => gravity = value;
+        }
+
+        /// <summary>
+        /// Global sets or gets if a body is able to be temporarily deactivated by the engine to
+        /// safe computation time. Use <see cref="SetInactivityThreshold"/> to set parameters
+        /// of the deactivation process.
+        /// </summary>
+        public bool AllowDeactivation { get; set; } = true;
 
         /// <summary>
         /// Create a new instance of the <see cref="World"/> class.
@@ -177,21 +196,8 @@ namespace Jitter
         public World(CollisionSystem collision)
         {
             CollisionSystem = collision;
-
-            collisionDetectionHandler = CollisionDetected;
-
-            CollisionSystem.CollisionDetected += collisionDetectionHandler;
-
-            ArbiterMap = new();
-
-            AllowDeactivation = true;
+            CollisionSystem.CollisionDetected += CollisionDetected;
         }
-
-        /// <summary>
-        /// Gets the <see cref="CollisionSystem"/> used
-        /// to detect collisions.
-        /// </summary>
-        public CollisionSystem CollisionSystem { set; get; }
 
         /// <summary>
         /// In Jitter many objects get added to stacks after they were used.
@@ -227,7 +233,7 @@ namespace Jitter
                 body.arbiters.Clear();
                 body.constraints.Clear();
 
-                events.RaiseRemovedRigidBody(body);
+                Events.RaiseRemovedRigidBody(body);
             }
 
             // remove bodies from the world
@@ -236,7 +242,7 @@ namespace Jitter
             // remove constraints
             foreach (var constraint in constraints)
             {
-                events.RaiseRemovedConstraint(constraint);
+                Events.RaiseRemovedConstraint(constraint);
             }
             constraints.Clear();
 
@@ -245,25 +251,7 @@ namespace Jitter
 
             // delete the arbiters
             ArbiterMap.Clear();
-
-            ResetResourcePools();
         }
-
-        /// <summary>
-        /// Gets or sets the gravity in this <see cref="World"/>. The default gravity is (0,0,0)
-        /// </summary>
-        public Vector3 Gravity
-        {
-            get => gravity;
-            set => gravity = value;
-        }
-
-        /// <summary>
-        /// Global sets or gets if a body is able to be temporarily deactivated by the engine to
-        /// safe computation time. Use <see cref="SetInactivityThreshold"/> to set parameters
-        /// of the deactivation process.
-        /// </summary>
-        public bool AllowDeactivation { get; set; }
 
         /// <summary>
         /// Every computation <see cref="Step(float)"/> the angular and linear velocity 
@@ -358,13 +346,13 @@ namespace Jitter
             foreach (var arbiter in body.arbiters)
             {
                 ArbiterMap.Remove(arbiter);
-                events.RaiseBodiesEndCollide(arbiter.Body1, arbiter.Body2);
+                Events.RaiseBodiesEndCollide(arbiter.Body1, arbiter.Body2);
             }
 
             foreach (var constraint in body.constraints)
             {
                 constraints.Remove(constraint);
-                events.RaiseRemovedConstraint(constraint);
+                Events.RaiseRemovedConstraint(constraint);
             }
 
             // remove the body from the collision system
@@ -373,7 +361,7 @@ namespace Jitter
             // remove the body from the island manager
             islands.RemoveBody(body);
 
-            events.RaiseRemovedRigidBody(body);
+            Events.RaiseRemovedRigidBody(body);
 
             return true;
         }
@@ -388,7 +376,7 @@ namespace Jitter
             if (body == null) throw new ArgumentNullException(nameof(body), "body can't be null.");
             if (rigidBodies.Contains(body)) throw new ArgumentException("The body was already added to the world.", nameof(body));
 
-            events.RaiseAddedRigidBody(body);
+            Events.RaiseAddedRigidBody(body);
 
             CollisionSystem.AddEntity(body);
 
@@ -405,7 +393,7 @@ namespace Jitter
             if (!constraints.Remove(constraint))
                 return false;
 
-            events.RaiseRemovedConstraint(constraint);
+            Events.RaiseRemovedConstraint(constraint);
             islands.ConstraintRemoved(constraint);
 
             return true;
@@ -421,7 +409,7 @@ namespace Jitter
                 throw new ArgumentException("The constraint was already added to the world.", nameof(constraint));
 
             islands.ConstraintCreated(constraint);
-            events.RaiseAddedConstraint(constraint);
+            Events.RaiseAddedConstraint(constraint);
         }
 
         private float currentLinearDampFactor = 1.0f;
@@ -466,7 +454,7 @@ namespace Jitter
             currentLinearDampFactor = (float)Math.Pow(linearDamping, timestep);
 
             sw.Reset(); sw.Start();
-            events.RaiseWorldPreStep(timestep);
+            Events.RaiseWorldPreStep(timestep);
             sw.Stop(); debugTimes[(int)DebugType.PreStep] = sw.Elapsed.TotalMilliseconds;
 
             sw.Reset(); sw.Start();
@@ -513,7 +501,7 @@ namespace Jitter
             sw.Stop(); debugTimes[(int)DebugType.Integrate] = sw.Elapsed.TotalMilliseconds;
 
             sw.Reset(); sw.Start();
-            events.RaiseWorldPostStep(timestep);
+            Events.RaiseWorldPostStep(timestep);
             sw.Stop(); debugTimes[(int)DebugType.PostStep] = sw.Elapsed.TotalMilliseconds;
         }
 
@@ -604,7 +592,7 @@ namespace Jitter
                 ArbiterMap.Remove(arbiter);
 
                 removedArbiterQueue.Enqueue(arbiter);
-                events.RaiseBodiesEndCollide(arbiter.Body1, arbiter.Body2);
+                Events.RaiseBodiesEndCollide(arbiter.Body1, arbiter.Body2);
             }
 
         }
@@ -755,7 +743,7 @@ namespace Jitter
 
                     addedArbiterQueue.Enqueue(arbiter);
 
-                    events.RaiseBodiesBeginCollide(body1, body2);
+                    Events.RaiseBodiesBeginCollide(body1, body2);
                 }
             }
 
@@ -771,7 +759,7 @@ namespace Jitter
                 contact = arbiter.AddContact(point2, point1, normal, penetration, ContactSettings);
             }
 
-            if (contact != null) events.RaiseContactCreated(contact);
+            if (contact != null) Events.RaiseContactCreated(contact);
 
         }
 
@@ -815,12 +803,12 @@ namespace Jitter
                         if (body.IsActive)
                         {
                             body.IsActive = false;
-                            events.RaiseDeactivatedBody(body);
+                            Events.RaiseDeactivatedBody(body);
                         }
                         else
                         {
                             body.IsActive = true;
-                            events.RaiseActivatedBody(body);
+                            Events.RaiseActivatedBody(body);
                         }
                     }
                     

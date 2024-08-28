@@ -41,10 +41,8 @@ namespace Jitter.Collision.Shapes
     public abstract class BaseShape
         : ISupportMappable
     {
-
-        // internal values so we can access them fast  without calling properties.
-        internal JMatrix inertia = JMatrix.Identity;
-        internal float mass = 1.0f;
+        private JMatrix _inertia = JMatrix.Identity;
+        private float _mass = 1.0f;
 
         internal JBBox boundingBox = JBBox.LargeBox;
         internal Vector3 geomCen;
@@ -66,8 +64,8 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         public JMatrix Inertia
         { 
-            get => inertia;
-            protected set => inertia = value;
+            get => _inertia;
+            protected set => _inertia = value;
         }
 
 
@@ -76,8 +74,8 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         public float Mass
         { 
-            get => mass;
-            protected set => mass = value;
+            get => _mass;
+            protected set => _mass = value;
         }
 
         /// <summary>
@@ -275,18 +273,18 @@ namespace Jitter.Collision.Shapes
             CalculateMassInertia();
             RaiseShapeUpdated();
         }
-        
+
         /// <summary>
         /// Calculates the inertia of the shape relative to the center of mass.
         /// </summary>
         /// <param name="shape"></param>
         /// <param name="centerOfMass"></param>
-        /// <param name="inertia">Returns the inertia relative to the center of mass, not to the origin</param>
-        /// <returns></returns>
-        public static float CalculateMassInertia(BaseShape shape, out Vector3 centerOfMass, out JMatrix inertia)
+        /// <returns>mass, the inertia relative to the center of mass (not to the origin)</returns>
+        public static (float, JMatrix) CalculateMassInertia(BaseShape shape, out Vector3 centerOfMass)
         {
             var mass = 0.0f;
-            centerOfMass = default; inertia = default;
+            centerOfMass = default;
+            var inertia = default(JMatrix);
 
             if (shape is Multishape) throw new ArgumentException("Can't calculate inertia of multishapes.", nameof(shape));
 
@@ -296,7 +294,8 @@ namespace Jitter.Collision.Shapes
 
             // create inertia of tetrahedron with vertices at
             // (0,0,0) (1,0,0) (0,1,0) (0,0,1)
-            float a = 1.0f / 60.0f, b = 1.0f / 120.0f;
+            const float a = 1.0f / 60.0f;
+            const float b = 1.0f / 120.0f;
             var C = new JMatrix(a, b, b, b, a, b, b, b, a);
 
             for (var i = 0; i < hullTriangles.Count; i += 3)
@@ -338,7 +337,7 @@ namespace Jitter.Collision.Shapes
 
             JMatrix.Add(ref inertia, ref t, out inertia);
 
-            return mass;
+            return (mass, inertia);
         }
 
         /// <summary>
@@ -348,7 +347,7 @@ namespace Jitter.Collision.Shapes
         /// </summary>
         public virtual void CalculateMassInertia()
         {
-            mass = CalculateMassInertia(this, out geomCen, out inertia);
+            (Mass, _inertia) = CalculateMassInertia(this, out geomCen);
         }
 
         /// <summary>

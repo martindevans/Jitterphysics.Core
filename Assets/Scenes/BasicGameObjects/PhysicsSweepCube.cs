@@ -1,9 +1,7 @@
-using Jitter.Collision.Shapes;
 using Jitter.Dynamics;
-using Jitter.LinearMath;
 using UnityEngine;
 
-namespace Assets.Scenes
+namespace Assets.Scenes.BasicGameObjects
 {
     public class PhysicsSweepCube
         : MonoBehaviour

@@ -1,5 +1,12 @@
 {
   "dependencies": {
+    "com.github-glitchenzo.nugetforunity": {
+      "version": "https://github.com/GlitchEnzo/NuGetForUnity.git?path=/src/NuGetForUnity",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "a011c51ed65c9abc3151a7a408bc70d408352933"
+    },
     "com.unity.editorcoroutines": {
       "version": "1.0.0",
       "depth": 1,
@@ -93,6 +100,22 @@
       "depth": 0,
       "source": "embedded",
       "dependencies": {}
+    },
+    "me.martindevans.myriad-unity-integration": {
+      "version": "git@github.com:martindevans/Myriad.ECS.Unity.git?path=/Packages/me.martindevans.myriad-unity-integration",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "software.placeholder.editor-ui": "1.0.0"
+      },
+      "hash": "4b53007e9a87d7c8cd359070926e8146f11dbf5a"
+    },
+    "software.placeholder.editor-ui": {
+      "version": "git@github.com:Placeholder-Software/Placeholder.Unity.UI.git?path=/Packages/software.placeholder.editor-ui",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "dcaaa92f63d0b6704b1dc503e052c43433073b2a"
     },
     "com.unity.modules.ai": {
       "version": "1.0.0",
