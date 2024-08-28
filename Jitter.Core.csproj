@@ -10,7 +10,7 @@
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <RootNamespace></RootNamespace>
-    <ProjectGuid>{8227BB8B-0B38-D10D-F481-81CF9FA92FA8}</ProjectGuid>
+    <ProjectGuid>{FB1E1029-8DDA-263F-57D1-F5F002C7F127}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <AssemblyName>Jitter.Core</AssemblyName>
@@ -100,8 +100,8 @@
     <Compile Include="Packages\Jitter.Core\Jitter.Core\Dynamics\Constraints\PointPointDistance.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter.Core\LinearMath\JMatrix.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter.Core\Dynamics\Joints\HingeJoint.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter.Core\LinearMath\Vector3.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter.Core\Dynamics\Contact.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter.Core\LinearMath\Vector3.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter.Core\Collision\CollisionSystemPersistentSAP.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter.Core\Collision\Shapes\TriangleMeshShape.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter.Core\Collision\Octree.cs" />

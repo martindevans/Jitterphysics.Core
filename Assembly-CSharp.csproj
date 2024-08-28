@@ -10,7 +10,7 @@
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <RootNamespace></RootNamespace>
-    <ProjectGuid>{85DE2CB9-A80E-E67F-91DC-D0884DD1995C}</ProjectGuid>
+    <ProjectGuid>{5F5EAFB5-6B04-57AA-1617-4C96C49EB6E0}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <AssemblyName>Assembly-CSharp</AssemblyName>
@@ -1009,6 +1009,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="Jitter.Core.csproj">
+      <Project>{FB1E1029-8DDA-263F-57D1-F5F002C7F127}</Project>
+      <Name>Jitter.Core</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="GenerateTargetFrameworkMonikerAttribute" />
