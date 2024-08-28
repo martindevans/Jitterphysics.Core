@@ -148,8 +148,7 @@ namespace Jitter.Collision
             var b1IsMulti = body1.Shape is Multishape;
             var b2IsMulti = body2.Shape is Multishape;
 
-            var speculative = speculativeContacts ||
-                              body1.EnableSpeculativeContacts || body2.EnableSpeculativeContacts;
+            var speculative = speculativeContacts || body1.EnableSpeculativeContacts || body2.EnableSpeculativeContacts;
 
             Vector3 point, normal;
             float penetration;
@@ -319,8 +318,7 @@ namespace Jitter.Collision
             BaseShape shape1, BaseShape shape2, ref Vector3 point, ref Vector3 normal,
             out Vector3 point1, out Vector3 point2)
         {
-            Vector3 mn;
-            mn = -normal;
+            var mn = -normal;
 
             SupportMapping(body1, shape1, ref mn, out var sA);
             SupportMapping(body2, shape2, ref normal, out var sB);

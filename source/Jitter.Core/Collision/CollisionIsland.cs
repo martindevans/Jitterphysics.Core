@@ -60,8 +60,9 @@ namespace Jitter.Collision
             var enumerator = bodies.GetEnumerator();
             enumerator.MoveNext();
 
-            if (enumerator.Current == null) return false;
-            else return enumerator.Current.isActive;
+            if (enumerator.Current == null)
+                return false;
+            return enumerator.Current.IsActive;
         }
 
         /// <summary>

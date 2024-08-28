@@ -127,7 +127,6 @@ namespace Jitter.Dynamics.Constraints
             JMatrix.Transpose(ref orientationDifference, out orientationDifference);
 
             var q = orientationDifference * body2.invOrientation * body1.orientation;
-            Vector3 axis;
 
             var x = q.M32 - q.M23;
             var y = q.M13 - q.M31;
@@ -137,7 +136,7 @@ namespace Jitter.Dynamics.Constraints
             var t = q.M11 + q.M22 + q.M33;
 
             var angle = MathF.Atan2(r, t - 1);
-            axis = new Vector3(x, y, z) * angle;
+            var axis = new Vector3(x, y, z) * angle;
 
             if (r != 0.0f) axis *= (1.0f / r);
 

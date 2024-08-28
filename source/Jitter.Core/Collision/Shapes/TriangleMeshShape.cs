@@ -32,20 +32,16 @@ namespace Jitter.Collision.Shapes
         private readonly List<int> potentialTriangles = new();
         private readonly Octree octree;
 
-        private float sphericalExpansion = 0.05f;
-
         /// <summary>
         /// Expands the triangles by the specified amount.
         /// This stabilizes collision detection for flat shapes.
         /// </summary>
-        public float SphericalExpansion 
-        { 
-            get => sphericalExpansion;
-            set => sphericalExpansion = value;
-        }
+        public float SphericalExpansion { get; set; } = 0.05f;
+
+        public bool FlipNormals { get; set; }
 
         /// <summary>
-        /// Creates a new istance if the TriangleMeshShape class.
+        /// Creates a new instance if the TriangleMeshShape class.
         /// </summary>
         /// <param name="octree">The octree which holds the triangles
         /// of a mesh.</param>
@@ -62,7 +58,7 @@ namespace Jitter.Collision.Shapes
         {
             var clone = new TriangleMeshShape(octree)
             {
-                sphericalExpansion = sphericalExpansion,
+                SphericalExpansion = SphericalExpansion,
             };
             return clone;
         }
@@ -81,12 +77,12 @@ namespace Jitter.Collision.Shapes
 
             var exp = box;
 
-            exp.Min.X -= sphericalExpansion;
-            exp.Min.Y -= sphericalExpansion;
-            exp.Min.Z -= sphericalExpansion;
-            exp.Max.X += sphericalExpansion;
-            exp.Max.Y += sphericalExpansion;
-            exp.Max.Z += sphericalExpansion;
+            exp.Min.X -= SphericalExpansion;
+            exp.Min.Y -= SphericalExpansion;
+            exp.Min.Z -= SphericalExpansion;
+            exp.Max.X += SphericalExpansion;
+            exp.Max.Y += SphericalExpansion;
+            exp.Max.Z += SphericalExpansion;
 
             octree.GetTrianglesIntersectingtAABox(potentialTriangles, ref exp);
 
@@ -119,16 +115,15 @@ namespace Jitter.Collision.Shapes
         {
             potentialTriangles.Clear();
 
-            Vector3 expDelta;
-            expDelta = Vector3.Normalize(rayDelta);
-            expDelta = rayDelta + expDelta * sphericalExpansion;
+            var expDelta = Vector3.Normalize(rayDelta);
+            expDelta = rayDelta + expDelta * SphericalExpansion;
 
             octree.GetTrianglesIntersectingRay(potentialTriangles, rayOrigin, expDelta);
 
             return potentialTriangles.Count;
         }
 
-        private Vector3[] vecs = new Vector3[3];
+        private readonly Vector3[] vecs = new Vector3[3];
 
         /// <summary>
         /// SupportMapping. Finds the point in the shape furthest away from the given direction.
@@ -136,12 +131,10 @@ namespace Jitter.Collision.Shapes
         /// until the plane does not intersect the shape. The last intersection point is the result.
         /// </summary>
         /// <param name="direction">The direction.</param>
-        /// <param name="result">The result.</param>
         public override Vector3 SupportMapping(Vector3 direction)
         {
-            Vector3 exp;
-            exp = Vector3.Normalize(direction);
-            exp *= sphericalExpansion;
+            var exp = Vector3.Normalize(direction);
+            exp *= SphericalExpansion;
 
             var min = Vector3.Dot(vecs[0], direction);
             var minIndex = 0;
@@ -167,25 +160,20 @@ namespace Jitter.Collision.Shapes
         /// the whole shape.
         /// </summary>
         /// <param name="orientation">The orientation of the shape.</param>
-        /// <param name="box">The axis aligned bounding box of the shape.</param>
+        /// <returns>The axis aligned bounding box of the shape.</returns>
         public override JBBox GetBoundingBox(JMatrix orientation)
         {
             var box = octree.rootNodeBox;
 
-            box.Min.X -= sphericalExpansion;
-            box.Min.Y -= sphericalExpansion;
-            box.Min.Z -= sphericalExpansion;
-            box.Max.X += sphericalExpansion;
-            box.Max.Y += sphericalExpansion;
-            box.Max.Z += sphericalExpansion;
+            box.Min.X -= SphericalExpansion;
+            box.Min.Y -= SphericalExpansion;
+            box.Min.Z -= SphericalExpansion;
+            box.Max.X += SphericalExpansion;
+            box.Max.Y += SphericalExpansion;
+            box.Max.Z += SphericalExpansion;
 
             box.Transform(ref orientation);
             return box;
-        }
-
-        private bool flipNormal;
-        public bool FlipNormals { get => flipNormal;
-            set => flipNormal = value;
         }
 
         /// <summary>
@@ -215,7 +203,7 @@ namespace Jitter.Collision.Shapes
             normal = vecs[2] - value5;
             normal = Vector3.Cross(sum, normal);
 
-            if (flipNormal) normal = -normal;
+            if (FlipNormals) normal = -normal;
         }
 
         private Vector3 normal = JVectorExtensions.Up;

@@ -95,7 +95,6 @@ namespace Jitter.Collision
         {
             // Used variables
             Vector3 temp1;
-            Vector3 mn;
 
             // Initialization of the output
             point = normal = default;
@@ -120,7 +119,7 @@ namespace Jitter.Collision
             if (v0.IsNearlyZero()) v0 = new(0.00001f, 0, 0);
 
             // v1 = support in direction of origin
-            mn = v0;
+            var mn = v0;
             normal = -v0;
 
             SupportMapTransformed(support1, ref orientation1, ref position1, ref mn, out var v11);

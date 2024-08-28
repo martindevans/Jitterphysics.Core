@@ -476,8 +476,7 @@ namespace Jitter.Collision
 
                 var transformedOrigin = rayOrigin - body.position;
                 transformedOrigin = JVectorExtensions.Transform(transformedOrigin, body.invOrientation);
-                Vector3 transformedDirection;
-                transformedDirection = JVectorExtensions.Transform(rayDirection, body.invOrientation);
+                var transformedDirection = JVectorExtensions.Transform(rayDirection, body.invOrientation);
 
                 var msLength = ms.Prepare(ref transformedOrigin, ref transformedDirection);
 

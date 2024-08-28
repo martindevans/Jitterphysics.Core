@@ -123,7 +123,7 @@ namespace Jitter.Dynamics.Constraints.SingleBody
 
             bias = -Vector3.Cross(l, p1 - anchor).Length() * biasFactor * (1.0f / timestep);
 
-            if (!body1.isStatic)
+            if (!body1.IsStatic)
             {
                 body1.linearVelocity += body1.inverseMass * accumulatedImpulse * jacobian[0];
                 body1.angularVelocity += JVectorExtensions.Transform(accumulatedImpulse * jacobian[1], body1.invInertiaWorld);
@@ -146,7 +146,7 @@ namespace Jitter.Dynamics.Constraints.SingleBody
 
             accumulatedImpulse += lambda;
 
-            if (!body1.isStatic)
+            if (!body1.IsStatic)
             {
                 body1.linearVelocity += body1.inverseMass * lambda * jacobian[0];
                 body1.angularVelocity += JVectorExtensions.Transform(lambda * jacobian[1], body1.invInertiaWorld);

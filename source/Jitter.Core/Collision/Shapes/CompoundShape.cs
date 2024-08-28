@@ -260,12 +260,10 @@ namespace Jitter.Collision.Shapes
             var localHalfExtents = 0.5f * (box.Max - box.Min);
             var localCenter = 0.5f * (box.Max + box.Min);
 
-            Vector3 center;
-            center = JVectorExtensions.Transform(localCenter, orientation);
+            var center = JVectorExtensions.Transform(localCenter, orientation);
 
             var abs = orientation.Absolute();
-            Vector3 temp;
-            temp = JVectorExtensions.Transform(localHalfExtents, abs);
+            var temp = JVectorExtensions.Transform(localHalfExtents, abs);
 
             box.Max = center + temp;
             box.Min = center - temp;

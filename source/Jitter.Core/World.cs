@@ -652,28 +652,28 @@ namespace Jitter
         {
             foreach (var body in rigidBodies)
             {
-                if (!body.isStatic && body.IsActive)
+                if (!body.IsStatic && body.IsActive)
                 {
                     var scaleFactor = body.inverseMass * timestep;
-                    var temp = body.force * scaleFactor;
+                    var temp = body.AccumulatedForce * scaleFactor;
                     body.linearVelocity = temp + body.linearVelocity;
 
                     if (!body.IsParticle)
                     {
-                        temp = body.torque * timestep;
+                        temp = body.AccumulatedTorque * timestep;
                         temp = JVectorExtensions.Transform(temp, body.invInertiaWorld);
                         body.angularVelocity = temp + body.angularVelocity;
                     }
 
-                    if (body.affectedByGravity)
+                    if (body.AffectedByGravity)
                     {
                         temp = gravity * timestep;
                         body.linearVelocity += temp;
                     }
                 }
 
-                body.force = default;
-                body.torque = default;
+                body.AccumulatedForce = default;
+                body.AccumulatedTorque = default;
 
             }
         }
@@ -734,7 +734,7 @@ namespace Jitter
             {
                 foreach (var body in rigidBodies)
                 {
-                    if (body.isStatic || !body.IsActive) continue;
+                    if (body.IsStatic || !body.IsActive) continue;
                     IntegrateCallback(body);
                 }
             }
@@ -810,9 +810,9 @@ namespace Jitter
 
                 foreach (var body in island.bodies)
                 {
-                    if (body.isActive == deactivateIsland)
+                    if (body.IsActive == deactivateIsland)
                     {
-                        if (body.isActive)
+                        if (body.IsActive)
                         {
                             body.IsActive = false;
                             events.RaiseDeactivatedBody(body);

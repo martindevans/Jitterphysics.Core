@@ -49,8 +49,8 @@ namespace Jitter.Dynamics
             Linear = 2
         }
 
-        internal JMatrix inertia;
-        internal JMatrix invInertia;
+        private JMatrix inertia;
+        private JMatrix invInertia;
 
         internal JMatrix invInertiaWorld;
         internal JMatrix orientation;
@@ -63,16 +63,16 @@ namespace Jitter.Dynamics
 
         internal float inactiveTime;
 
-        internal bool isActive = true;
-        internal bool isStatic;
-        internal bool affectedByGravity = true;
+        private bool _isActive = true;
+        private bool _isStatic;
 
         internal CollisionIsland? island;
         internal float inverseMass;
 
-        internal Vector3 force, torque;
+        internal Vector3 AccumulatedForce;
+        internal Vector3 AccumulatedTorque;
 
-        private ShapeUpdatedHandler updatedHandler;
+        private ShapeUpdatedHandler? updatedHandler;
 
         internal readonly List<RigidBody> connections = new();
         internal readonly HashSet<Arbiter> arbiters = new();
@@ -80,29 +80,27 @@ namespace Jitter.Dynamics
 
         internal int marker = 0;
 
-
-        public RigidBody(BaseShape shape)
-            : this(shape, new(), false)
-        {
-        }
-
-        private bool isParticle;
+        private bool _isParticle;
 
         /// <summary>
         /// If true, the body as no angular movement.
         /// </summary>
-        public bool IsParticle { 
-            get => isParticle;
+        public bool IsParticle
+        { 
+            get => _isParticle;
             set
             {
-                if (isParticle && !value)
+                if (_isParticle == value)
+                    return;
+
+                if (_isParticle && !value)
                 {
                     updatedHandler = ShapeUpdated;
                     Shape.ShapeUpdated += updatedHandler;
                     SetMassProperties();
-                    isParticle = false;
+                    _isParticle = false;
                 }
-                else if (!isParticle && value)
+                else if (!_isParticle && value)
                 {
                     inertia = default;
                     invInertia = invInertiaWorld = default;
@@ -111,11 +109,20 @@ namespace Jitter.Dynamics
 
                     Shape.ShapeUpdated -= updatedHandler;
 
-                    isParticle = true;
+                    _isParticle = true;
                 }
 
                 Update();
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="shape"></param>
+        public RigidBody(BaseShape shape)
+            : this(shape, new())
+        {
         }
 
         /// <summary>
@@ -128,9 +135,16 @@ namespace Jitter.Dynamics
         public RigidBody(BaseShape shape, Material material, bool isParticle = false)
         {
             instance = Interlocked.Increment(ref instanceCount);
+
+            // Setting shape twice. The property does some important setups (hooking events) so must be called.
+            // However the property cannot handle a null shape. So first set the shape and then set the shape
+            // for real.
+            _shape = shape;
             Shape = shape;
+
             orientation = JMatrix.Identity;
 
+            _isParticle = isParticle;
             if (!isParticle)
             {
                 updatedHandler = ShapeUpdated;
@@ -145,12 +159,10 @@ namespace Jitter.Dynamics
                 inverseMass = 1.0f;
             }
 
-            this.Material = material;
+            Material = material;
 
             AllowDeactivation = true;
             EnableSpeculativeContacts = false;
-
-            this.isParticle = isParticle;
 
             Update();
         }
@@ -197,15 +209,15 @@ namespace Jitter.Dynamics
         /// </summary>
         public bool IsActive
         {
-            get => isActive;
+            get => _isActive;
             set
             {
-                if (!isActive && value)
+                if (!_isActive && value)
                 {
                     // if inactive and should be active
                     inactiveTime = 0.0f;
                 }
-                else if (isActive && !value)
+                else if (_isActive && !value)
                 {
                     // if active and should be inactive
                     inactiveTime = float.PositiveInfinity;
@@ -213,7 +225,7 @@ namespace Jitter.Dynamics
                     linearVelocity = default;
                 }
 
-                isActive = value;
+                _isActive = value;
             }
         }
 
@@ -224,7 +236,7 @@ namespace Jitter.Dynamics
         /// <param name="impulse">Impulse direction and magnitude.</param>
         public void ApplyImpulse(Vector3 impulse)
         {
-            if (isStatic)
+            if (_isStatic)
                 throw new InvalidOperationException("Can't apply an impulse to a static body.");
 
             var temp = impulse * inverseMass;
@@ -240,7 +252,7 @@ namespace Jitter.Dynamics
         /// in Body coordinate frame.</param>
         public void ApplyImpulse(Vector3 impulse, Vector3 relativePosition)
         {
-            if (isStatic)
+            if (_isStatic)
                 throw new InvalidOperationException("Can't apply an impulse to a static body.");
 
             var temp = impulse * inverseMass;
@@ -253,54 +265,54 @@ namespace Jitter.Dynamics
 
         /// <summary>
         /// Adds a force to the center of the body. The force gets applied
-        /// the next time <see cref="World.Step"/> is called. The 'impact'
+        /// the next time <see cref="World.Step(float)"/> is called. The 'impact'
         /// of the force depends on the time it is applied to a body - so
         /// the timestep influences the energy added to the body.
         /// </summary>
-        /// <param name="force">The force to add next <see cref="World.Step"/>.</param>
+        /// <param name="force">The force to add next <see cref="World.Step(float)"/>.</param>
         public void AddForce(Vector3 force)
         {
-            this.force = force + this.force;
+            AccumulatedForce = force + AccumulatedForce;
         }
 
         /// <summary>
         /// Adds a force to the center of the body. The force gets applied
-        /// the next time <see cref="World.Step"/> is called. The 'impact'
+        /// the next time <see cref="World.Step(float)"/> is called. The 'impact'
         /// of the force depends on the time it is applied to a body - so
         /// the timestep influences the energy added to the body.
         /// </summary>
-        /// <param name="force">The force to add next <see cref="World.Step"/>.</param>
+        /// <param name="force">The force to add next <see cref="World.Step(float)"/>.</param>
         /// <param name="pos">The position where the force is applied.</param>
         public void AddForce(Vector3 force, Vector3 pos)
         {
-            this.force += force;
+            AccumulatedForce += force;
             pos -= position;
             pos = Vector3.Cross(pos, force);
-            torque = pos + torque;
+            AccumulatedTorque = pos + AccumulatedTorque;
         }
 
         /// <summary>
         /// Returns the torque which acts this timestep on the body.
         /// </summary>
-        public Vector3 Torque => torque;
+        public Vector3 Torque => AccumulatedTorque;
 
         /// <summary>
         /// Returns the force which acts this timestep on the body.
         /// </summary>
-        public Vector3 Force { get => force;
-            set => force = value;
+        public Vector3 Force { get => AccumulatedForce;
+            set => AccumulatedForce = value;
         }
 
         /// <summary>
         /// Adds torque to the body. The torque gets applied
-        /// the next time <see cref="World.Step"/> is called. The 'impact'
+        /// the next time <see cref="World.Step(float)"/> is called. The 'impact'
         /// of the torque depends on the time it is applied to a body - so
         /// the timestep influences the energy added to the body.
         /// </summary>
         /// <param name="torque">The torque to add next <see cref="World.Step"/>.</param>
         public void AddTorque(Vector3 torque)
         {
-            this.torque = torque + this.torque;
+            AccumulatedTorque = torque + AccumulatedTorque;
         }
 
         protected bool useShapeMassProperties = true;
@@ -328,7 +340,7 @@ namespace Jitter.Dynamics
         {
             if (setAsInverseValues)
             {
-                if (!isParticle)
+                if (!_isParticle)
                 {
                     invInertia = inertia;
                     this.inertia = inertia.Inverse();
@@ -338,7 +350,7 @@ namespace Jitter.Dynamics
             }
             else
             {
-                if (!isParticle)
+                if (!_isParticle)
                 {
                     this.inertia = inertia;
                     invInertia = inertia.Inverse();
@@ -352,9 +364,12 @@ namespace Jitter.Dynamics
 
         private void ShapeUpdated()
         {
-            if (useShapeMassProperties) SetMassProperties();
+            _debugHullDirty = true;
+
+            if (useShapeMassProperties)
+                SetMassProperties();
+
             Update();
-            UpdateHullData();
         }
 
         /// <summary>
@@ -362,20 +377,23 @@ namespace Jitter.Dynamics
         /// </summary>
         public BaseShape Shape 
         {
-            get => shape;
+            get => _shape;
             set 
             {
                 // deregister update event
-                if (shape != null)
-                    shape.ShapeUpdated -= updatedHandler;
+                _shape.ShapeUpdated -= updatedHandler;
 
                 // register new event
-                shape = value; 
-                shape.ShapeUpdated += ShapeUpdated; 
+                _shape = value; 
+                _shape.ShapeUpdated += ShapeUpdated;
+
+                // Hull is only used for debug drawing. mark it as dirty and it will be 
+                // regenerated next time it's needed (usually never)
+                _debugHullDirty = true;
             } 
         }
 
-        private BaseShape shape;
+        private BaseShape _shape;
 
         public DampingType Damping { get; set; } = DampingType.Angular | DampingType.Linear;
 
@@ -399,13 +417,12 @@ namespace Jitter.Dynamics
             get => linearVelocity;
             set 
             { 
-                if (isStatic) 
+                if (IsStatic) 
                     throw new InvalidOperationException("Can't set a velocity to a static body.");
                 linearVelocity = value;
             }
         }
 
-        // TODO: check here is static!
         /// <summary>
         /// The angular velocity of the body.
         /// </summary>
@@ -414,7 +431,7 @@ namespace Jitter.Dynamics
             get => angularVelocity;
             set
             {
-                if (isStatic)
+                if (IsStatic)
                     throw new InvalidOperationException("Can't set a velocity to a static body.");
                 angularVelocity = value;
             }
@@ -443,25 +460,24 @@ namespace Jitter.Dynamics
         /// </summary>
         public bool IsStatic
         {
-            get => isStatic;
+            get => _isStatic;
             set
             {
-                if (value && !isStatic)
+                if (value && !_isStatic)
                 {
                     island?.islandManager.MakeBodyStatic(this);
 
                     angularVelocity = default;
                     linearVelocity = default;
                 }
-                isStatic = value;
+                _isStatic = value;
             }
         }
 
-        public bool AffectedByGravity
-        {
-            get => affectedByGravity;
-            set => affectedByGravity = value;
-        }
+        /// <summary>
+        /// Set whether or not gravity should pull on this body
+        /// </summary>
+        public bool AffectedByGravity { get; set; } = true;
 
         /// <summary>
         /// The inverse inertia tensor in world space.
@@ -480,7 +496,7 @@ namespace Jitter.Dynamics
                 if (value <= 0.0f) throw new ArgumentException("Mass can't be less or equal zero.");
 
                 // scale inertia
-                if (!isParticle)
+                if (!_isParticle)
                 {
                     JMatrix.Multiply(ref Shape.inertia, value / Shape.mass, out inertia);
                     invInertia = inertia.Inverse();
@@ -531,12 +547,12 @@ namespace Jitter.Dynamics
         /// </summary>
         public void Update()
         {
-            if (isParticle)
+            if (_isParticle)
             {
                 inertia = default;
                 invInertia = invInertiaWorld = default;
                 invOrientation = orientation = JMatrix.Identity;
-                boundingBox = shape.boundingBox;
+                boundingBox = _shape.boundingBox;
                 boundingBox.Min += position;
                 boundingBox.Max += position;
 
@@ -551,7 +567,7 @@ namespace Jitter.Dynamics
                 boundingBox.Max += position;
 
 
-                if (!isStatic)
+                if (!_isStatic)
                 {
                     JMatrix.Multiply(ref invOrientation, ref invInertia, out invInertiaWorld);
                     JMatrix.Multiply(ref invInertiaWorld, ref orientation, out invInertiaWorld);
@@ -571,38 +587,28 @@ namespace Jitter.Dynamics
             return other?.instance.CompareTo(instance) ?? 1;
         }
 
-        public bool IsStaticOrInactive => !isActive || isStatic;
+        /// <summary>
+        /// Get if this body is either static or not active
+        /// </summary>
+        public bool IsStaticOrInactive => !_isActive || _isStatic;
 
-        private bool enableDebugDraw;
-        public bool EnableDebugDraw
-        {
-            get => enableDebugDraw;
-            set
-            {
-                enableDebugDraw = value;
-                UpdateHullData();
-            }
-        }
-
-        private readonly List<Vector3> hullPoints = new();
-
-        private void UpdateHullData()
-        {
-            hullPoints.Clear();
-
-            if (enableDebugDraw)
-                shape.MakeHull(hullPoints, 3);
-        }
-
+        private bool _debugHullDirty = true;
+        private readonly List<Vector3> _debugHullPoints = new();
 
         /// <inheritdoc />
         public void DebugDraw(IDebugDrawer drawer)
         {
-            for(var i = 0;i<hullPoints.Count;i+=3)
+            if (_debugHullDirty)
             {
-                var pos1 = hullPoints[i + 0];
-                var pos2 = hullPoints[i + 1];
-                var pos3 = hullPoints[i + 2];
+                _debugHullPoints.Clear();
+                _shape.MakeHull(_debugHullPoints, 3);
+            }
+
+            for (var i = 0; i < _debugHullPoints.Count; i += 3)
+            {
+                var pos1 = _debugHullPoints[i + 0];
+                var pos2 = _debugHullPoints[i + 1];
+                var pos3 = _debugHullPoints[i + 2];
 
                 pos1 = JVectorExtensions.Transform(pos1, orientation);
                 pos1 += position;

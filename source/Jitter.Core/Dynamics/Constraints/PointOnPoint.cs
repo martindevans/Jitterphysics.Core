@@ -108,13 +108,13 @@ namespace Jitter.Dynamics.Constraints
 
             bias = deltaLength * biasFactor * (1.0f / timestep);
 
-            if (!body1.isStatic)
+            if (!body1.IsStatic)
             {
                 body1.linearVelocity += body1.inverseMass * accumulatedImpulse * jacobian[0];
                 body1.angularVelocity += JVectorExtensions.Transform(accumulatedImpulse * jacobian[1], body1.invInertiaWorld);
             }
 
-            if (!body2.isStatic)
+            if (!body2.IsStatic)
             {
                 body2.linearVelocity += body2.inverseMass * accumulatedImpulse * jacobian[2];
                 body2.angularVelocity += JVectorExtensions.Transform(accumulatedImpulse * jacobian[3], body2.invInertiaWorld);
@@ -140,13 +140,13 @@ namespace Jitter.Dynamics.Constraints
 
             accumulatedImpulse += lambda;
 
-            if (!body1.isStatic)
+            if (!body1.IsStatic)
             {
                 body1.linearVelocity += body1.inverseMass * lambda * jacobian[0];
                 body1.angularVelocity += JVectorExtensions.Transform(lambda * jacobian[1], body1.invInertiaWorld);
             }
 
-            if (!body2.isStatic)
+            if (!body2.IsStatic)
             {
                 body2.linearVelocity += body2.inverseMass * lambda * jacobian[2];
                 body2.angularVelocity += JVectorExtensions.Transform(lambda * jacobian[3], body2.invInertiaWorld);

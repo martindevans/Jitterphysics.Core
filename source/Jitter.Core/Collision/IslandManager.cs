@@ -161,10 +161,10 @@ namespace Jitter.Collision
 
         private void AddConnection(RigidBody body1, RigidBody body2)
         {
-            System.Diagnostics.Debug.Assert(!(body1.isStatic && body2.isStatic),
+            System.Diagnostics.Debug.Assert(!(body1.IsStatic && body2.IsStatic),
                 "IslandManager Inconsistency: Arbiter detected between two static objects.");
 
-            if (body1.isStatic) // <- only body1 is static
+            if (body1.IsStatic) // <- only body1 is static
             {
                 if (body2.island == null)
                 {
@@ -176,7 +176,7 @@ namespace Jitter.Collision
                     islands.Add(newIsland);
                 }
             }
-            else if (body2 == null || body2.isStatic) // <- only body2 is static
+            else if (body2 == null || body2.IsStatic) // <- only body2 is static
             {
                 if (body1.island == null)
                 {
@@ -199,10 +199,10 @@ namespace Jitter.Collision
 
         private void RemoveConnection(RigidBody body1, RigidBody body2)
         {
-            System.Diagnostics.Debug.Assert(!(body1.isStatic && body2.isStatic),
+            System.Diagnostics.Debug.Assert(!(body1.IsStatic && body2.IsStatic),
                 "IslandManager Inconsistency: Arbiter detected between two static objects.");
 
-            if (body1.isStatic) // <- only body1 is static
+            if (body1.IsStatic) // <- only body1 is static
             {
                 // if (!body2.connections.Contains(body1)) throw new Exception();
                 //System.Diagnostics.Debug.Assert(body2.connections.Contains(body1),
@@ -211,7 +211,7 @@ namespace Jitter.Collision
 
                 body2.connections.Remove(body1);
             }
-            else if (body2 == null || body2.isStatic) // <- only body2 is static
+            else if (body2 == null || body2.IsStatic) // <- only body2 is static
             {
                 //System.Diagnostics.Debug.Assert(body1.connections.Contains(body2),
                 //    "IslandManager Inconsistency.",
@@ -255,7 +255,7 @@ namespace Jitter.Collision
             while (leftSearchQueue.Count > 0 && rightSearchQueue.Count > 0)
             {
                 var currentNode = leftSearchQueue.Dequeue();
-                if (!currentNode.isStatic)
+                if (!currentNode.IsStatic)
                 {
                     for (var i = 0; i < currentNode.connections.Count; i++)
                     {
@@ -277,7 +277,7 @@ namespace Jitter.Collision
                 }
 
                 currentNode = rightSearchQueue.Dequeue();
-                if (!currentNode.isStatic)
+                if (!currentNode.IsStatic)
                 {
 
                     for (var i = 0; i < currentNode.connections.Count; i++)

@@ -721,8 +721,10 @@ namespace Jitter.Dynamics
 
         public void TreatBodyAsStatic(RigidBodyIndex index)
         {
-            if (index == RigidBodyIndex.RigidBody1) treatBody1AsStatic = true;
-            else treatBody2AsStatic = true;
+            if (index == RigidBodyIndex.RigidBody1)
+                treatBody1AsStatic = true;
+            else
+                treatBody2AsStatic = true;
         }
 
 
@@ -758,8 +760,8 @@ namespace Jitter.Dynamics
             // Material Properties
             if (newContact)
             {
-                treatBody1AsStatic = body1.isStatic;
-                treatBody2AsStatic = body2.isStatic;
+                treatBody1AsStatic = body1.IsStatic;
+                treatBody2AsStatic = body2.IsStatic;
 
                 accumulatedNormalImpulse = 0.0f;
                 accumulatedTangentImpulse = 0.0f;
