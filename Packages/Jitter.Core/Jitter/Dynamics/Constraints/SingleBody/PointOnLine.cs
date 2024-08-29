@@ -23,10 +23,10 @@ using Jitter.LinearMath;
 
 namespace Jitter.Dynamics.Constraints.SingleBody
 {
-
     /// <summary>
     /// </summary>
-    public class PointOnLine : BaseConstraint
+    public class PointOnLine
+        : BaseConstraint
     {
         private Vector3 localAnchor1;
         private Vector3 r1;
