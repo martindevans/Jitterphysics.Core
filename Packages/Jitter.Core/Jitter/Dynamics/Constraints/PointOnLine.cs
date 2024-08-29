@@ -31,15 +31,13 @@ namespace Jitter.Dynamics.Constraints
     /// Constraints a point on a body to be fixed on a line
     /// which is fixed on another body.
     /// </summary>
-    public class PointOnLine : Constraint
+    public class PointOnLine
+        : BaseConstraint
     {
         private Vector3 lineNormal;
 
         private Vector3 localAnchor1, localAnchor2;
         private Vector3 r1, r2;
-
-        private float biasFactor = 0.5f;
-        private float softness;
 
         /// <summary>
         /// Constraints a point on a body to be fixed on a line
@@ -63,28 +61,23 @@ namespace Jitter.Dynamics.Constraints
             lineNormal = Vector3.Normalize(lineStartPointBody1 - pointBody2);
         }
 
-        public float AppliedImpulse => accumulatedImpulse;
+        public float AppliedImpulse { get; private set; }
 
         /// <summary>
         /// Defines how big the applied impulses can get.
         /// </summary>
-        public float Softness { get => softness;
-            set => softness = value;
-        }
+        public float Softness { get; set; }
 
         /// <summary>
         /// Defines how big the applied impulses can get which correct errors.
         /// </summary>
-        public float BiasFactor { get => biasFactor;
-            set => biasFactor = value;
-        }
+        public float BiasFactor { get; set; } = 0.5f;
 
         private float effectiveMass;
-        private float accumulatedImpulse;
         private float bias;
         private float softnessOverDt;
 
-        private Vector3[] jacobian = new Vector3[4];
+        private readonly Vector3[] jacobian = new Vector3[4];
 
         /// <summary>
         /// Called once before iteration starts.
@@ -92,16 +85,16 @@ namespace Jitter.Dynamics.Constraints
         /// <param name="timestep">The simulation timestep</param>
         public override void PrepareForIteration(float timestep)
         {
-            r1 = localAnchor1.Transform(body1.orientation);
-            r2 = localAnchor2.Transform(body2.orientation);
+            r1 = localAnchor1.Transform(Body1.orientation);
+            r2 = localAnchor2.Transform(Body2.orientation);
 
             Vector3 dp;
-            var p1 = body1.position + r1;
-            var p2 = body2.position + r2;
+            var p1 = Body1.position + r1;
+            var p2 = Body2.position + r2;
 
             dp = p2 - p1;
 
-            var l = lineNormal.Transform(body1.orientation);
+            var l = lineNormal.Transform(Body1.orientation);
             l = Vector3.Normalize(l);
 
             var t = Vector3.Cross(p1 - p2, l);
@@ -113,27 +106,27 @@ namespace Jitter.Dynamics.Constraints
             jacobian[2] = -1.0f * t;              // linearVel Body2
             jacobian[3] = -1.0f * Vector3.Cross(r2, t);         // angularVel Body2
 
-            effectiveMass = body1.inverseMass + body2.inverseMass
-                + Vector3.Dot(jacobian[1].Transform(body1.invInertiaWorld), jacobian[1])
-                                              + Vector3.Dot(jacobian[3].Transform(body2.invInertiaWorld), jacobian[3]);
+            effectiveMass = Body1.inverseMass + Body2.inverseMass
+                + Vector3.Dot(jacobian[1].Transform(Body1.invInertiaWorld), jacobian[1])
+                                              + Vector3.Dot(jacobian[3].Transform(Body2.invInertiaWorld), jacobian[3]);
 
-            softnessOverDt = softness / timestep;
+            softnessOverDt = Softness / timestep;
             effectiveMass += softnessOverDt;
 
             if(effectiveMass != 0) effectiveMass = 1.0f / effectiveMass;
 
-            bias = -Vector3.Cross(l, p2 - p1).Length() * biasFactor * (1.0f / timestep);
+            bias = -Vector3.Cross(l, p2 - p1).Length() * BiasFactor * (1.0f / timestep);
 
-            if (!body1.IsStatic)
+            if (!Body1.IsStatic)
             {
-                body1.linearVelocity += body1.inverseMass * accumulatedImpulse * jacobian[0];
-                body1.angularVelocity += (accumulatedImpulse * jacobian[1]).Transform(body1.invInertiaWorld);
+                Body1.linearVelocity += Body1.inverseMass * AppliedImpulse * jacobian[0];
+                Body1.angularVelocity += (AppliedImpulse * jacobian[1]).Transform(Body1.invInertiaWorld);
             }
 
-            if (!body2.IsStatic)
+            if (!Body2.IsStatic)
             {
-                body2.linearVelocity += body2.inverseMass * accumulatedImpulse * jacobian[2];
-                body2.angularVelocity += (accumulatedImpulse * jacobian[3]).Transform(body2.invInertiaWorld);
+                Body2.linearVelocity += Body2.inverseMass * AppliedImpulse * jacobian[2];
+                Body2.angularVelocity += (AppliedImpulse * jacobian[3]).Transform(Body2.invInertiaWorld);
             }
         }
 
@@ -143,34 +136,34 @@ namespace Jitter.Dynamics.Constraints
         public override void Iterate()
         {
             var jv =
-                Vector3.Dot(body1.linearVelocity, jacobian[0]) +
-                Vector3.Dot(body1.angularVelocity, jacobian[1]) +
-                Vector3.Dot(body2.linearVelocity, jacobian[2]) +
-                Vector3.Dot(body2.angularVelocity, jacobian[3]);
+                Vector3.Dot(Body1.linearVelocity, jacobian[0]) +
+                Vector3.Dot(Body1.angularVelocity, jacobian[1]) +
+                Vector3.Dot(Body2.linearVelocity, jacobian[2]) +
+                Vector3.Dot(Body2.angularVelocity, jacobian[3]);
 
-            var softnessScalar = accumulatedImpulse * softnessOverDt;
+            var softnessScalar = AppliedImpulse * softnessOverDt;
 
             var lambda = -effectiveMass * (jv + bias + softnessScalar);
 
-            accumulatedImpulse += lambda;
+            AppliedImpulse += lambda;
 
-            if (!body1.IsStatic)
+            if (!Body1.IsStatic)
             {
-                body1.linearVelocity += body1.inverseMass * lambda * jacobian[0];
-                body1.angularVelocity += (lambda * jacobian[1]).Transform(body1.invInertiaWorld);
+                Body1.linearVelocity += Body1.inverseMass * lambda * jacobian[0];
+                Body1.angularVelocity += (lambda * jacobian[1]).Transform(Body1.invInertiaWorld);
             }
 
-            if (!body2.IsStatic)
+            if (!Body2.IsStatic)
             {
-                body2.linearVelocity += body2.inverseMass * lambda * jacobian[2];
-                body2.angularVelocity += (lambda * jacobian[3]).Transform(body2.invInertiaWorld);
+                Body2.linearVelocity += Body2.inverseMass * lambda * jacobian[2];
+                Body2.angularVelocity += (lambda * jacobian[3]).Transform(Body2.invInertiaWorld);
             }
         }
 
         public override void DebugDraw(IDebugDrawer drawer)
         {
-            drawer.DrawLine(body1.position + r1,
-                body1.position + r1 + lineNormal.Transform(body1.orientation) * 100.0f);
+            drawer.DrawLine(Body1.position + r1,
+                Body1.position + r1 + lineNormal.Transform(Body1.orientation) * 100.0f);
         }
 
     }

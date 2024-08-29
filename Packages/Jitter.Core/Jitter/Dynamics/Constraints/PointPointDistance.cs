@@ -27,7 +27,8 @@ namespace Jitter.Dynamics.Constraints
     /// The distance between two given points on two bodies will not
     /// exceed a value.
     /// </summary>
-    public class PointPointDistance : Constraint
+    public class PointPointDistance
+        : BaseConstraint
     {
         public enum DistanceBehavior
         {
@@ -36,14 +37,7 @@ namespace Jitter.Dynamics.Constraints
             LimitMinimumDistance,
         }
 
-        private Vector3 localAnchor1, localAnchor2;
         private Vector3 r1, r2;
-
-        private float biasFactor = 0.1f;
-        private float softness = 0.01f;
-        private float distance;
-
-        private DistanceBehavior behavior = DistanceBehavior.LimitDistance;
 
         /// <summary>
         /// Initializes a new instance of the DistanceConstraint class.
@@ -57,65 +51,52 @@ namespace Jitter.Dynamics.Constraints
         public PointPointDistance(RigidBody body1, RigidBody body2, Vector3 anchor1,Vector3 anchor2)
             : base(body1, body2)
         {
-            localAnchor1 = anchor1 - body1.position;
-            localAnchor2 = anchor2 - body2.position;
+            LocalAnchor1 = anchor1 - body1.position;
+            LocalAnchor2 = anchor2 - body2.position;
 
-            localAnchor1 = localAnchor1.Transform(body1.invOrientation);
-            localAnchor2 = localAnchor2.Transform(body2.invOrientation);
+            LocalAnchor1 = LocalAnchor1.Transform(body1.invOrientation);
+            LocalAnchor2 = LocalAnchor2.Transform(body2.invOrientation);
 
-            distance = (anchor1 - anchor2).Length();
+            Distance = (anchor1 - anchor2).Length();
         }
 
-        public float AppliedImpulse => accumulatedImpulse;
+        public float AppliedImpulse { get; private set; }
 
         /// <summary>
         /// 
         /// </summary>
-        public float Distance { get => distance;
-            set => distance = value;
-        }
+        public float Distance { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        public DistanceBehavior Behavior { get => behavior;
-            set => behavior = value;
-        }
+        public DistanceBehavior Behavior { get; set; } = DistanceBehavior.LimitDistance;
 
         /// <summary>
         /// The anchor point of body1 in local (body) coordinates.
         /// </summary>
-        public Vector3 LocalAnchor1 { get => localAnchor1;
-            set => localAnchor1 = value;
-        }
+        public Vector3 LocalAnchor1 { get; set; }
 
         /// <summary>
         /// The anchor point of body2 in local (body) coordinates.
         /// </summary>
-        public Vector3 LocalAnchor2 { get => localAnchor2;
-            set => localAnchor2 = value;
-        }
+        public Vector3 LocalAnchor2 { get; set; }
 
         /// <summary>
         /// Defines how big the applied impulses can get.
         /// </summary>
-        public float Softness { get => softness;
-            set => softness = value;
-        }
+        public float Softness { get; set; } = 0.01f;
 
         /// <summary>
         /// Defines how big the applied impulses can get which correct errors.
         /// </summary>
-        public float BiasFactor { get => biasFactor;
-            set => biasFactor = value;
-        }
+        public float BiasFactor { get; set; } = 0.1f;
 
         private float effectiveMass;
-        private float accumulatedImpulse;
         private float bias;
         private float softnessOverDt;
 
-        private Vector3[] jacobian = new Vector3[4];
+        private readonly Vector3[] jacobian = new Vector3[4];
 
         private bool skipConstraint;
 
@@ -125,21 +106,21 @@ namespace Jitter.Dynamics.Constraints
         /// <param name="timestep">The 5simulation timestep</param>
         public override void PrepareForIteration(float timestep)
         {
-            r1 = localAnchor1.Transform(body1.orientation);
-            r2 = localAnchor2.Transform(body2.orientation);
+            r1 = LocalAnchor1.Transform(Body1.orientation);
+            r2 = LocalAnchor2.Transform(Body2.orientation);
 
-            var p1 = body1.position + r1;
-            var p2 = body2.position + r2;
+            var p1 = Body1.position + r1;
+            var p2 = Body2.position + r2;
 
             var dp = p2 - p1;
 
-            var deltaLength = dp.Length() - distance;
+            var deltaLength = dp.Length() - Distance;
 
-            if (behavior == DistanceBehavior.LimitMaximumDistance && deltaLength <= 0.0f)
+            if (Behavior == DistanceBehavior.LimitMaximumDistance && deltaLength <= 0.0f)
             {
                 skipConstraint = true;
             }
-            else if (behavior == DistanceBehavior.LimitMinimumDistance && deltaLength >= 0.0f)
+            else if (Behavior == DistanceBehavior.LimitMinimumDistance && deltaLength >= 0.0f)
             {
                 skipConstraint = true;
             }
@@ -155,27 +136,27 @@ namespace Jitter.Dynamics.Constraints
                 jacobian[2] = 1.0f * n;
                 jacobian[3] = Vector3.Cross(r2, n);
 
-                effectiveMass = body1.inverseMass + body2.inverseMass
-                    + Vector3.Dot(jacobian[1].Transform(body1.invInertiaWorld), jacobian[1])
-                                                  + Vector3.Dot(jacobian[3].Transform(body2.invInertiaWorld), jacobian[3]);
+                effectiveMass = Body1.inverseMass + Body2.inverseMass
+                    + Vector3.Dot(jacobian[1].Transform(Body1.invInertiaWorld), jacobian[1])
+                                                  + Vector3.Dot(jacobian[3].Transform(Body2.invInertiaWorld), jacobian[3]);
 
-                softnessOverDt = softness / timestep;
+                softnessOverDt = Softness / timestep;
                 effectiveMass += softnessOverDt;
 
                 effectiveMass = 1.0f / effectiveMass;
 
-                bias = deltaLength * biasFactor * (1.0f / timestep);
+                bias = deltaLength * BiasFactor * (1.0f / timestep);
 
-                if (!body1.IsStatic)
+                if (!Body1.IsStatic)
                 {
-                    body1.linearVelocity += body1.inverseMass * accumulatedImpulse * jacobian[0];
-                    body1.angularVelocity += (accumulatedImpulse * jacobian[1]).Transform(body1.invInertiaWorld);
+                    Body1.linearVelocity += Body1.inverseMass * AppliedImpulse * jacobian[0];
+                    Body1.angularVelocity += (AppliedImpulse * jacobian[1]).Transform(Body1.invInertiaWorld);
                 }
 
-                if (!body2.IsStatic)
+                if (!Body2.IsStatic)
                 {
-                    body2.linearVelocity += body2.inverseMass * accumulatedImpulse * jacobian[2];
-                    body2.angularVelocity += (accumulatedImpulse * jacobian[3]).Transform(body2.invInertiaWorld);
+                    Body2.linearVelocity += Body2.inverseMass * AppliedImpulse * jacobian[2];
+                    Body2.angularVelocity += (AppliedImpulse * jacobian[3]).Transform(Body2.invInertiaWorld);
                 }
             }
             
@@ -189,49 +170,49 @@ namespace Jitter.Dynamics.Constraints
             if (skipConstraint) return;
 
             var jv =
-                Vector3.Dot(body1.linearVelocity, jacobian[0]) +
-                Vector3.Dot(body1.angularVelocity, jacobian[1]) +
-                Vector3.Dot(body2.linearVelocity, jacobian[2]) +
-                Vector3.Dot(body2.angularVelocity, jacobian[3]);
+                Vector3.Dot(Body1.linearVelocity, jacobian[0]) +
+                Vector3.Dot(Body1.angularVelocity, jacobian[1]) +
+                Vector3.Dot(Body2.linearVelocity, jacobian[2]) +
+                Vector3.Dot(Body2.angularVelocity, jacobian[3]);
 
-            var softnessScalar = accumulatedImpulse * softnessOverDt;
+            var softnessScalar = AppliedImpulse * softnessOverDt;
 
             var lambda = -effectiveMass * (jv + bias + softnessScalar);
 
-            if (behavior == DistanceBehavior.LimitMinimumDistance)
+            if (Behavior == DistanceBehavior.LimitMinimumDistance)
             {
-                var previousAccumulatedImpulse = accumulatedImpulse;
-                accumulatedImpulse = Math.Max(accumulatedImpulse + lambda, 0);
-                lambda = accumulatedImpulse - previousAccumulatedImpulse;
+                var previousAccumulatedImpulse = AppliedImpulse;
+                AppliedImpulse = Math.Max(AppliedImpulse + lambda, 0);
+                lambda = AppliedImpulse - previousAccumulatedImpulse;
             }
-            else if (behavior == DistanceBehavior.LimitMaximumDistance)
+            else if (Behavior == DistanceBehavior.LimitMaximumDistance)
             {
-                var previousAccumulatedImpulse = accumulatedImpulse;
-                accumulatedImpulse = Math.Min(accumulatedImpulse + lambda, 0);
-                lambda = accumulatedImpulse - previousAccumulatedImpulse;
+                var previousAccumulatedImpulse = AppliedImpulse;
+                AppliedImpulse = Math.Min(AppliedImpulse + lambda, 0);
+                lambda = AppliedImpulse - previousAccumulatedImpulse;
             }
             else
             {
-                accumulatedImpulse += lambda;
+                AppliedImpulse += lambda;
             }
 
-            if (!body1.IsStatic)
+            if (!Body1.IsStatic)
             {
-                body1.linearVelocity += body1.inverseMass * lambda * jacobian[0];
-                body1.angularVelocity += (lambda * jacobian[1]).Transform(body1.invInertiaWorld);
+                Body1.linearVelocity += Body1.inverseMass * lambda * jacobian[0];
+                Body1.angularVelocity += (lambda * jacobian[1]).Transform(Body1.invInertiaWorld);
             }
 
-            if (!body2.IsStatic)
+            if (!Body2.IsStatic)
             {
-                body2.linearVelocity += body2.inverseMass * lambda * jacobian[2];
-                body2.angularVelocity += (lambda * jacobian[3]).Transform(body2.invInertiaWorld);
+                Body2.linearVelocity += Body2.inverseMass * lambda * jacobian[2];
+                Body2.angularVelocity += (lambda * jacobian[3]).Transform(Body2.invInertiaWorld);
             }
         }
 
 
         public override void DebugDraw(IDebugDrawer drawer)
         {
-            drawer.DrawLine(body1.position + r1, body2.position + r2);
+            drawer.DrawLine(Body1.position + r1, Body2.position + r2);
         }
 
     }

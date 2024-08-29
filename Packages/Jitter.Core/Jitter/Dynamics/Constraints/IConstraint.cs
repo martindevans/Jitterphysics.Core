@@ -21,7 +21,6 @@ namespace Jitter.Dynamics.Constraints
 {
     public interface IConstraint
     {
-
         RigidBody Body1 { get; }
 
         RigidBody Body2 { get; }

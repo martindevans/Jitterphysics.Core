@@ -23,7 +23,7 @@ namespace Jitter.Dynamics.Joints
     /// <summary>
     /// A joint is a collection of internally handled constraints.
     /// </summary>
-    public abstract class Joint
+    public abstract class BaseJoint
     {
         /// <summary>
         /// The world class to which the internal constraints
@@ -36,7 +36,7 @@ namespace Jitter.Dynamics.Joints
         /// </summary>
         /// <param name="world">The world class to which the internal constraints
         /// should be added.</param>
-        public Joint(World world) {World = world;}
+        public BaseJoint(World world) {World = world;}
 
         /// <summary>
         /// Adds the internal constraints of this joint to the world class.

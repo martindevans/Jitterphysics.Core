@@ -56,16 +56,9 @@ namespace Jitter.Dynamics.Constraints
     /// orientation to each other. Combine the AngleConstraint with a PointOnLine
     /// Constraint to get a prismatic joint.
     /// </summary>
-    public class FixedAngle : Constraint
+    public class FixedAngle
+        : BaseConstraint
     {
-
-        private float biasFactor = 0.05f;
-        private float softness;
-
-        private Vector3 accumulatedImpulse;
-
-        private JMatrix initialOrientation1, initialOrientation2;
-
         /// <summary>
         /// Constraints two bodies to always have the same relative
         /// orientation to each other. Combine the AngleConstraint with a PointOnLine
@@ -73,35 +66,28 @@ namespace Jitter.Dynamics.Constraints
         /// </summary>
         public FixedAngle(RigidBody body1, RigidBody body2) : base(body1, body2)
         {
-            initialOrientation1 = body1.orientation;
-            initialOrientation2 = body2.orientation;
+            InitialOrientationBody1 = body1.orientation;
+            InitialOrientationBody2 = body2.orientation;
 
             //orientationDifference = body1.orientation * body2.invOrientation;
             //orientationDifference = JMatrix.Transpose(orientationDifference);
         }
 
-        public Vector3 AppliedImpulse => accumulatedImpulse;
+        public Vector3 AppliedImpulse { get; private set; }
 
-        public JMatrix InitialOrientationBody1 { get => initialOrientation1;
-            set => initialOrientation1 = value;
-        }
-        public JMatrix InitialOrientationBody2 { get => initialOrientation2;
-            set => initialOrientation2 = value;
-        }
+        public JMatrix InitialOrientationBody1 { get; set; }
+
+        public JMatrix InitialOrientationBody2 { get; set; }
 
         /// <summary>
         /// Defines how big the applied impulses can get.
         /// </summary>
-        public float Softness { get => softness;
-            set => softness = value;
-        }
+        public float Softness { get; set; }
 
         /// <summary>
         /// Defines how big the applied impulses can get which correct errors.
         /// </summary>
-        public float BiasFactor { get => biasFactor;
-            set => biasFactor = value;
-        }
+        public float BiasFactor { get; set; } = 0.05f;
 
         private JMatrix effectiveMass;
         private Vector3 bias;
@@ -113,9 +99,9 @@ namespace Jitter.Dynamics.Constraints
         /// <param name="timestep">The 5simulation timestep</param>
         public override void PrepareForIteration(float timestep)
         {
-            effectiveMass = body1.invInertiaWorld + body2.invInertiaWorld;
+            effectiveMass = Body1.invInertiaWorld + Body2.invInertiaWorld;
 
-            softnessOverDt = softness / timestep;
+            softnessOverDt = Softness / timestep;
 
             effectiveMass.M11 += softnessOverDt;
             effectiveMass.M22 += softnessOverDt;
@@ -123,10 +109,10 @@ namespace Jitter.Dynamics.Constraints
 
             effectiveMass = effectiveMass.Inverse();
 
-            JMatrix.Multiply(ref initialOrientation1, ref initialOrientation2, out var orientationDifference);
+            var orientationDifference = JMatrix.Multiply(InitialOrientationBody1, InitialOrientationBody2);
             JMatrix.Transpose(ref orientationDifference, out orientationDifference);
 
-            var q = orientationDifference * body2.invOrientation * body1.orientation;
+            var q = orientationDifference * Body2.invOrientation * Body1.orientation;
 
             var x = q.M32 - q.M23;
             var y = q.M13 - q.M31;
@@ -140,11 +126,11 @@ namespace Jitter.Dynamics.Constraints
 
             if (r != 0.0f) axis *= (1.0f / r);
 
-            bias = axis * biasFactor * (-1.0f / timestep);
+            bias = axis * BiasFactor * (-1.0f / timestep);
 
             // Apply previous frame solution as initial guess for satisfying the constraint.
-            if (!body1.IsStatic) body1.angularVelocity += accumulatedImpulse.Transform(body1.invInertiaWorld);
-            if (!body2.IsStatic) body2.angularVelocity += (-1.0f * accumulatedImpulse).Transform(body2.invInertiaWorld);
+            if (!Body1.IsStatic) Body1.angularVelocity += AppliedImpulse.Transform(Body1.invInertiaWorld);
+            if (!Body2.IsStatic) Body2.angularVelocity += (-1.0f * AppliedImpulse).Transform(Body2.invInertiaWorld);
         }
 
         /// <summary>
@@ -152,16 +138,16 @@ namespace Jitter.Dynamics.Constraints
         /// </summary>
         public override void Iterate()
         {
-            var jv = body1.angularVelocity - body2.angularVelocity;
+            var jv = Body1.angularVelocity - Body2.angularVelocity;
 
-            var softnessVector = accumulatedImpulse * softnessOverDt;
+            var softnessVector = AppliedImpulse * softnessOverDt;
 
             var lambda = -1.0f * (jv+bias+softnessVector).Transform(effectiveMass);
 
-            accumulatedImpulse += lambda;
+            AppliedImpulse += lambda;
 
-            if(!body1.IsStatic) body1.angularVelocity += lambda.Transform(body1.invInertiaWorld);
-            if(!body2.IsStatic) body2.angularVelocity += (-1.0f * lambda).Transform(body2.invInertiaWorld);
+            if(!Body1.IsStatic) Body1.angularVelocity += lambda.Transform(Body1.invInertiaWorld);
+            if(!Body2.IsStatic) Body2.angularVelocity += (-1.0f * lambda).Transform(Body2.invInertiaWorld);
         }
 
     }

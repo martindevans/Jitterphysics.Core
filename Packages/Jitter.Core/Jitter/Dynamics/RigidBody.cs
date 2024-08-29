@@ -77,7 +77,7 @@ namespace Jitter.Dynamics
 
         internal readonly List<RigidBody> connections = new();
         internal readonly HashSet<Arbiter> arbiters = new();
-        internal readonly HashSet<Constraint> constraints = new();
+        internal readonly HashSet<BaseConstraint> constraints = new();
 
         internal int marker = 0;
 
@@ -180,7 +180,7 @@ namespace Jitter.Dynamics
         }
 
         public IReadOnlyCollection<Arbiter> Arbiters => arbiters;
-        public IReadOnlyCollection<Constraint> Constraints => constraints;
+        public IReadOnlyCollection<BaseConstraint> Constraints => constraints;
 
         /// <summary>
         /// If set to false the body will never be deactived by the

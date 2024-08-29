@@ -25,7 +25,7 @@ namespace Jitter.Collision
 
         private readonly Stack<RigidBody> _rmStackRb = new();
         private readonly Stack<Arbiter> _rmStackArb = new();
-        private readonly Stack<Constraint> _rmStackCstr = new();
+        private readonly Stack<BaseConstraint> _rmStackCstr = new();
 
         private readonly Queue<RigidBody> _leftSearchQueue = new();
         private readonly Queue<RigidBody> _rightSearchQueue = new();
@@ -63,31 +63,31 @@ namespace Jitter.Collision
             RemoveConnection(arbiter.Body1, arbiter.Body2);
         }
 
-        public void ConstraintCreated(Constraint constraint)
+        public void ConstraintCreated(BaseConstraint constraint)
         {
-            AddConnection(constraint.body1, constraint.body2);
+            AddConnection(constraint.Body1, constraint.Body2);
 
-            constraint.body1.constraints.Add(constraint);
-            constraint.body2?.constraints.Add(constraint);
+            constraint.Body1.constraints.Add(constraint);
+            constraint.Body2?.constraints.Add(constraint);
 
-            if (constraint.body1.island != null)
-                constraint.body1.island.constraints.Add(constraint);
-            else if (constraint.body2 is { island: not null })
-                constraint.body2.island.constraints.Add(constraint);
+            if (constraint.Body1.island != null)
+                constraint.Body1.island.constraints.Add(constraint);
+            else if (constraint.Body2 is { island: not null })
+                constraint.Body2.island.constraints.Add(constraint);
         }
 
-        public void ConstraintRemoved(Constraint constraint)
+        public void ConstraintRemoved(BaseConstraint constraint)
         {
-            constraint.body1.constraints.Remove(constraint);
+            constraint.Body1.constraints.Remove(constraint);
 
-            constraint.body2?.constraints.Remove(constraint);
+            constraint.Body2?.constraints.Remove(constraint);
 
-            if (constraint.body1.island != null)
-                constraint.body1.island.constraints.Remove(constraint);
-            else if (constraint.body2 is { island: not null })
-                constraint.body2.island.constraints.Remove(constraint);
+            if (constraint.Body1.island != null)
+                constraint.Body1.island.constraints.Remove(constraint);
+            else if (constraint.Body2 is { island: not null })
+                constraint.Body2.island.constraints.Remove(constraint);
 
-            RemoveConnection(constraint.body1, constraint.body2);
+            RemoveConnection(constraint.Body1, constraint.Body2);
         }
 
         public void MakeBodyStatic(RigidBody body)

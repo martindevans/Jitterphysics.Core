@@ -85,12 +85,7 @@ namespace Jitter.LinearMath
             var num1 = position.X * matrix.M12 + position.Y * matrix.M22 + position.Z * matrix.M32;
             var num2 = position.X * matrix.M13 + position.Y * matrix.M23 + position.Z * matrix.M33;
 
-            return new()
-            {
-                X = num0,
-                Y = num1,
-                Z = num2
-            };
+            return new(num0, num1, num2);
         }
 
         public static Vector3 TransposedTransform(this Vector3 position, in JMatrix matrix)
@@ -99,12 +94,7 @@ namespace Jitter.LinearMath
             var num1 = position.X * matrix.M21 + position.Y * matrix.M22 + position.Z * matrix.M23;
             var num2 = position.X * matrix.M31 + position.Y * matrix.M32 + position.Z * matrix.M33;
 
-            return new()
-            {
-                X = num0,
-                Y = num1,
-                Z = num2,
-            };
+            return new(num0, num1, num2);
         }
     }
 }

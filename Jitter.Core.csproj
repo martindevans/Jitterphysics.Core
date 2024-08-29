@@ -60,13 +60,13 @@
     <Analyzer Include="D:\Unity\2022.3.27f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Constraints\Constraint.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Joints\BaseJoint.cs" />
+    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Constraints\BaseConstraint.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter\Collision\GJKCollide.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter\Collision\IslandManager.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter\Collision\Shapes\BoxShape.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Constraints\PointPointDistance.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Constraints\SingleBody\FixedAngle.cs" />
-    <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Joints\Joint.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter\IDebugDraw.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter\Dynamics\Constraints\FixedAngle.cs" />
     <Compile Include="Packages\Jitter.Core\Jitter\LinearMath\JBBox.cs" />

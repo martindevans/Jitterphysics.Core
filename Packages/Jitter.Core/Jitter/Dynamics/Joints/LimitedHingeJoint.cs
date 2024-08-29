@@ -9,18 +9,12 @@ namespace Jitter.Dynamics.Joints
     /// <summary>
     /// Limited hinge joint.
     /// </summary>
-    public class LimitedHingeJoint : Joint
+    public class LimitedHingeJoint
+        : BaseJoint
     {
-
-
-        private readonly PointOnPoint[] worldPointConstraint;
-        private readonly PointPointDistance distance;
-
-        public PointOnPoint PointConstraint1 => worldPointConstraint[0];
-        public PointOnPoint PointConstraint2 => worldPointConstraint[1];
-
-        public PointPointDistance DistanceConstraint => distance;
-
+        public PointOnPoint PointOnPointConstraint0 { get; }
+        public PointOnPoint PointOnPointConstraint1 { get; }
+        public PointPointDistance DistanceConstraint { get; }
 
         /// <summary>
         /// Initializes a new instance of the HingeJoint class.
@@ -30,21 +24,18 @@ namespace Jitter.Dynamics.Joints
         /// <param name="body2">The second body connected to the first one.</param>
         /// <param name="position">The position in world space where both bodies get connected.</param>
         /// <param name="hingeAxis">The axis if the hinge.</param>
-        public LimitedHingeJoint(World world, RigidBody body1, RigidBody body2, Vector3 position, Vector3 hingeAxis,
-            float hingeFwdAngle, float hingeBckAngle)
+        public LimitedHingeJoint(World world, RigidBody body1, RigidBody body2, Vector3 position, Vector3 hingeAxis, float hingeFwdAngle, float hingeBckAngle)
             : base(world)
         {
             // Create the hinge first, two point constraints
-
-            worldPointConstraint = new PointOnPoint[2];
 
             hingeAxis *= 0.5f;
 
             var pos1 = position; pos1 += hingeAxis;
             var pos2 = position; pos2 -= hingeAxis;
 
-            worldPointConstraint[0] = new(body1, body2, pos1);
-            worldPointConstraint[1] = new(body1, body2, pos2);
+            PointOnPointConstraint0 = new(body1, body2, pos1);
+            PointOnPointConstraint1 = new(body1, body2, pos2);
 
 
             // Now the limit, one max distance constraint
@@ -63,7 +54,7 @@ namespace Jitter.Dynamics.Joints
 
             // the length of the "arm" TODO take this as a parameter? what's
             // the effect of changing it?
-            var len = 10.0f * 3;
+            const float len = 10.0f * 3;
 
             // Choose a position using that dir. this will be the anchor point
             // for body 0. relative to hinge
@@ -77,28 +68,27 @@ namespace Jitter.Dynamics.Joints
 
             // work out the "string" length
             var hingeHalfAngle = 0.5f * (hingeFwdAngle + hingeBckAngle);
-            var allowedDistance = len * 2.0f * (float)Math.Sin(hingeHalfAngle * 0.5f / 360.0f * 2.0f * MathF.PI);
+            var allowedDistance = len * 2.0f * MathF.Sin(hingeHalfAngle * 0.5f / 360.0f * 2.0f * MathF.PI);
 
             var hingePos = body1.Position;
             var relPos0c = hingePos + hingeRelAnchorPos0;
             var relPos1c = hingePos + hingeRelAnchorPos1;
 
-            distance = new(body1, body2, relPos0c, relPos1c)
+            DistanceConstraint = new(body1, body2, relPos0c, relPos1c)
             {
                 Distance = allowedDistance,
                 Behavior = PointPointDistance.DistanceBehavior.LimitMaximumDistance,
             };
         }
 
-
         /// <summary>
         /// Adds the internal constraints of this joint to the world class.
         /// </summary>
         public override void Activate()
         {
-            World.AddConstraint(worldPointConstraint[0]);
-            World.AddConstraint(worldPointConstraint[1]);
-            World.AddConstraint(distance);
+            World.AddConstraint(PointOnPointConstraint0);
+            World.AddConstraint(PointOnPointConstraint1);
+            World.AddConstraint(DistanceConstraint);
         }
 
         /// <summary>
@@ -106,9 +96,9 @@ namespace Jitter.Dynamics.Joints
         /// </summary>
         public override void Deactivate()
         {
-            World.RemoveConstraint(worldPointConstraint[0]);
-            World.RemoveConstraint(worldPointConstraint[1]);
-            World.RemoveConstraint(distance);
+            World.RemoveConstraint(PointOnPointConstraint0);
+            World.RemoveConstraint(PointOnPointConstraint1);
+            World.RemoveConstraint(DistanceConstraint);
         }
     }
 }

@@ -54,8 +54,8 @@ namespace Jitter
             // Add&Remove
             public event Action<RigidBody> AddedRigidBody;
             public event Action<RigidBody> RemovedRigidBody;
-            public event Action<Constraint> AddedConstraint;
-            public event Action<Constraint> RemovedConstraint;
+            public event Action<BaseConstraint> AddedConstraint;
+            public event Action<BaseConstraint> RemovedConstraint;
 
             // Collision
             public event Action<RigidBody, RigidBody> BodiesBeginCollide;
@@ -88,12 +88,12 @@ namespace Jitter
                 RemovedRigidBody?.Invoke(body);
             }
 
-            internal void RaiseAddedConstraint(Constraint constraint)
+            internal void RaiseAddedConstraint(BaseConstraint constraint)
             {
                 AddedConstraint?.Invoke(constraint);
             }
 
-            internal void RaiseRemovedConstraint(Constraint constraint)
+            internal void RaiseRemovedConstraint(BaseConstraint constraint)
             {
                 RemovedConstraint?.Invoke(constraint);
             }
@@ -140,8 +140,8 @@ namespace Jitter
         private readonly HashSet<RigidBody> rigidBodies = new();
         public IReadOnlyCollection<RigidBody> RigidBodies => rigidBodies;
 
-        private readonly HashSet<Constraint> constraints = new();
-        public IReadOnlyCollection<Constraint> Constraints => constraints;
+        private readonly HashSet<BaseConstraint> constraints = new();
+        public IReadOnlyCollection<BaseConstraint> Constraints => constraints;
 
         public WorldEvents Events { get; } = new();
 
@@ -384,11 +384,11 @@ namespace Jitter
         }
 
         /// <summary>
-        /// Add a <see cref="Constraint"/> to the world. Fast, O(1).
+        /// Add a <see cref="BaseConstraint"/> to the world. Fast, O(1).
         /// </summary>
         /// <param name="constraint">The constraint which should be added.</param>
         /// <returns>True if the constraint was successfully removed.</returns>
-        public bool RemoveConstraint(Constraint constraint)
+        public bool RemoveConstraint(BaseConstraint constraint)
         {
             if (!constraints.Remove(constraint))
                 return false;
@@ -400,10 +400,10 @@ namespace Jitter
         }
 
         /// <summary>
-        /// Add a <see cref="Constraint"/> to the world.
+        /// Add a <see cref="BaseConstraint"/> to the world.
         /// </summary>
         /// <param name="constraint">The constraint which should be removed.</param>
-        public void AddConstraint(Constraint constraint)
+        public void AddConstraint(BaseConstraint constraint)
         {
             if (!constraints.Add(constraint)) 
                 throw new ArgumentException("The constraint was already added to the world.", nameof(constraint));
@@ -621,7 +621,7 @@ namespace Jitter
                 //  Constraints
                 foreach (var c in island.constraints)
                 {
-                    if (c.body1 != null && !c.body1.IsActive && c.body2 != null && !c.body2.IsActive)
+                    if (c.Body1 != null && !c.Body1.IsActive && c.Body2 != null && !c.Body2.IsActive)
                         continue;
 
                     if (i == -1) c.PrepareForIteration(timestep);

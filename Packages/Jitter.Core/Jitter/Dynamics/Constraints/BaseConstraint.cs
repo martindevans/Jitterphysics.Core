@@ -25,33 +25,31 @@ namespace Jitter.Dynamics.Constraints
     /// <summary>
     /// A constraints forces a body to behave in a specific way.
     /// </summary>
-    public abstract class Constraint : IConstraint, IDebugDrawable, IComparable<Constraint>
+    public abstract class BaseConstraint
+        : IConstraint, IDebugDrawable, IComparable<BaseConstraint>
     {
-        internal RigidBody body1;
-        internal RigidBody body2;
-
         /// <summary>
         /// Gets the first body. Can be null.
         /// </summary>
-        public RigidBody Body1 => body1;
+        public RigidBody Body1 { get; }
 
         /// <summary>
         /// Gets the second body. Can be null.
         /// </summary>
-        public RigidBody Body2 => body2;
+        public RigidBody Body2 { get; }
 
         private static int instanceCount;
-        private int instance;
+        private readonly int instance;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="body1">The first body which should get constrained. Can be null.</param>
         /// <param name="body2">The second body which should get constrained. Can be null.</param>
-        public Constraint(RigidBody body1, RigidBody body2)
+        public BaseConstraint(RigidBody body1, RigidBody body2)
         {
-            this.body1 = body1;
-            this.body2 = body2;
+            Body1 = body1;
+            Body2 = body2;
 
             instance = Interlocked.Increment(ref instanceCount);
 
@@ -75,16 +73,13 @@ namespace Jitter.Dynamics.Constraints
         public abstract void Iterate();
 
 
-        public int CompareTo(Constraint other)
+        public int CompareTo(BaseConstraint other)
         {
-            if (other.instance < instance) return -1;
-            else if (other.instance > instance) return 1;
-            else return 0;
+            return instance.CompareTo(other.instance);
         }
 
         public virtual void DebugDraw(IDebugDrawer drawer)
         {
-            //throw new NotImplementedException();
         }
     }
 }

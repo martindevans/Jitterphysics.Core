@@ -22,18 +22,12 @@ using Jitter.Dynamics.Constraints;
 
 namespace Jitter.Dynamics.Joints
 {
-
     /// <summary>
-    /// Connects to bodies with a hinge joint.
+    /// Connects two bodies with a hinge joint.
     /// </summary>
-    public class HingeJoint : Joint
+    public class HingeJoint
+        : BaseJoint
     {
-
-        private PointOnPoint[] worldPointConstraint;
-
-        public PointOnPoint PointConstraint1 => worldPointConstraint[0];
-        public PointOnPoint PointConstraint2 => worldPointConstraint[1];
-
         /// <summary>
         /// Initializes a new instance of the HingeJoint class.
         /// </summary>
@@ -42,32 +36,30 @@ namespace Jitter.Dynamics.Joints
         /// <param name="body2">The second body connected to the first one.</param>
         /// <param name="position">The position in world space where both bodies get connected.</param>
         /// <param name="hingeAxis">The axis if the hinge.</param>
-        public HingeJoint(World world, RigidBody body1, RigidBody body2, Vector3 position, Vector3 hingeAxis) : base(world)
+        public HingeJoint(World world, RigidBody body1, RigidBody body2, Vector3 position, Vector3 hingeAxis)
+            : base(world)
         {
-            worldPointConstraint = new PointOnPoint[2];
-
             hingeAxis *= 0.5f;
 
             var pos1 = position; pos1 += hingeAxis;
             var pos2 = position; pos2 -= hingeAxis;
 
-            worldPointConstraint[0] = new(body1,body2,pos1);
-            worldPointConstraint[1] = new(body1,body2,pos2);
+            PointOnPointConstraint0 = new(body1,body2,pos1);
+            PointOnPointConstraint1 = new(body1,body2,pos2);
         }
 
-        public PointOnPoint PointOnPointConstraint1 => worldPointConstraint[0];
+        public PointOnPoint PointOnPointConstraint0 { get; }
+        public PointOnPoint PointOnPointConstraint1 { get; }
 
-        public PointOnPoint PointOnPointConstraint2 => worldPointConstraint[1];
-
-        public float AppliedImpulse => worldPointConstraint[0].AppliedImpulse + worldPointConstraint[1].AppliedImpulse;
+        public float AppliedImpulse => PointOnPointConstraint0.AppliedImpulse + PointOnPointConstraint1.AppliedImpulse;
 
         /// <summary>
         /// Adds the internal constraints of this joint to the world class.
         /// </summary>
         public override void Activate()
         {
-            World.AddConstraint(worldPointConstraint[0]);
-            World.AddConstraint(worldPointConstraint[1]);
+            World.AddConstraint(PointOnPointConstraint0);
+            World.AddConstraint(PointOnPointConstraint1);
         }
 
         /// <summary>
@@ -75,8 +67,8 @@ namespace Jitter.Dynamics.Joints
         /// </summary>
         public override void Deactivate()
         {
-            World.RemoveConstraint(worldPointConstraint[0]);
-            World.RemoveConstraint(worldPointConstraint[1]);
+            World.RemoveConstraint(PointOnPointConstraint0);
+            World.RemoveConstraint(PointOnPointConstraint1);
         }
     }
 }

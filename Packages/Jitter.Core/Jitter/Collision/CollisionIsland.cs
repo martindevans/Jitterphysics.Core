@@ -32,7 +32,7 @@ namespace Jitter.Collision
 
         internal readonly HashSet<RigidBody> bodies = new();
         internal readonly HashSet<Arbiter> arbiter = new();
-        internal readonly HashSet<Constraint> constraints = new();
+        internal readonly HashSet<BaseConstraint> constraints = new();
 
         /// <summary>
         /// Gets a read only list of <see cref="RigidBody"/> which are in contact with each other.
@@ -45,9 +45,9 @@ namespace Jitter.Collision
         public IReadOnlyCollection<Arbiter> Arbiter => arbiter;
 
         /// <summary>
-        /// Gets a read only list of <see cref="Constraint"/> which are involved in this island.
+        /// Gets a read only list of <see cref="BaseConstraint"/> which are involved in this island.
         /// </summary>
-        public IReadOnlyCollection<Constraint> Constraints => constraints;
+        public IReadOnlyCollection<BaseConstraint> Constraints => constraints;
 
         /// <summary>
         /// Whether the island is active or not.
