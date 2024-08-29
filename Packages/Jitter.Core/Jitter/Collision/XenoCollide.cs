@@ -100,12 +100,12 @@ namespace Jitter.Collision
 
             // Get the center of shape1 in world coordinates -> v01
             var v01 = support1.SupportCenter();
-            v01 = JVectorExtensions.Transform(v01, orientation1);
+            v01 = v01.Transform(orientation1);
             v01 = position1 + v01;
 
             // Get the center of shape2 in world coordinates -> v02
             var v02 = support2.SupportCenter();
-            v02 = JVectorExtensions.Transform(v02, orientation2);
+            v02 = v02.Transform(orientation2);
             v02 = position2 + v02;
 
             // v0 is the center of the minkowski difference

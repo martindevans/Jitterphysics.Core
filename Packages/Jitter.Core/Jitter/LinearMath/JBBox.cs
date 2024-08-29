@@ -96,10 +96,10 @@ namespace Jitter.LinearMath
             var halfExtents = Max - Min;
             halfExtents.X *= 0.5f; halfExtents.Y *= 0.5f; halfExtents.Z *= 0.5f;
 
-            center = JVectorExtensions.TransposedTransform(center, orientation);
+            center = center.TransposedTransform(orientation);
 
             var abs = orientation.Absolute();
-            halfExtents = JVectorExtensions.TransposedTransform(halfExtents, abs);
+            halfExtents = halfExtents.TransposedTransform(abs);
 
             Max = center + halfExtents;
             Min = center - halfExtents;
@@ -110,10 +110,10 @@ namespace Jitter.LinearMath
             var halfExtents = 0.5f * (Max - Min);
             var center = 0.5f * (Max + Min);
 
-            center = JVectorExtensions.Transform(center, orientation);
+            center = center.Transform(orientation);
 
             var abs = orientation.Absolute();
-            halfExtents = JVectorExtensions.Transform(halfExtents, abs);
+            halfExtents = halfExtents.Transform(abs);
 
             Max = center + halfExtents;
             Min = center - halfExtents;

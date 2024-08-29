@@ -162,7 +162,7 @@ namespace Jitter.Collision.Shapes
                 {
                     var pos = triangles[e];
                     var matrix = shapes[i].orientation;
-                    pos = JVectorExtensions.Transform(pos, matrix);
+                    pos = pos.Transform(matrix);
                     var value2 = shapes[i].position;
                     pos += value2;
                     triangleList.Add(pos);
@@ -239,10 +239,10 @@ namespace Jitter.Collision.Shapes
         public override Vector3 SupportMapping(Vector3 direction)
         {
             var matrix = shapes[currentShape].invOrientation;
-            var result = JVectorExtensions.Transform(direction, matrix);
+            var result = direction.Transform(matrix);
             result = shapes[currentShape].Shape.SupportMapping(direction);
             var matrix1 = shapes[currentShape].orientation;
-            result = JVectorExtensions.Transform(result, matrix1);
+            result = result.Transform(matrix1);
             var value2 = shapes[currentShape].position;
             result += value2;
             return result;
@@ -263,10 +263,10 @@ namespace Jitter.Collision.Shapes
             var localHalfExtents = 0.5f * (box.Max - box.Min);
             var localCenter = 0.5f * (box.Max + box.Min);
 
-            var center = JVectorExtensions.Transform(localCenter, orientation);
+            var center = localCenter.Transform(orientation);
 
             var abs = orientation.Absolute();
-            var temp = JVectorExtensions.Transform(localHalfExtents, abs);
+            var temp = localHalfExtents.Transform(abs);
 
             box.Max = center + temp;
             box.Min = center - temp;

@@ -79,7 +79,7 @@ namespace Jitter.LinearMath
         /// <param name="position">The vector to transform.</param>
         /// <param name="matrix">The transform matrix.</param>
         /// <returns>The transformed vector.</returns>
-        public static Vector3 Transform(Vector3 position, JMatrix matrix)
+        public static Vector3 Transform(this Vector3 position, in JMatrix matrix)
         {
             var num0 = position.X * matrix.M11 + position.Y * matrix.M21 + position.Z * matrix.M31;
             var num1 = position.X * matrix.M12 + position.Y * matrix.M22 + position.Z * matrix.M32;
@@ -93,7 +93,7 @@ namespace Jitter.LinearMath
             };
         }
 
-        public static Vector3 TransposedTransform(Vector3 position, JMatrix matrix)
+        public static Vector3 TransposedTransform(this Vector3 position, in JMatrix matrix)
         {
             var num0 = position.X * matrix.M11 + position.Y * matrix.M12 + position.Z * matrix.M13;
             var num1 = position.X * matrix.M21 + position.Y * matrix.M22 + position.Z * matrix.M23;

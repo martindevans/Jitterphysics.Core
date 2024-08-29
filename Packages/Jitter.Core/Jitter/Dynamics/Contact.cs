@@ -308,7 +308,7 @@ namespace Jitter.Dynamics
             }
             else
             {
-                p1 = JVectorExtensions.Transform(realRelPos1, body1.orientation);
+                p1 = realRelPos1.Transform(body1.orientation);
                 p1 += body1.position;
             }
 
@@ -318,7 +318,7 @@ namespace Jitter.Dynamics
             }
             else
             {
-                p2 = JVectorExtensions.Transform(realRelPos2, body2.orientation);
+                p2 = realRelPos2.Transform(body2.orientation);
                 p2 += body2.position;
             }
 
@@ -771,8 +771,8 @@ namespace Jitter.Dynamics
 
             relativePos1 = p1 - body1.position;
             relativePos2 = p2 - body2.position;
-            realRelPos1 = JVectorExtensions.Transform(relativePos1, body1.invOrientation);
-            realRelPos2 = JVectorExtensions.Transform(relativePos2, body2.invOrientation);
+            realRelPos1 = relativePos1.Transform(body1.invOrientation);
+            realRelPos2 = relativePos2.Transform(body2.invOrientation);
 
             initialPen = penetration;
             this.penetration = penetration;

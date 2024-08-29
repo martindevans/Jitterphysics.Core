@@ -60,8 +60,8 @@ namespace Jitter.Dynamics.Constraints
             localAnchor1 = anchor1 - body1.position;
             localAnchor2 = anchor2 - body2.position;
 
-            localAnchor1 = JVectorExtensions.Transform(localAnchor1, body1.invOrientation);
-            localAnchor2 = JVectorExtensions.Transform(localAnchor2, body2.invOrientation);
+            localAnchor1 = localAnchor1.Transform(body1.invOrientation);
+            localAnchor2 = localAnchor2.Transform(body2.invOrientation);
 
             distance = (anchor1 - anchor2).Length();
         }
@@ -125,8 +125,8 @@ namespace Jitter.Dynamics.Constraints
         /// <param name="timestep">The 5simulation timestep</param>
         public override void PrepareForIteration(float timestep)
         {
-            r1 = JVectorExtensions.Transform(localAnchor1, body1.orientation);
-            r2 = JVectorExtensions.Transform(localAnchor2, body2.orientation);
+            r1 = localAnchor1.Transform(body1.orientation);
+            r2 = localAnchor2.Transform(body2.orientation);
 
             var p1 = body1.position + r1;
             var p2 = body2.position + r2;
@@ -156,8 +156,8 @@ namespace Jitter.Dynamics.Constraints
                 jacobian[3] = Vector3.Cross(r2, n);
 
                 effectiveMass = body1.inverseMass + body2.inverseMass
-                    + Vector3.Dot(JVectorExtensions.Transform(jacobian[1], body1.invInertiaWorld), jacobian[1])
-                                                  + Vector3.Dot(JVectorExtensions.Transform(jacobian[3], body2.invInertiaWorld), jacobian[3]);
+                    + Vector3.Dot(jacobian[1].Transform(body1.invInertiaWorld), jacobian[1])
+                                                  + Vector3.Dot(jacobian[3].Transform(body2.invInertiaWorld), jacobian[3]);
 
                 softnessOverDt = softness / timestep;
                 effectiveMass += softnessOverDt;
@@ -169,13 +169,13 @@ namespace Jitter.Dynamics.Constraints
                 if (!body1.IsStatic)
                 {
                     body1.linearVelocity += body1.inverseMass * accumulatedImpulse * jacobian[0];
-                    body1.angularVelocity += JVectorExtensions.Transform(accumulatedImpulse * jacobian[1], body1.invInertiaWorld);
+                    body1.angularVelocity += (accumulatedImpulse * jacobian[1]).Transform(body1.invInertiaWorld);
                 }
 
                 if (!body2.IsStatic)
                 {
                     body2.linearVelocity += body2.inverseMass * accumulatedImpulse * jacobian[2];
-                    body2.angularVelocity += JVectorExtensions.Transform(accumulatedImpulse * jacobian[3], body2.invInertiaWorld);
+                    body2.angularVelocity += (accumulatedImpulse * jacobian[3]).Transform(body2.invInertiaWorld);
                 }
             }
             
@@ -218,13 +218,13 @@ namespace Jitter.Dynamics.Constraints
             if (!body1.IsStatic)
             {
                 body1.linearVelocity += body1.inverseMass * lambda * jacobian[0];
-                body1.angularVelocity += JVectorExtensions.Transform(lambda * jacobian[1], body1.invInertiaWorld);
+                body1.angularVelocity += (lambda * jacobian[1]).Transform(body1.invInertiaWorld);
             }
 
             if (!body2.IsStatic)
             {
                 body2.linearVelocity += body2.inverseMass * lambda * jacobian[2];
-                body2.angularVelocity += JVectorExtensions.Transform(lambda * jacobian[3], body2.invInertiaWorld);
+                body2.angularVelocity += (lambda * jacobian[3]).Transform(body2.invInertiaWorld);
             }
         }
 

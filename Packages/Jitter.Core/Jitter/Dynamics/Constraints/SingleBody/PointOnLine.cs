@@ -51,7 +51,7 @@ namespace Jitter.Dynamics.Constraints.SingleBody
                 throw new ArgumentException("Line direction can't be zero", nameof(lineDirection));
 
             localAnchor1 = localAnchor;
-            anchor = body.position + JVectorExtensions.Transform(localAnchor, body.orientation);
+            anchor = body.position + localAnchor.Transform(body.orientation);
 
             lineNormal = lineDirection;
             lineNormal = Vector3.Normalize(lineNormal);
@@ -97,7 +97,7 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         /// <param name="timestep">The simulation timestep</param>
         public override void PrepareForIteration(float timestep)
         {
-            r1 = JVectorExtensions.Transform(localAnchor1, body1.orientation);
+            r1 = localAnchor1.Transform(body1.orientation);
 
             Vector3 dp;
             var p1 = body1.position + r1;
@@ -114,7 +114,7 @@ namespace Jitter.Dynamics.Constraints.SingleBody
             jacobian[1] = Vector3.Cross(r1, t);
 
             effectiveMass = body1.inverseMass
-                + Vector3.Dot(JVectorExtensions.Transform(jacobian[1], body1.invInertiaWorld), jacobian[1]);
+                + Vector3.Dot(jacobian[1].Transform(body1.invInertiaWorld), jacobian[1]);
 
             softnessOverDt = softness / timestep;
             effectiveMass += softnessOverDt;
@@ -126,7 +126,7 @@ namespace Jitter.Dynamics.Constraints.SingleBody
             if (!body1.IsStatic)
             {
                 body1.linearVelocity += body1.inverseMass * accumulatedImpulse * jacobian[0];
-                body1.angularVelocity += JVectorExtensions.Transform(accumulatedImpulse * jacobian[1], body1.invInertiaWorld);
+                body1.angularVelocity += (accumulatedImpulse * jacobian[1]).Transform(body1.invInertiaWorld);
             }
 
         }
@@ -149,7 +149,7 @@ namespace Jitter.Dynamics.Constraints.SingleBody
             if (!body1.IsStatic)
             {
                 body1.linearVelocity += body1.inverseMass * lambda * jacobian[0];
-                body1.angularVelocity += JVectorExtensions.Transform(lambda * jacobian[1], body1.invInertiaWorld);
+                body1.angularVelocity += (lambda * jacobian[1]).Transform(body1.invInertiaWorld);
             }
         }
 

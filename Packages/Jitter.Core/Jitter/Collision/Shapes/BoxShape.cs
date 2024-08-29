@@ -91,7 +91,7 @@ namespace Jitter.Collision.Shapes
         {
             JBBox box;
             var abs = orientation.Absolute();
-            var temp = JVectorExtensions.Transform(halfSize, abs);
+            var temp = halfSize.Transform(abs);
 
             box.Max = temp;
             box.Min = -temp;

@@ -67,7 +67,7 @@ namespace Jitter.Collision
             arbitraryPoint = point - arbitraryPoint;
 
             var r = support.SupportCenter();
-            r = JVectorExtensions.Transform(r, orientation);
+            r = r.Transform(orientation);
             r = position + r;
             r = point - r;
 

@@ -57,8 +57,8 @@ namespace Jitter.Dynamics.Constraints
             localAnchor1 = lineStartPointBody1 - body1.position;
             localAnchor2 = pointBody2 - body2.position;
 
-            localAnchor1 = JVectorExtensions.Transform(localAnchor1, body1.invOrientation);
-            localAnchor2 = JVectorExtensions.Transform(localAnchor2, body2.invOrientation);
+            localAnchor1 = localAnchor1.Transform(body1.invOrientation);
+            localAnchor2 = localAnchor2.Transform(body2.invOrientation);
 
             lineNormal = Vector3.Normalize(lineStartPointBody1 - pointBody2);
         }
@@ -92,8 +92,8 @@ namespace Jitter.Dynamics.Constraints
         /// <param name="timestep">The simulation timestep</param>
         public override void PrepareForIteration(float timestep)
         {
-            r1 = JVectorExtensions.Transform(localAnchor1, body1.orientation);
-            r2 = JVectorExtensions.Transform(localAnchor2, body2.orientation);
+            r1 = localAnchor1.Transform(body1.orientation);
+            r2 = localAnchor2.Transform(body2.orientation);
 
             Vector3 dp;
             var p1 = body1.position + r1;
@@ -101,7 +101,7 @@ namespace Jitter.Dynamics.Constraints
 
             dp = p2 - p1;
 
-            var l = JVectorExtensions.Transform(lineNormal, body1.orientation);
+            var l = lineNormal.Transform(body1.orientation);
             l = Vector3.Normalize(l);
 
             var t = Vector3.Cross(p1 - p2, l);
@@ -114,8 +114,8 @@ namespace Jitter.Dynamics.Constraints
             jacobian[3] = -1.0f * Vector3.Cross(r2, t);         // angularVel Body2
 
             effectiveMass = body1.inverseMass + body2.inverseMass
-                + Vector3.Dot(JVectorExtensions.Transform(jacobian[1], body1.invInertiaWorld), jacobian[1])
-                                              + Vector3.Dot(JVectorExtensions.Transform(jacobian[3], body2.invInertiaWorld), jacobian[3]);
+                + Vector3.Dot(jacobian[1].Transform(body1.invInertiaWorld), jacobian[1])
+                                              + Vector3.Dot(jacobian[3].Transform(body2.invInertiaWorld), jacobian[3]);
 
             softnessOverDt = softness / timestep;
             effectiveMass += softnessOverDt;
@@ -127,13 +127,13 @@ namespace Jitter.Dynamics.Constraints
             if (!body1.IsStatic)
             {
                 body1.linearVelocity += body1.inverseMass * accumulatedImpulse * jacobian[0];
-                body1.angularVelocity += JVectorExtensions.Transform(accumulatedImpulse * jacobian[1], body1.invInertiaWorld);
+                body1.angularVelocity += (accumulatedImpulse * jacobian[1]).Transform(body1.invInertiaWorld);
             }
 
             if (!body2.IsStatic)
             {
                 body2.linearVelocity += body2.inverseMass * accumulatedImpulse * jacobian[2];
-                body2.angularVelocity += JVectorExtensions.Transform(accumulatedImpulse * jacobian[3], body2.invInertiaWorld);
+                body2.angularVelocity += (accumulatedImpulse * jacobian[3]).Transform(body2.invInertiaWorld);
             }
         }
 
@@ -157,20 +157,20 @@ namespace Jitter.Dynamics.Constraints
             if (!body1.IsStatic)
             {
                 body1.linearVelocity += body1.inverseMass * lambda * jacobian[0];
-                body1.angularVelocity += JVectorExtensions.Transform(lambda * jacobian[1], body1.invInertiaWorld);
+                body1.angularVelocity += (lambda * jacobian[1]).Transform(body1.invInertiaWorld);
             }
 
             if (!body2.IsStatic)
             {
                 body2.linearVelocity += body2.inverseMass * lambda * jacobian[2];
-                body2.angularVelocity += JVectorExtensions.Transform(lambda * jacobian[3], body2.invInertiaWorld);
+                body2.angularVelocity += (lambda * jacobian[3]).Transform(body2.invInertiaWorld);
             }
         }
 
         public override void DebugDraw(IDebugDrawer drawer)
         {
             drawer.DrawLine(body1.position + r1,
-                body1.position + r1 + JVectorExtensions.Transform(lineNormal, body1.orientation) * 100.0f);
+                body1.position + r1 + lineNormal.Transform(body1.orientation) * 100.0f);
         }
 
     }

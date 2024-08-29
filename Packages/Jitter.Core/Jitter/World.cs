@@ -651,7 +651,7 @@ namespace Jitter
                     if (!body.IsParticle)
                     {
                         temp = body.AccumulatedTorque * timestep;
-                        temp = JVectorExtensions.Transform(temp, body.invInertiaWorld);
+                        temp = temp.Transform(body.invInertiaWorld);
                         body.angularVelocity = temp + body.angularVelocity;
                     }
 

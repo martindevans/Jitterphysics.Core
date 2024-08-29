@@ -73,7 +73,7 @@ namespace Jitter.Dynamics.Joints
             // anchor point for body 2 is chosen to be in the middle of the
             // angle range.  relative to hinge
             var angleToMiddle = 0.5f * (hingeFwdAngle - hingeBckAngle);
-            var hingeRelAnchorPos1 = JVectorExtensions.Transform(hingeRelAnchorPos0, JMatrix.CreateFromAxisAngle(hingeAxis, -angleToMiddle / 360.0f * 2.0f * MathF.PI));
+            var hingeRelAnchorPos1 = hingeRelAnchorPos0.Transform(JMatrix.CreateFromAxisAngle(hingeAxis, -angleToMiddle / 360.0f * 2.0f * MathF.PI));
 
             // work out the "string" length
             var hingeHalfAngle = 0.5f * (hingeFwdAngle + hingeBckAngle);

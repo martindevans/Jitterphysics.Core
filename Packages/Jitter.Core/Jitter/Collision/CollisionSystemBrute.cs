@@ -149,8 +149,8 @@ namespace Jitter.Collision
                 var multiShapeCollides = false;
 
                 var transformedOrigin = rayOrigin - body.position;
-                transformedOrigin = JVectorExtensions.Transform(transformedOrigin, body.invOrientation);
-                var transformedDirection = JVectorExtensions.Transform(rayDirection, body.invOrientation);
+                transformedOrigin = transformedOrigin.Transform(body.invOrientation);
+                var transformedDirection = rayDirection.Transform(body.invOrientation);
 
                 var msLength = ms.Prepare(ref transformedOrigin, ref transformedDirection);
 
@@ -166,7 +166,7 @@ namespace Jitter.Collision
                             if (useTriangleMeshNormal && ms is TriangleMeshShape)
                             {
                                 (ms as TriangleMeshShape).CollisionNormal(out tempNormal);
-                                tempNormal = JVectorExtensions.Transform(tempNormal, body.orientation);
+                                tempNormal = tempNormal.Transform(body.orientation);
                                 tempNormal = -tempNormal;
                             }
 
