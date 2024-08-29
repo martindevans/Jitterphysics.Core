@@ -96,7 +96,7 @@ namespace Jitter.Collision
 
         private struct Node
         {
-            public UInt16[] nodeIndices;
+            public ushort[] nodeIndices;
             public int[] triIndices;
             public JBBox box;
         }
@@ -247,10 +247,10 @@ namespace Jitter.Collision
             //nodeStack = new UInt16[buildNodes.Count];
             for (var i = 0; i < nodes.Length; i++)
             {
-                nodes[i].nodeIndices = new UInt16[buildNodes[i].nodeIndices.Count];
+                nodes[i].nodeIndices = new ushort[buildNodes[i].nodeIndices.Count];
                 for (var index = 0; index < nodes[i].nodeIndices.Length; ++index)
                 {
-                    nodes[i].nodeIndices[index] = (UInt16)buildNodes[i].nodeIndices[index];
+                    nodes[i].nodeIndices[index] = (ushort)buildNodes[i].nodeIndices[index];
                 }
 
                 nodes[i].triIndices = new int[buildNodes[i].triIndices.Count];
@@ -377,7 +377,7 @@ namespace Jitter.Collision
             return triCount;
         }
 
-        private ThreadSafeArrayResourcePool<UInt16> nodeStackPool;
+        private ThreadSafeArrayResourcePool<ushort> nodeStackPool;
 
         /// <summary>
         /// Returns all triangles which intersect the given axis aligned bounding box.
@@ -458,9 +458,6 @@ namespace Jitter.Collision
         /// <summary>
         /// Gets the number of triangles within this octree.
         /// </summary>
-        public int NumTriangles
-        {
-            get { return tris.Length; }
-        }
+        public int NumTriangles => tris.Length;
     }
 }

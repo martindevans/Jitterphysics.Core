@@ -73,8 +73,6 @@ namespace Jitter.Dynamics
         internal Vector3 AccumulatedForce;
         internal Vector3 AccumulatedTorque;
 
-        private ShapeUpdatedHandler? updatedHandler;
-
         internal readonly List<RigidBody> connections = new();
         internal readonly HashSet<Arbiter> arbiters = new();
         internal readonly HashSet<BaseConstraint> constraints = new();
@@ -95,8 +93,6 @@ namespace Jitter.Dynamics
         /// </summary>
         /// <param name="shape">The shape of the body.</param>
         /// <param name="material"></param>
-        /// <param name="isParticle">If set to true the body doesn't rotate. 
-        /// Also contacts are only solved for the linear motion part.</param>
         public RigidBody(BaseShape shape, Material material)
         {
             instance = Interlocked.Increment(ref instanceCount);
@@ -109,8 +105,7 @@ namespace Jitter.Dynamics
 
             orientation = JMatrix.Identity;
 
-            updatedHandler = ShapeUpdated;
-            Shape.ShapeUpdated += updatedHandler;
+            Shape.ShapeUpdated += ShapeUpdated;
             SetMassProperties();
 
             Material = material;
@@ -253,9 +248,7 @@ namespace Jitter.Dynamics
         /// <summary>
         /// Returns the force which acts this timestep on the body.
         /// </summary>
-        public Vector3 Force { get => AccumulatedForce;
-            set => AccumulatedForce = value;
-        }
+        public Vector3 Force => AccumulatedForce;
 
         /// <summary>
         /// Adds torque to the body. The torque gets applied
@@ -326,7 +319,7 @@ namespace Jitter.Dynamics
             set 
             {
                 // deregister update event
-                _shape.ShapeUpdated -= updatedHandler;
+                _shape.ShapeUpdated -= ShapeUpdated;
 
                 // register new event
                 _shape = value; 
