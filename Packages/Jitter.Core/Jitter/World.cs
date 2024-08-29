@@ -154,8 +154,6 @@ namespace Jitter
         private readonly Queue<Arbiter> removedArbiterQueue = new();
         private readonly Queue<Arbiter> addedArbiterQueue = new();
 
-        private Vector3 gravity = new(0, 0, 0);
-
         public ContactSettings ContactSettings { get; } = new();
 
         /// <summary>
@@ -173,15 +171,11 @@ namespace Jitter
         /// <summary>
         /// Gets or sets the gravity in this <see cref="World"/>. The default gravity is (0,0,0)
         /// </summary>
-        public Vector3 Gravity
-        {
-            get => gravity;
-            set => gravity = value;
-        }
+        public Vector3 Gravity { get; set; } = new(0, 0, 0);
 
         /// <summary>
         /// Global sets or gets if a body is able to be temporarily deactivated by the engine to
-        /// safe computation time. Use <see cref="SetInactivityThreshold"/> to set parameters
+        /// save computation time. Use <see cref="SetInactivityThreshold"/> to set parameters
         /// of the deactivation process.
         /// </summary>
         public bool AllowDeactivation { get; set; } = true;
@@ -324,23 +318,11 @@ namespace Jitter
             this.smallIterations = smallIterations;
         }
 
-        /// <summary>
-        /// Removes a <see cref="RigidBody"/> from the world.
-        /// </summary>
-        /// <param name="body">The body which should be removed.</param>
-        /// <returns>Returns false if the body could not be removed from the world.</returns>
         public bool RemoveBody(RigidBody body)
         {
-            return RemoveBody(body, false);
-        }
-
-        private bool RemoveBody(RigidBody body, bool removeMassPoints)
-        {
-            // Its very important to clean up, after removing a body
-            if (!removeMassPoints && body.IsParticle) return false;
-
             // remove the body from the world list
-            if (!rigidBodies.Remove(body)) return false;
+            if (!rigidBodies.Remove(body))
+                return false;
 
             // Remove all connected constraints and arbiters
             foreach (var arbiter in body.arbiters)
@@ -648,7 +630,6 @@ namespace Jitter
                     var scaleFactor = body.inverseMass * _timestep;
                     body.linearVelocity = body.AccumulatedForce * scaleFactor + body.LinearVelocity;
 
-                    if (!body.IsParticle)
                     {
                         var temp = body.AccumulatedTorque * _timestep;
                         temp = temp.Transform(body.invInertiaWorld);
@@ -657,7 +638,7 @@ namespace Jitter
 
                     if (body.AffectedByGravity)
                     {
-                        var temp = gravity * _timestep;
+                        var temp = Gravity * _timestep;
                         body.LinearVelocity += temp;
                     }
                 }
@@ -672,35 +653,31 @@ namespace Jitter
         {
             body.Position = body.LinearVelocity * _timestep + body.Position;
 
-            if (!body.IsParticle)
+            //exponential map
+            Vector3 axis;
+            var angle = body.AngularVelocity.Length();
+
+            if (angle < 0.001f)
             {
-
-                //exponential map
-                Vector3 axis;
-                var angle = body.AngularVelocity.Length();
-
-                if (angle < 0.001f)
-                {
-                    // use Taylor's expansions of sync function
-                    // axis = body.angularVelocity * (0.5f * timestep - (timestep * timestep * timestep) * (0.020833333333f) * angle * angle);
-                    var scaleFactor = 0.5f * _timestep - MathF.Pow(_timestep, 3) * 0.020833333333f * MathF.Pow(angle, 2);
-                    axis = body.AngularVelocity * scaleFactor;
-                }
-                else
-                {
-                    // sync(fAngle) = sin(c*fAngle)/t
-                    var scaleFactor = MathF.Sin(0.5f * angle * _timestep) / angle;
-                    axis = body.AngularVelocity * scaleFactor;
-                }
-
-                var dorn = new Quaternion(axis.X, axis.Y, axis.Z, (float)Math.Cos(angle * _timestep * 0.5f));
-
-                var ornA = body.orientation.ToQuaternion();
-                dorn = Quaternion.Multiply(dorn, ornA);
-
-                dorn = Quaternion.Normalize(dorn);
-                body.orientation = JMatrix.CreateFromQuaternion(dorn);
+                // use Taylor's expansions of sync function
+                // axis = body.angularVelocity * (0.5f * timestep - (timestep * timestep * timestep) * (0.020833333333f) * angle * angle);
+                var scaleFactor = 0.5f * _timestep - MathF.Pow(_timestep, 3) * 0.020833333333f * MathF.Pow(angle, 2);
+                axis = body.AngularVelocity * scaleFactor;
             }
+            else
+            {
+                // sync(fAngle) = sin(c*fAngle)/t
+                var scaleFactor = MathF.Sin(0.5f * angle * _timestep) / angle;
+                axis = body.AngularVelocity * scaleFactor;
+            }
+
+            var dorn = new Quaternion(axis.X, axis.Y, axis.Z, (float)Math.Cos(angle * _timestep * 0.5f));
+
+            var ornA = body.orientation.ToQuaternion();
+            dorn = Quaternion.Multiply(dorn, ornA);
+
+            dorn = Quaternion.Normalize(dorn);
+            body.orientation = JMatrix.CreateFromQuaternion(dorn);
 
             if ((body.Damping & RigidBody.DampingType.Linear) != 0)
                 body.LinearVelocity *= currentLinearDampFactor;
@@ -730,19 +707,14 @@ namespace Jitter
 
         private void CollisionDetected(RigidBody body1, RigidBody body2, Vector3 point1, Vector3 point2, Vector3 normal, float penetration)
         {
-            Arbiter arbiter;
-
-            lock (ArbiterMap)
+            ArbiterMap.LookUpArbiter(body1, body2, out var arbiter);
+            if (arbiter == null)
             {
-                ArbiterMap.LookUpArbiter(body1, body2, out arbiter);
-                if (arbiter == null)
-                {
-                    arbiter = ArbiterMap.Add(body1, body2);
+                arbiter = ArbiterMap.Add(body1, body2);
 
-                    addedArbiterQueue.Enqueue(arbiter);
+                addedArbiterQueue.Enqueue(arbiter);
 
-                    Events.RaiseBodiesBeginCollide(body1, body2);
-                }
+                Events.RaiseBodiesBeginCollide(body1, body2);
             }
 
             Contact contact;

@@ -81,42 +81,6 @@ namespace Jitter.Dynamics
 
         internal int marker = 0;
 
-        private bool _isParticle;
-
-        /// <summary>
-        /// If true, the body as no angular movement.
-        /// </summary>
-        public bool IsParticle
-        { 
-            get => _isParticle;
-            set
-            {
-                if (_isParticle == value)
-                    return;
-
-                if (_isParticle && !value)
-                {
-                    updatedHandler = ShapeUpdated;
-                    Shape.ShapeUpdated += updatedHandler;
-                    SetMassProperties();
-                    _isParticle = false;
-                }
-                else if (!_isParticle && value)
-                {
-                    inertia = default;
-                    invInertia = invInertiaWorld = default;
-                    invOrientation = orientation = JMatrix.Identity;
-                    inverseMass = 1.0f;
-
-                    Shape.ShapeUpdated -= updatedHandler;
-
-                    _isParticle = true;
-                }
-
-                Update();
-            }
-        }
-
         /// <summary>
         /// 
         /// </summary>
@@ -133,7 +97,7 @@ namespace Jitter.Dynamics
         /// <param name="material"></param>
         /// <param name="isParticle">If set to true the body doesn't rotate. 
         /// Also contacts are only solved for the linear motion part.</param>
-        public RigidBody(BaseShape shape, Material material, bool isParticle = false)
+        public RigidBody(BaseShape shape, Material material)
         {
             instance = Interlocked.Increment(ref instanceCount);
 
@@ -145,20 +109,9 @@ namespace Jitter.Dynamics
 
             orientation = JMatrix.Identity;
 
-            _isParticle = isParticle;
-            if (!isParticle)
-            {
-                updatedHandler = ShapeUpdated;
-                Shape.ShapeUpdated += updatedHandler;
-                SetMassProperties();
-            }
-            else
-            {
-                inertia = default;
-                invInertia = invInertiaWorld = default;
-                invOrientation = orientation = JMatrix.Identity;
-                inverseMass = 1.0f;
-            }
+            updatedHandler = ShapeUpdated;
+            Shape.ShapeUpdated += updatedHandler;
+            SetMassProperties();
 
             Material = material;
 
@@ -341,21 +294,15 @@ namespace Jitter.Dynamics
         {
             if (setAsInverseValues)
             {
-                if (!_isParticle)
-                {
-                    invInertia = inertia;
-                    this.inertia = inertia.Inverse();
-                    this.inertia = inertia.Inverse();
-                }
+                invInertia = inertia;
+                this.inertia = inertia.Inverse();
+                this.inertia = inertia.Inverse();
                 inverseMass = mass;
             }
             else
             {
-                if (!_isParticle)
-                {
-                    this.inertia = inertia;
-                    invInertia = inertia.Inverse();
-                }
+                this.inertia = inertia;
+                invInertia = inertia.Inverse();
                 inverseMass = 1.0f / mass;
             }
 
@@ -491,11 +438,8 @@ namespace Jitter.Dynamics
                 if (value <= 0.0f) throw new ArgumentException("Mass can't be less or equal zero.");
 
                 // scale inertia
-                if (!_isParticle)
-                {
-                    inertia = JMatrix.Multiply(Shape.Inertia, value / Shape.Mass);
-                    invInertia = inertia.Inverse();
-                }
+                inertia = JMatrix.Multiply(Shape.Inertia, value / Shape.Mass);
+                invInertia = inertia.Inverse();
 
                 inverseMass = 1.0f / value;
             }
@@ -542,31 +486,16 @@ namespace Jitter.Dynamics
         /// </summary>
         public void Update()
         {
-            if (_isParticle)
+            // Given: Orientation, Inertia
+            invOrientation = JMatrix.Transpose(Orientation);
+            boundingBox = Shape.GetBoundingBox(Orientation);
+            boundingBox.Min += position;
+            boundingBox.Max += position;
+
+            if (!_isStatic)
             {
-                inertia = default;
-                invInertia = invInertiaWorld = default;
-                invOrientation = orientation = JMatrix.Identity;
-                boundingBox = _shape.boundingBox;
-                boundingBox.Min += position;
-                boundingBox.Max += position;
-
-                angularVelocity = default;
-            }
-            else
-            {
-                // Given: Orientation, Inertia
-                invOrientation = JMatrix.Transpose(Orientation);
-                boundingBox = Shape.GetBoundingBox(Orientation);
-                boundingBox.Min += position;
-                boundingBox.Max += position;
-
-
-                if (!_isStatic)
-                {
-                    JMatrix.Multiply(ref invOrientation, ref invInertia, out invInertiaWorld);
-                    JMatrix.Multiply(ref invInertiaWorld, ref orientation, out invInertiaWorld);
-                }
+                JMatrix.Multiply(ref invOrientation, ref invInertia, out invInertiaWorld);
+                JMatrix.Multiply(ref invInertiaWorld, ref orientation, out invInertiaWorld);
             }
         }
 

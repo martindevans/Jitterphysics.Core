@@ -772,9 +772,6 @@ namespace Jitter.Dynamics
             initialPen = penetration;
             this.penetration = penetration;
 
-            body1IsMassPoint = body1.IsParticle;
-            body2IsMassPoint = body2.IsParticle;
-
             // Material Properties
             if (newContact)
             {

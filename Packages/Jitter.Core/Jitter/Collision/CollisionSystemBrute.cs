@@ -109,20 +109,16 @@ namespace Jitter.Collision
             var result = false;
 
             // TODO: This can be done better in CollisionSystemPersistenSAP
-            foreach (var e in bodyList)
+            foreach (var b in bodyList)
             {
+                if (Raycast(b, rayOrigin, rayDirection, out var tempNormal, out var tempFraction))
                 {
-                    var b = e as RigidBody;
-
-                    if (Raycast(b, rayOrigin, rayDirection, out var tempNormal, out var tempFraction))
+                    if (tempFraction < fraction && (raycast == null || raycast(b, tempNormal, tempFraction)))
                     {
-                        if (tempFraction < fraction && (raycast == null || raycast(b, tempNormal, tempFraction)))
-                        {
-                            body = b;
-                            normal = tempNormal;
-                            fraction = tempFraction;
-                            result = true;
-                        }
+                        body = b;
+                        normal = tempNormal;
+                        fraction = tempFraction;
+                        result = true;
                     }
                 }
             }
@@ -140,53 +136,57 @@ namespace Jitter.Collision
         {
             fraction = float.MaxValue; normal = default;
 
-            if (!body.BoundingBox.RayIntersect(rayOrigin, rayDirection)) return false;
+            if (!body.BoundingBox.RayIntersect(rayOrigin, rayDirection))
+                return false;
 
-            if (body.Shape is Multishape)
+            if (body.Shape is Multishape ms)
             {
-                var ms = (body.Shape as Multishape).RequestWorkingClone();
-
-                var multiShapeCollides = false;
-
-                var transformedOrigin = rayOrigin - body.position;
-                transformedOrigin = transformedOrigin.Transform(body.invOrientation);
-                var transformedDirection = rayDirection.Transform(body.invOrientation);
-
-                var msLength = ms.Prepare(ref transformedOrigin, ref transformedDirection);
-
-                for (var i = 0; i < msLength; i++)
+                ms = ms.RequestWorkingClone();
+                try
                 {
-                    ms.SetCurrentShape(i);
+                    var multiShapeCollides = false;
 
-                    if (GJKCollide.Raycast(ms, ref body.orientation, ref body.position,
-                        ref rayOrigin, ref rayDirection, out var tempFraction, out var tempNormal))
+                    var transformedOrigin = rayOrigin - body.position;
+                    transformedOrigin = transformedOrigin.Transform(body.invOrientation);
+                    var transformedDirection = rayDirection.Transform(body.invOrientation);
+
+                    var msLength = ms.Prepare(ref transformedOrigin, ref transformedDirection);
+
+                    for (var i = 0; i < msLength; i++)
                     {
-                        if (tempFraction < fraction)
-                        {
-                            if (UseTriangleMeshNormal && ms is TriangleMeshShape)
-                            {
-                                (ms as TriangleMeshShape).CollisionNormal(out tempNormal);
-                                tempNormal = tempNormal.Transform(body.orientation);
-                                tempNormal = -tempNormal;
-                            }
+                        ms.SetCurrentShape(i);
 
-                            normal = tempNormal;
-                            fraction = tempFraction;
-                            multiShapeCollides = true;
+                        if (GJKCollide.Raycast(ms, ref body.orientation, ref body.position,
+                                ref rayOrigin, ref rayDirection, out var tempFraction, out var tempNormal))
+                        {
+                            if (tempFraction < fraction)
+                            {
+                                if (UseTriangleMeshNormal && ms is TriangleMeshShape triangleMesh)
+                                {
+                                    triangleMesh.CollisionNormal(out tempNormal);
+                                    tempNormal = tempNormal.Transform(body.orientation);
+                                    tempNormal = -tempNormal;
+                                }
+
+                                normal = tempNormal;
+                                fraction = tempFraction;
+                                multiShapeCollides = true;
+                            }
                         }
                     }
-                }
 
-                ms.ReturnWorkingClone();
-                return multiShapeCollides;
+                    return multiShapeCollides;
+                }
+                finally
+                {
+                    ms.ReturnWorkingClone();
+                }
             }
             else
             {
                 return GJKCollide.Raycast(body.Shape, ref body.orientation, ref body.position,
                     ref rayOrigin, ref rayDirection, out fraction, out normal);
             }
-
-
         }
     }
 }
