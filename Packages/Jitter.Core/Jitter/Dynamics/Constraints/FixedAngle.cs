@@ -129,8 +129,10 @@ namespace Jitter.Dynamics.Constraints
             bias = axis * BiasFactor * (-1.0f / timestep);
 
             // Apply previous frame solution as initial guess for satisfying the constraint.
-            if (!Body1.IsStatic) Body1.angularVelocity += AppliedImpulse.Transform(Body1.invInertiaWorld);
-            if (!Body2.IsStatic) Body2.angularVelocity += (-1.0f * AppliedImpulse).Transform(Body2.invInertiaWorld);
+            if (!Body1.IsStatic)
+                Body1.angularVelocity += AppliedImpulse.Transform(Body1.invInertiaWorld);
+            if (!Body2.IsStatic)
+                Body2.angularVelocity += (-1.0f * AppliedImpulse).Transform(Body2.invInertiaWorld);
         }
 
         /// <summary>
@@ -146,8 +148,10 @@ namespace Jitter.Dynamics.Constraints
 
             AppliedImpulse += lambda;
 
-            if(!Body1.IsStatic) Body1.angularVelocity += lambda.Transform(Body1.invInertiaWorld);
-            if(!Body2.IsStatic) Body2.angularVelocity += (-1.0f * lambda).Transform(Body2.invInertiaWorld);
+            if(!Body1.IsStatic)
+                Body1.angularVelocity += lambda.Transform(Body1.invInertiaWorld);
+            if(!Body2.IsStatic)
+                Body2.angularVelocity += (-1.0f * lambda).Transform(Body2.invInertiaWorld);
         }
 
     }

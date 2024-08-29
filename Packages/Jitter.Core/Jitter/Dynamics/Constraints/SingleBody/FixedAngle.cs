@@ -55,13 +55,9 @@ namespace Jitter.Dynamics.Constraints.SingleBody
     /// The body stays at a fixed angle relative to
     /// world space.
     /// </summary>
-    public class FixedAngle : BaseConstraint
+    public class FixedAngle
+        : BaseConstraint
     {
-
-        private float biasFactor = 0.05f;
-        private float softness;
-
-        private JMatrix orientation;
         private Vector3 accumulatedImpulse;
 
         /// <summary>
@@ -72,26 +68,20 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         public FixedAngle(RigidBody body1)
             : base(body1, null)
         {
-            orientation = body1.orientation;
+            InitialOrientation = body1.orientation;
         }
 
         /// <summary>
         /// Defines how big the applied impulses can get.
         /// </summary>
-        public float Softness { get => softness;
-            set => softness = value;
-        }
+        public float Softness { get; set; }
 
         /// <summary>
         /// Defines how big the applied impulses can get which correct errors.
         /// </summary>
-        public float BiasFactor { get => biasFactor;
-            set => biasFactor = value;
-        }
+        public float BiasFactor { get; set; } = 0.05f;
 
-        public JMatrix InitialOrientation { get => orientation;
-            set => orientation = value;
-        }
+        public JMatrix InitialOrientation { get; set; }
 
         private JMatrix effectiveMass;
         private Vector3 bias;
@@ -105,14 +95,14 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         {
             effectiveMass = Body1.invInertiaWorld;
 
-            softnessOverDt = softness / timestep;
+            softnessOverDt = Softness / timestep;
 
             effectiveMass.M11 += softnessOverDt;
             effectiveMass.M22 += softnessOverDt;
             effectiveMass.M33 += softnessOverDt;
 
             effectiveMass = effectiveMass.Inverse();
-            var q = JMatrix.Transpose(orientation) * Body1.orientation;
+            var q = JMatrix.Transpose(InitialOrientation) * Body1.orientation;
 
             var x = q.M32 - q.M23;
             var y = q.M13 - q.M31;
@@ -126,10 +116,11 @@ namespace Jitter.Dynamics.Constraints.SingleBody
 
             if (r != 0.0f) axis *= (1.0f / r);
 
-            bias = axis * biasFactor * (-1.0f / timestep);
+            bias = axis * BiasFactor * (-1.0f / timestep);
 
             // Apply previous frame solution as initial guess for satisfying the constraint.
-            if (!Body1.IsStatic) Body1.angularVelocity += accumulatedImpulse.Transform(Body1.invInertiaWorld);
+            if (!Body1.IsStatic)
+                Body1.angularVelocity += accumulatedImpulse.Transform(Body1.invInertiaWorld);
         }
 
         /// <summary>
@@ -145,7 +136,8 @@ namespace Jitter.Dynamics.Constraints.SingleBody
 
             accumulatedImpulse += lambda;
 
-            if (!Body1.IsStatic) Body1.angularVelocity += lambda.Transform(Body1.invInertiaWorld);
+            if (!Body1.IsStatic)
+                Body1.angularVelocity += lambda.Transform(Body1.invInertiaWorld);
         }
 
     }

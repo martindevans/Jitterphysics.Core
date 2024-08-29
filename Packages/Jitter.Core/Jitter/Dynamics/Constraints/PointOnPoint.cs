@@ -91,8 +91,8 @@ namespace Jitter.Dynamics.Constraints
             jacobian[3] = Vector3.Cross(r2, n);
 
             effectiveMass = Body1.inverseMass + Body2.inverseMass
-                + Vector3.Dot(jacobian[1].Transform(Body1.invInertiaWorld), jacobian[1])
-                                              + Vector3.Dot(jacobian[3].Transform(Body2.invInertiaWorld), jacobian[3]);
+                          + Vector3.Dot(jacobian[1].Transform(Body1.invInertiaWorld), jacobian[1])
+                          + Vector3.Dot(jacobian[3].Transform(Body2.invInertiaWorld), jacobian[3]);
 
             softnessOverDt = Softness / timestep;
             effectiveMass += softnessOverDt;

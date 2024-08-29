@@ -32,10 +32,6 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         private Vector3 r1;
 
         private Vector3 lineNormal;
-        private Vector3 anchor;
-
-        private float biasFactor = 0.5f;
-        private float softness;
 
         /// <summary>
         /// Initializes a new instance of the WorldLineConstraint.
@@ -51,7 +47,7 @@ namespace Jitter.Dynamics.Constraints.SingleBody
                 throw new ArgumentException("Line direction can't be zero", nameof(lineDirection));
 
             localAnchor1 = localAnchor;
-            anchor = body.position + localAnchor.Transform(body.orientation);
+            Anchor = body.position + localAnchor.Transform(body.orientation);
 
             lineNormal = lineDirection;
             lineNormal = Vector3.Normalize(lineNormal);
@@ -60,36 +56,37 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         /// <summary>
         /// The anchor point of the body in world space.
         /// </summary>
-        public Vector3 Anchor { get => anchor;
-            set => anchor = value;
-        }
+        public Vector3 Anchor { get; set; }
 
         /// <summary>
         /// The axis defining the line of the constraint.
         /// </summary>
-        public Vector3 Axis { get => lineNormal;
-            set { lineNormal = value; lineNormal = Vector3.Normalize(lineNormal); } }
+        public Vector3 Axis
+        {
+            get => lineNormal;
+            set
+            {
+                lineNormal = value;
+                lineNormal = Vector3.Normalize(lineNormal);
+            }
+        }
 
         /// <summary>
         /// Defines how big the applied impulses can get.
         /// </summary>
-        public float Softness { get => softness;
-            set => softness = value;
-        }
+        public float Softness { get; set; }
 
         /// <summary>
         /// Defines how big the applied impulses can get which correct errors.
         /// </summary>
-        public float BiasFactor { get => biasFactor;
-            set => biasFactor = value;
-        }
+        public float BiasFactor { get; set; } = 0.5f;
 
         private float effectiveMass;
         private float accumulatedImpulse;
         private float bias;
         private float softnessOverDt;
 
-        private Vector3[] jacobian = new Vector3[2];
+        private readonly Vector3[] jacobian = new Vector3[2];
 
         /// <summary>
         /// Called once before iteration starts.
@@ -99,14 +96,13 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         {
             r1 = localAnchor1.Transform(Body1.orientation);
 
-            Vector3 dp;
             var p1 = Body1.position + r1;
 
-            dp = p1 - anchor;
+            var dp = p1 - Anchor;
 
             var l = lineNormal;
 
-            var t = Vector3.Cross(p1 - anchor, l);
+            var t = Vector3.Cross(p1 - Anchor, l);
             if (t.LengthSquared() != 0.0f) t = Vector3.Normalize(t);
             t = Vector3.Cross(t, l);
 
@@ -116,12 +112,12 @@ namespace Jitter.Dynamics.Constraints.SingleBody
             effectiveMass = Body1.inverseMass
                 + Vector3.Dot(jacobian[1].Transform(Body1.invInertiaWorld), jacobian[1]);
 
-            softnessOverDt = softness / timestep;
+            softnessOverDt = Softness / timestep;
             effectiveMass += softnessOverDt;
 
             if (effectiveMass != 0) effectiveMass = 1.0f / effectiveMass;
 
-            bias = -Vector3.Cross(l, p1 - anchor).Length() * biasFactor * (1.0f / timestep);
+            bias = -Vector3.Cross(l, p1 - Anchor).Length() * BiasFactor * (1.0f / timestep);
 
             if (!Body1.IsStatic)
             {
@@ -155,7 +151,7 @@ namespace Jitter.Dynamics.Constraints.SingleBody
 
         public override void DebugDraw(IDebugDrawer drawer)
         {
-            drawer.DrawLine(anchor - lineNormal * 50.0f, anchor + lineNormal * 50.0f);
+            drawer.DrawLine(Anchor - lineNormal * 50.0f, Anchor + lineNormal * 50.0f);
             drawer.DrawLine(Body1.position, Body1.position + r1);
         }
 

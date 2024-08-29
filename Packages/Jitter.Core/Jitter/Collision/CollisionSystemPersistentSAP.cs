@@ -459,7 +459,7 @@ namespace Jitter.Collision
                         {
                             if (tempFraction < fraction)
                             {
-                                if (useTriangleMeshNormal && ms is TriangleMeshShape shape)
+                                if (UseTriangleMeshNormal && ms is TriangleMeshShape shape)
                                 {
                                     shape.CollisionNormal(out tempNormal);
                                     tempNormal = tempNormal.Transform(body.orientation);

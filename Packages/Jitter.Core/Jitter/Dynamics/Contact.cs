@@ -157,14 +157,17 @@ namespace Jitter.Dynamics
         /// <returns>The relative velocity of body contact points on the bodies.</returns>
         public Vector3 CalculateRelativeVelocity()
         {
-            var x = body2.angularVelocity.Y * relativePos2.Z - body2.angularVelocity.Z * relativePos2.Y + body2.linearVelocity.X;
-            var y = body2.angularVelocity.Z * relativePos2.X - body2.angularVelocity.X * relativePos2.Z + body2.linearVelocity.Y;
-            var z = body2.angularVelocity.X * relativePos2.Y - body2.angularVelocity.Y * relativePos2.X + body2.linearVelocity.Z;
+            var av1 = body1.AngularVelocity;
+            var av2 = body2.AngularVelocity;
+
+            var x = av2.Y * relativePos2.Z - av2.Z * relativePos2.Y + body2.linearVelocity.X;
+            var y = av2.Z * relativePos2.X - av2.X * relativePos2.Z + body2.linearVelocity.Y;
+            var z = av2.X * relativePos2.Y - av2.Y * relativePos2.X + body2.linearVelocity.Z;
 
             Vector3 relVel;
-            relVel.X = x - body1.angularVelocity.Y * relativePos1.Z + body1.angularVelocity.Z * relativePos1.Y - body1.linearVelocity.X;
-            relVel.Y = y - body1.angularVelocity.Z * relativePos1.X + body1.angularVelocity.X * relativePos1.Z - body1.linearVelocity.Y;
-            relVel.Z = z - body1.angularVelocity.X * relativePos1.Y + body1.angularVelocity.Y * relativePos1.X - body1.linearVelocity.Z;
+            relVel.X = x - av1.Y * relativePos1.Z + av1.Z * relativePos1.Y - body1.linearVelocity.X;
+            relVel.Y = y - av1.Z * relativePos1.X + av1.X * relativePos1.Z - body1.linearVelocity.Y;
+            relVel.Z = z - av1.X * relativePos1.Y + av1.Y * relativePos1.X - body1.linearVelocity.Z;
 
             return relVel;
         }
@@ -174,11 +177,8 @@ namespace Jitter.Dynamics
         /// </summary>
         public void Iterate()
         {
-            //body1.linearVelocity = default;
-            //body2.linearVelocity = default;
-            //return;
-
-            if (treatBody1AsStatic && treatBody2AsStatic) return;
+            if (treatBody1AsStatic && treatBody2AsStatic)
+                return;
 
             var dvx = body2.linearVelocity.X - body1.linearVelocity.X;
             var dvy = body2.linearVelocity.Y - body1.linearVelocity.Y;
@@ -200,7 +200,7 @@ namespace Jitter.Dynamics
 
             // this gets us some performance
             if (dvx * dvx + dvy * dvy + dvz * dvz < settings.MinimumVelocity * settings.MinimumVelocity)
-            { return; }
+                return;
 
             var vn = normal.X * dvx + normal.Y * dvy + normal.Z * dvz;
             var normalImpulse = massNormal * (-vn + restitutionBias + speculativeVelocity);
@@ -222,16 +222,11 @@ namespace Jitter.Dynamics
             tangentImpulse = accumulatedTangentImpulse - oldTangentImpulse;
 
             // Apply contact impulse
-            Vector3 impulse;
-            impulse.X = normal.X * normalImpulse + tangent.X * tangentImpulse;
-            impulse.Y = normal.Y * normalImpulse + tangent.Y * tangentImpulse;
-            impulse.Z = normal.Z * normalImpulse + tangent.Z * tangentImpulse;
+            var impulse = normal * normalImpulse + tangent * tangentImpulse;
 
             if (!treatBody1AsStatic)
             {
-                body1.linearVelocity.X -= impulse.X * body1.inverseMass;
-                body1.linearVelocity.Y -= impulse.Y * body1.inverseMass;
-                body1.linearVelocity.Z -= impulse.Z * body1.inverseMass;
+                body1.LinearVelocity -= impulse * body1.inverseMass;
 
                 if (!body1IsMassPoint)
                 {

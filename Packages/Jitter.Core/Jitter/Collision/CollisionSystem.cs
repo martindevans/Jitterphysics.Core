@@ -17,8 +17,6 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
-using System.Collections.Generic;
-
 using Jitter.Dynamics;
 using Jitter.LinearMath;
 using Jitter.Collision.Shapes;
@@ -44,8 +42,8 @@ namespace Jitter.Collision
     /// A delegate to inform the user that a pair of bodies passed the broadsphase
     /// system of the engine.
     /// </summary>
-    /// <param name="body1">The first body.</param>
-    /// <param name="body2">The second body.</param>
+    /// <param name="entity1">The first body.</param>
+    /// <param name="entity2">The second body.</param>
     /// <returns>If false is returned the collision information is dropped. The CollisionDetectedHandler
     /// is never called.</returns>
     public delegate bool PassedBroadphaseHandler(RigidBody entity1, RigidBody entity2);
@@ -101,10 +99,7 @@ namespace Jitter.Collision
         /// </summary>
         public event CollisionDetectedHandler CollisionDetected;
 
-        private bool speculativeContacts;
-        public bool EnableSpeculativeContacts { get => speculativeContacts;
-            set => speculativeContacts = value;
-        }
+        public bool EnableSpeculativeContacts { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the CollisionSystem.
@@ -113,22 +108,18 @@ namespace Jitter.Collision
         {
         }
 
-        internal bool useTriangleMeshNormal = true;
-
         /// <summary>
         /// If set to true the collision system uses the normal of
         /// the current colliding triangle as collision normal. This
         /// fixes unwanted behavior on triangle transitions.
         /// </summary>
-        public bool UseTriangleMeshNormal { get => useTriangleMeshNormal;
-            set => useTriangleMeshNormal = value;
-        }
-        
+        public bool UseTriangleMeshNormal { get; set; } = true;
+
         /// <summary>
         /// Checks two bodies for collisions using narrowphase.
         /// </summary>
-        /// <param name="body1">The first body.</param>
-        /// <param name="body2">The second body.</param>
+        /// <param name="entity1">The first body.</param>
+        /// <param name="entity2">The second body.</param>
         public virtual void Detect(RigidBody entity1, RigidBody entity2)
         {
             Debug.Assert(entity1 != entity2, "CollisionSystem reports selfcollision. Something is wrong.");
@@ -148,7 +139,7 @@ namespace Jitter.Collision
             var b1IsMulti = body1.Shape is Multishape;
             var b2IsMulti = body2.Shape is Multishape;
 
-            var speculative = speculativeContacts || body1.EnableSpeculativeContacts || body2.EnableSpeculativeContacts;
+            var speculative = EnableSpeculativeContacts || body1.EnableSpeculativeContacts || body2.EnableSpeculativeContacts;
 
             Vector3 point, normal;
             float penetration;
@@ -185,8 +176,8 @@ namespace Jitter.Collision
             }
             else if (b1IsMulti && b2IsMulti)
             {
-                var ms1 = body1.Shape as Multishape;
-                var ms2 = body2.Shape as Multishape;
+                var ms1 = (Multishape)body1.Shape;
+                var ms2 = (Multishape)body2.Shape;
 
                 ms1 = ms1.RequestWorkingClone();
                 ms2 = ms2.RequestWorkingClone();
@@ -257,7 +248,7 @@ namespace Jitter.Collision
                 if (body2.Shape is Multishape) { b1 = body2; b2 = body1; }
                 else { b2 = body2; b1 = body1; }
 
-                var ms = b1.Shape as Multishape;
+                var ms = (Multishape)b1.Shape;
 
                 ms = ms.RequestWorkingClone();
 
@@ -282,7 +273,7 @@ namespace Jitter.Collision
                     {
                         FindSupportPoints(b1, b2, ms, b2.Shape, ref point, ref normal, out var point1, out var point2);
 
-                        if (useTriangleMeshNormal && ms is TriangleMeshShape)
+                        if (UseTriangleMeshNormal && ms is TriangleMeshShape)
                         {
                             (ms as TriangleMeshShape).CollisionNormal(out normal);
                             normal = normal.Transform(b1.orientation);

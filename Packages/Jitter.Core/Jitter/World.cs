@@ -128,12 +128,12 @@ namespace Jitter
         private float inactiveLinearThresholdSq = 0.1f;
         private float deactivationTime = 2f;
 
-        private float angularDamping = 0.85f;
-        private float linearDamping = 0.85f;
+        private float _angularDamping = 0.85f;
+        private float _linearDamping = 0.85f;
 
         private int contactIterations = 10;
         private int smallIterations = 4;
-        private float timestep;
+        private float _timestep;
 
         private readonly IslandManager islands = new();
 
@@ -263,14 +263,14 @@ namespace Jitter
         /// The default value is 0.85</param>
         public void SetDampingFactors(float angularDamping, float linearDamping)
         {
-            if (angularDamping < 0.0f || angularDamping > 1.0f)
+            if (angularDamping is < 0.0f or > 1.0f)
                 throw new ArgumentException("Angular damping factor has to be between 0.0 and 1.0", nameof(angularDamping));
 
-            if (linearDamping < 0.0f || linearDamping > 1.0f)
+            if (linearDamping is < 0.0f or > 1.0f)
                 throw new ArgumentException("Linear damping factor has to be between 0.0 and 1.0", nameof(linearDamping));
 
-            this.angularDamping = angularDamping;
-            this.linearDamping = linearDamping;
+            _angularDamping = angularDamping;
+            _linearDamping = linearDamping;
         }
 
         /// <summary>
@@ -289,14 +289,14 @@ namespace Jitter
         /// <param name="time">The threshold value for the time in seconds. The default value is 2.</param>
         public void SetInactivityThreshold(float angularVelocity, float linearVelocity, float time)
         {
-            if (angularVelocity < 0.0f) throw new ArgumentException("Angular velocity threshold has to " +
-                 "be larger than zero", nameof(angularVelocity));
+            if (angularVelocity < 0.0f)
+                throw new ArgumentException("Angular velocity threshold has to be larger than zero", nameof(angularVelocity));
 
-            if (linearVelocity < 0.0f) throw new ArgumentException("Linear velocity threshold has to " +
-                "be larger than zero", nameof(linearVelocity));
+            if (linearVelocity < 0.0f)
+                throw new ArgumentException("Linear velocity threshold has to be larger than zero", nameof(linearVelocity));
 
-            if (time < 0.0f) throw new ArgumentException("Deactivation time threshold has to " +
-                "be larger than zero", nameof(time));
+            if (time < 0.0f)
+                throw new ArgumentException("Deactivation time threshold has to be larger than zero", nameof(time));
 
             inactiveAngularThresholdSq = angularVelocity * angularVelocity;
             inactiveLinearThresholdSq = linearVelocity * linearVelocity;
@@ -304,7 +304,7 @@ namespace Jitter
         }
 
         /// <summary>
-        /// Jitter uses an iterativ approach to solve collisions and contacts. You can set the number of
+        /// Jitter uses an iterative approach to solve collisions and contacts. You can set the number of
         /// iterations Jitter should do. In general the more iterations the more stable a simulation gets
         /// but also costs computation time.
         /// </summary>
@@ -422,12 +422,12 @@ namespace Jitter
             CollisionDetect, BuildIslands, HandleArbiter, UpdateContacts,
             PreStep, DeactivateBodies, IntegrateForces, Integrate, PostStep, Num
         }
-        
+
         /// <summary>
-        /// Time in ms for every part of the <see cref="Step"/> method.
+        /// Time in ms for every part of the <see cref="Step(float)"/> method.
         /// </summary>
         /// <example>int time = DebugTimes[(int)DebugType.CollisionDetect] gives
-        /// the amount of time spent on collision detection during the last <see cref="Step"/>.
+        /// the amount of time spent on collision detection during the last <see cref="Step(float)"/>.
         /// </example>
         private readonly double[] debugTimes = new double[(int)DebugType.Num];
         public IReadOnlyList<double> DebugTimes => debugTimes;
@@ -441,17 +441,16 @@ namespace Jitter
         /// (timestep=1/60).</param>
         public void Step(float timestep)
         {
-            this.timestep = timestep;
+            _timestep = timestep;
 
-            // yeah! nothing to do!
-            if (timestep == 0.0f) return;
-
-            // throw exception if the timestep is smaller zero.
-            if (timestep < 0.0f) throw new ArgumentException("The timestep can't be negative.", nameof(timestep));
+            if (timestep == 0.0f)
+                return;
+            if (timestep < 0.0f)
+                throw new ArgumentException("The timestep can't be negative.", nameof(timestep));
 
             // Calculate this
-            currentAngularDampFactor = (float)Math.Pow(angularDamping, timestep);
-            currentLinearDampFactor = (float)Math.Pow(linearDamping, timestep);
+            currentAngularDampFactor = (float)Math.Pow(_angularDamping, timestep);
+            currentLinearDampFactor = (float)Math.Pow(_linearDamping, timestep);
 
             sw.Reset(); sw.Start();
             Events.RaiseWorldPreStep(timestep);
@@ -612,7 +611,7 @@ namespace Jitter
                     for (var e = 0; e < contactCount; e++)
                     {
                         if (i == -1)
-                            arbiter.ContactList[e].PrepareForIteration(timestep);
+                            arbiter.ContactList[e].PrepareForIteration(_timestep);
                         else
                             arbiter.ContactList[e].Iterate();
                     }
@@ -625,7 +624,7 @@ namespace Jitter
                         continue;
 
                     if (i == -1)
-                        c.PrepareForIteration(timestep);
+                        c.PrepareForIteration(_timestep);
                     else
                         c.Iterate();
                 }
@@ -646,19 +645,19 @@ namespace Jitter
             {
                 if (!body.IsStatic && body.IsActive)
                 {
-                    var scaleFactor = body.inverseMass * timestep;
+                    var scaleFactor = body.inverseMass * _timestep;
                     body.linearVelocity = body.AccumulatedForce * scaleFactor + body.LinearVelocity;
 
                     if (!body.IsParticle)
                     {
-                        var temp = body.AccumulatedTorque * timestep;
+                        var temp = body.AccumulatedTorque * _timestep;
                         temp = temp.Transform(body.invInertiaWorld);
                         body.AngularVelocity = temp + body.AngularVelocity;
                     }
 
                     if (body.AffectedByGravity)
                     {
-                        var temp = gravity * timestep;
+                        var temp = gravity * _timestep;
                         body.LinearVelocity += temp;
                     }
                 }
@@ -671,30 +670,30 @@ namespace Jitter
 
         private void IntegrateCallback(RigidBody body)
         {
-            body.Position = body.LinearVelocity * timestep + body.Position;
+            body.Position = body.LinearVelocity * _timestep + body.Position;
 
             if (!body.IsParticle)
             {
 
                 //exponential map
                 Vector3 axis;
-                var angle = body.angularVelocity.Length();
+                var angle = body.AngularVelocity.Length();
 
                 if (angle < 0.001f)
                 {
                     // use Taylor's expansions of sync function
                     // axis = body.angularVelocity * (0.5f * timestep - (timestep * timestep * timestep) * (0.020833333333f) * angle * angle);
-                    var scaleFactor = 0.5f * timestep - MathF.Pow(timestep, 3) * 0.020833333333f * MathF.Pow(angle, 2);
-                    axis = body.angularVelocity * scaleFactor;
+                    var scaleFactor = 0.5f * _timestep - MathF.Pow(_timestep, 3) * 0.020833333333f * MathF.Pow(angle, 2);
+                    axis = body.AngularVelocity * scaleFactor;
                 }
                 else
                 {
                     // sync(fAngle) = sin(c*fAngle)/t
-                    var scaleFactor = MathF.Sin(0.5f * angle * timestep) / angle;
-                    axis = body.angularVelocity * scaleFactor;
+                    var scaleFactor = MathF.Sin(0.5f * angle * _timestep) / angle;
+                    axis = body.AngularVelocity * scaleFactor;
                 }
 
-                var dorn = new Quaternion(axis.X, axis.Y, axis.Z, (float)Math.Cos(angle * timestep * 0.5f));
+                var dorn = new Quaternion(axis.X, axis.Y, axis.Z, (float)Math.Cos(angle * _timestep * 0.5f));
 
                 var ornA = body.orientation.ToQuaternion();
                 dorn = Quaternion.Multiply(dorn, ornA);
@@ -713,7 +712,7 @@ namespace Jitter
 
             
             if (CollisionSystem.EnableSpeculativeContacts || body.EnableSpeculativeContacts)
-                body.SweptExpandBoundingBox(timestep);
+                body.SweptExpandBoundingBox(_timestep);
         }
 
 
@@ -782,11 +781,10 @@ namespace Jitter
                 {
                     foreach (var body in island.bodies)
                     {
-                        // body allowdeactivation
-                        if (body.AllowDeactivation && body.angularVelocity.LengthSquared() < inactiveAngularThresholdSq &&
+                        if (body.AllowDeactivation && body.AngularVelocity.LengthSquared() < inactiveAngularThresholdSq &&
                             body.linearVelocity.LengthSquared() < inactiveLinearThresholdSq)
                         {
-                            body.inactiveTime += timestep;
+                            body.inactiveTime += _timestep;
                             if (body.inactiveTime < deactivationTime)
                                 deactivateIsland = false;
                         }

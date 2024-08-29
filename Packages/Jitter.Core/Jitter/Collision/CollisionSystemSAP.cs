@@ -204,7 +204,7 @@ namespace Jitter.Collision
                         {
                             if (tempFraction < fraction)
                             {
-                                if (useTriangleMeshNormal && tms != null)
+                                if (UseTriangleMeshNormal && tms != null)
                                 {
                                     tms.CollisionNormal(out tempNormal);
                                     tempNormal = tempNormal.Transform(body.orientation);

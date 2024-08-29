@@ -22,8 +22,8 @@ using Jitter.LinearMath;
 
 namespace Jitter.Dynamics.Constraints.SingleBody
 {
-
-    public class PointOnPoint : BaseConstraint
+    public class PointOnPoint
+        : BaseConstraint
     {
         private Vector3 localAnchor1;
         private Vector3 anchor;
@@ -110,8 +110,8 @@ namespace Jitter.Dynamics.Constraints.SingleBody
 
             if (!Body1.IsStatic)
             {
-                Body1.linearVelocity += Body1.inverseMass * accumulatedImpulse * jacobian[0];
-                Body1.angularVelocity += (accumulatedImpulse * jacobian[1]).Transform(Body1.invInertiaWorld);
+                Body1.LinearVelocity += Body1.inverseMass * accumulatedImpulse * jacobian[0];
+                Body1.AngularVelocity += (accumulatedImpulse * jacobian[1]).Transform(Body1.invInertiaWorld);
             }
         }
 
@@ -120,9 +120,7 @@ namespace Jitter.Dynamics.Constraints.SingleBody
         /// </summary>
         public override void Iterate()
         {
-            var jv =
-                Vector3.Dot(Body1.linearVelocity, jacobian[0]) +
-                Vector3.Dot(Body1.angularVelocity, jacobian[1]);
+            var jv = Vector3.Dot(Body1.LinearVelocity, jacobian[0]) + Vector3.Dot(Body1.AngularVelocity, jacobian[1]);
 
             var softnessScalar = accumulatedImpulse * softnessOverDt;
 
@@ -132,8 +130,8 @@ namespace Jitter.Dynamics.Constraints.SingleBody
 
             if (!Body1.IsStatic)
             {
-                Body1.linearVelocity += Body1.inverseMass * lambda * jacobian[0];
-                Body1.angularVelocity += (lambda * jacobian[1]).Transform(Body1.invInertiaWorld);
+                Body1.LinearVelocity += Body1.inverseMass * lambda * jacobian[0];
+                Body1.AngularVelocity += (lambda * jacobian[1]).Transform(Body1.invInertiaWorld);
             }
         }
 

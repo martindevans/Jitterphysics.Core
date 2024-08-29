@@ -417,7 +417,6 @@ namespace Jitter.Dynamics
             }
         }
 
-        // TODO: check here is static!
         /// <summary>
         /// The angular velocity of the body.
         /// </summary>
