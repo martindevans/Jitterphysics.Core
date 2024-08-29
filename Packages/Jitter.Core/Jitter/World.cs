@@ -597,10 +597,8 @@ namespace Jitter
 
         }
 
-        private void ArbiterCallback(object obj)
+        private void ArbiterCallback(CollisionIsland island)
         {
-            var island = (CollisionIsland)obj;
-
             var thisIterations = island.Bodies.Count + island.Constraints.Count > 3
                                ? contactIterations
                                : smallIterations;
@@ -613,19 +611,23 @@ namespace Jitter
                     var contactCount = arbiter.ContactList.Count;
                     for (var e = 0; e < contactCount; e++)
                     {
-                        if (i == -1) arbiter.ContactList[e].PrepareForIteration(timestep);
-                        else arbiter.ContactList[e].Iterate();
+                        if (i == -1)
+                            arbiter.ContactList[e].PrepareForIteration(timestep);
+                        else
+                            arbiter.ContactList[e].Iterate();
                     }
                 }
 
                 //  Constraints
                 foreach (var c in island.constraints)
                 {
-                    if (c.Body1 != null && !c.Body1.IsActive && c.Body2 != null && !c.Body2.IsActive)
+                    if (c.Body1 is { IsActive: false } && c.Body2 is { IsActive: false })
                         continue;
 
-                    if (i == -1) c.PrepareForIteration(timestep);
-                    else c.Iterate();
+                    if (i == -1)
+                        c.PrepareForIteration(timestep);
+                    else
+                        c.Iterate();
                 }
 
             }
@@ -645,20 +647,19 @@ namespace Jitter
                 if (!body.IsStatic && body.IsActive)
                 {
                     var scaleFactor = body.inverseMass * timestep;
-                    var temp = body.AccumulatedForce * scaleFactor;
-                    body.linearVelocity = temp + body.linearVelocity;
+                    body.linearVelocity = body.AccumulatedForce * scaleFactor + body.LinearVelocity;
 
                     if (!body.IsParticle)
                     {
-                        temp = body.AccumulatedTorque * timestep;
+                        var temp = body.AccumulatedTorque * timestep;
                         temp = temp.Transform(body.invInertiaWorld);
-                        body.angularVelocity = temp + body.angularVelocity;
+                        body.AngularVelocity = temp + body.AngularVelocity;
                     }
 
                     if (body.AffectedByGravity)
                     {
-                        temp = gravity * timestep;
-                        body.linearVelocity += temp;
+                        var temp = gravity * timestep;
+                        body.LinearVelocity += temp;
                     }
                 }
 
@@ -668,12 +669,9 @@ namespace Jitter
             }
         }
 
-        private void IntegrateCallback(object obj)
+        private void IntegrateCallback(RigidBody body)
         {
-            var body = (RigidBody)obj;
-
-            var temp = body.linearVelocity * timestep;
-            body.position = temp + body.position;
+            body.Position = body.LinearVelocity * timestep + body.Position;
 
             if (!body.IsParticle)
             {
@@ -686,13 +684,13 @@ namespace Jitter
                 {
                     // use Taylor's expansions of sync function
                     // axis = body.angularVelocity * (0.5f * timestep - (timestep * timestep * timestep) * (0.020833333333f) * angle * angle);
-                    var scaleFactor = 0.5f * timestep - timestep * timestep * timestep * 0.020833333333f * angle * angle;
+                    var scaleFactor = 0.5f * timestep - MathF.Pow(timestep, 3) * 0.020833333333f * MathF.Pow(angle, 2);
                     axis = body.angularVelocity * scaleFactor;
                 }
                 else
                 {
                     // sync(fAngle) = sin(c*fAngle)/t
-                    var scaleFactor = (float)Math.Sin(0.5f * angle * timestep) / angle;
+                    var scaleFactor = MathF.Sin(0.5f * angle * timestep) / angle;
                     axis = body.angularVelocity * scaleFactor;
                 }
 
@@ -706,10 +704,10 @@ namespace Jitter
             }
 
             if ((body.Damping & RigidBody.DampingType.Linear) != 0)
-                body.linearVelocity *= currentLinearDampFactor;
+                body.LinearVelocity *= currentLinearDampFactor;
 
             if ((body.Damping & RigidBody.DampingType.Angular) != 0)
-                body.angularVelocity *= currentAngularDampFactor;
+                body.AngularVelocity *= currentAngularDampFactor;
 
             body.Update();
 
@@ -724,7 +722,8 @@ namespace Jitter
             {
                 foreach (var body in rigidBodies)
                 {
-                    if (body.IsStatic || !body.IsActive) continue;
+                    if (body.IsStatic || !body.IsActive)
+                        continue;
                     IntegrateCallback(body);
                 }
             }
@@ -775,7 +774,10 @@ namespace Jitter
                 var deactivateIsland = true;
 
                 // global allowdeactivation
-                if (!AllowDeactivation) deactivateIsland = false;
+                if (!AllowDeactivation)
+                {
+                    deactivateIsland = false;
+                }
                 else
                 {
                     foreach (var body in island.bodies)

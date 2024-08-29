@@ -55,21 +55,9 @@ namespace Jitter.Collision
                 get
                 {
                     if (Begin)
-                    {
-                        return Axis switch
-                        {
-                            0 => Body.BoundingBox.Min.X,
-                            1 => Body.BoundingBox.Min.Y,
-                            _ => Body.BoundingBox.Min.Z
-                        };
-                    }
-
-                    return Axis switch
-                    {
-                        0 => Body.BoundingBox.Max.X,
-                        1 => Body.BoundingBox.Max.Y,
-                        _ => Body.BoundingBox.Max.Z
-                    };
+                        return Body.BoundingBox.Min.Element(Axis);
+                    else
+                        return Body.BoundingBox.Max.Element(Axis);
                 }
             }
 

@@ -557,8 +557,8 @@ namespace Jitter.Dynamics
             else
             {
                 // Given: Orientation, Inertia
-                JMatrix.Transpose(ref orientation, out invOrientation);
-                boundingBox = Shape.GetBoundingBox(orientation);
+                invOrientation = JMatrix.Transpose(Orientation);
+                boundingBox = Shape.GetBoundingBox(Orientation);
                 boundingBox.Min += position;
                 boundingBox.Max += position;
 

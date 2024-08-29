@@ -17,6 +17,7 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
+using System;
 using System.Numerics;
 
 namespace Jitter.LinearMath
@@ -95,6 +96,17 @@ namespace Jitter.LinearMath
             var num2 = position.X * matrix.M31 + position.Y * matrix.M32 + position.Z * matrix.M33;
 
             return new(num0, num1, num2);
+        }
+
+        public static float Element(this Vector3 vector, int axis)
+        {
+            return axis switch
+            {
+                0 => vector.X,
+                1 => vector.Y,
+                2 => vector.Z,
+                _ => throw new ArgumentOutOfRangeException(nameof(axis), axis, null)
+            };
         }
     }
 }
