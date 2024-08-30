@@ -69,24 +69,24 @@ namespace Jitter.Dynamics.Joints
         public override void Activate()
         {
             if (MaximumDistanceConstraint != null)
-                World.AddConstraint(MaximumDistanceConstraint);
+                World.Add(MaximumDistanceConstraint);
             if (MinimumDistanceConstraint != null)
-                World.AddConstraint(MinimumDistanceConstraint);
+                World.Add(MinimumDistanceConstraint);
 
-            World.AddConstraint(FixedAngleConstraint);
-            World.AddConstraint(PointOnLineConstraint);
+            World.Add(FixedAngleConstraint);
+            World.Add(PointOnLineConstraint);
         }
 
         /// <inheritdoc />
         public override void Deactivate()
         {
             if (MaximumDistanceConstraint != null)
-                World.RemoveConstraint(MaximumDistanceConstraint);
+                World.Remove(MaximumDistanceConstraint);
             if (MinimumDistanceConstraint != null)
-                World.RemoveConstraint(MinimumDistanceConstraint);
+                World.Remove(MinimumDistanceConstraint);
 
-            World.RemoveConstraint(FixedAngleConstraint);
-            World.RemoveConstraint(PointOnLineConstraint);
+            World.Remove(FixedAngleConstraint);
+            World.Remove(PointOnLineConstraint);
         }
     }
 }

@@ -17,6 +17,8 @@
 *  3. This notice may not be removed or altered from any source distribution. 
 */
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -48,23 +50,23 @@ namespace Jitter
         public class WorldEvents
         {
             // Post&Prestep
-            public event WorldStep PreStep;
-            public event WorldStep PostStep;
+            public event WorldStep? PreStep;
+            public event WorldStep? PostStep;
 
             // Add&Remove
-            public event Action<RigidBody> AddedRigidBody;
-            public event Action<RigidBody> RemovedRigidBody;
-            public event Action<BaseConstraint> AddedConstraint;
-            public event Action<BaseConstraint> RemovedConstraint;
+            public event Action<RigidBody>? AddedRigidBody;
+            public event Action<RigidBody>? RemovedRigidBody;
+            public event Action<BaseConstraint>? AddedConstraint;
+            public event Action<BaseConstraint>? RemovedConstraint;
 
             // Collision
-            public event Action<RigidBody, RigidBody> BodiesBeginCollide;
-            public event Action<RigidBody, RigidBody> BodiesEndCollide;
-            public event Action<Contact> ContactCreated;
+            public event Action<RigidBody, RigidBody>? BodiesBeginCollide;
+            public event Action<RigidBody, RigidBody>? BodiesEndCollide;
+            public event Action<Contact>? ContactCreated;
 
             // Deactivation
-            public event Action<RigidBody> DeactivatedBody;
-            public event Action<RigidBody> ActivatedBody;
+            public event Action<RigidBody>? DeactivatedBody;
+            public event Action<RigidBody>? ActivatedBody;
 
             internal WorldEvents() { }
 
@@ -124,24 +126,15 @@ namespace Jitter
             }
         }
 
-        private float inactiveAngularThresholdSq = 0.1f;
-        private float inactiveLinearThresholdSq = 0.1f;
-        private float deactivationTime = 2f;
-
-        private float _angularDamping = 0.85f;
-        private float _linearDamping = 0.85f;
-
-        private int contactIterations = 10;
-        private int smallIterations = 4;
         private float _timestep;
 
-        private readonly IslandManager islands = new();
+        private readonly IslandManager _islands = new();
 
-        private readonly HashSet<RigidBody> rigidBodies = new();
-        public IReadOnlyCollection<RigidBody> RigidBodies => rigidBodies;
+        private readonly HashSet<RigidBody> _bodies = new();
+        public IReadOnlyCollection<RigidBody> RigidBodies => _bodies;
 
-        private readonly HashSet<BaseConstraint> constraints = new();
-        public IReadOnlyCollection<BaseConstraint> Constraints => constraints;
+        private readonly HashSet<BaseConstraint> _constraints = new();
+        public IReadOnlyCollection<BaseConstraint> Constraints => _constraints;
 
         public WorldEvents Events { get; } = new();
 
@@ -160,7 +153,7 @@ namespace Jitter
         /// Gets a read only collection of the <see cref="Jitter.Collision.CollisionIsland"/> objects managed by
         /// this class.
         /// </summary>
-        public ReadOnlyCollection<CollisionIsland> Islands => islands.Readonly;
+        public ReadOnlyCollection<CollisionIsland> Islands => _islands.Readonly;
 
         /// <summary>
         /// Gets the <see cref="CollisionSystem"/> used
@@ -175,8 +168,9 @@ namespace Jitter
 
         /// <summary>
         /// Global sets or gets if a body is able to be temporarily deactivated by the engine to
-        /// save computation time. Use <see cref="SetInactivityThreshold"/> to set parameters
-        /// of the deactivation process.
+        /// save computation time. Use <see cref="DeactivationAngularVelocityThreshold"/>,
+        /// <see cref="DeactivationLinearVelocityThreshold"/> and <see cref="DeactivationTime"/> to
+        /// set parameters of the deactivation process.
         /// </summary>
         public bool AllowDeactivation { get; set; } = true;
 
@@ -200,11 +194,206 @@ namespace Jitter
         /// Calling this method removes all cached objects from all
         /// stacks.
         /// </summary>
-        public void ResetResourcePools()
+        public static void ClearResourcePools()
         {
             IslandManager.Pool.ResetResourcePool();
             Arbiter.ResetResourcePool();
             Contact.Pool.ResetResourcePool();
+        }
+
+        #region damping
+        private float _angularDamping = 0.85f;
+        private float _linearDamping = 0.85f;
+
+        /// <summary>
+        /// Factor to reduce linear velocity by every second
+        /// </summary>
+        public float LinearDampingFactor
+        {
+            get => _linearDamping;
+            set
+            {
+                if (value is < 0.0f or > 1.0f)
+                    throw new ArgumentException("Linear damping factor must be between 0.0 and 1.0", nameof(value));
+                _linearDamping = value;
+            }
+        }
+
+        /// <summary>
+        /// Factor to reduce angular velocity by every second
+        /// </summary>
+        public float AngularDampingFactor
+        {
+            get => _angularDamping;
+            set
+            {
+                if (value is < 0.0f or > 1.0f)
+                    throw new ArgumentException("Angular damping factor must be between 0.0 and 1.0", nameof(value));
+                _angularDamping = value;
+            }
+        }
+        #endregion
+
+        #region deactivation
+        private float _deactivationTime = 2f;
+        private float _inactiveLinearThreshold = 0.3f;
+        private float _inactiveAngularThreshold = 0.3f;
+
+        /// <summary>
+        /// A body will be deactivated if it's angular velocity and linear velocity are below the thresholds for this amount of time.
+        /// </summary>
+        public float DeactivationTime
+        {
+            get => _deactivationTime;
+            set
+            {
+                if (value < 0.0f)
+                    throw new ArgumentException("Deactivation time threshold must be greater than or equal to zero", nameof(value));
+                _deactivationTime = value;
+            }
+        }
+        
+        /// <summary>
+        /// A body will be deactivated if it's linear velocity is below this threshold for the <see cref="DeactivationTime"/>
+        /// </summary>
+        public float DeactivationLinearVelocityThreshold
+        {
+            get => _inactiveLinearThreshold;
+            set
+            {
+                if (value < 0.0f)
+                    throw new ArgumentException("Deactivation linear velocity threshold must be greater than or equal to zero", nameof(value));
+                _inactiveLinearThreshold = value;
+            }
+        }
+
+        /// <summary>
+        /// A body will be deactivated if it's angular velocity is below this threshold for the <see cref="DeactivationTime"/>
+        /// </summary>
+        public float DeactivationAngularVelocityThreshold
+        {
+            get => _inactiveAngularThreshold;
+            set
+            {
+                if (value < 0.0f)
+                    throw new ArgumentException("Deactivation angular velocity threshold must be greater than or equal to zero", nameof(value));
+                _inactiveAngularThreshold = value;
+            }
+        }
+        #endregion
+
+        #region iterations
+        private int _contactIterations = 10;
+        private int _smallIterations = 4;
+
+        /// <summary>
+        /// Number of contacts iterations. More iterations leads to a more stable simulation but is computationally more expensive.
+        /// As a guide, the value should be around 3 to 30.
+        /// </summary>
+        public int ContactIterations
+        {
+            get => _contactIterations;
+            set
+            {
+                if (value <= 0)
+                    throw new ArgumentException("The number of contact iterations must be larger than zero", nameof(value));
+                _contactIterations = value;
+            }
+        }
+
+        /// <summary>
+        /// Number of contacts iterations to use for smaller (two and three constraint) systems.
+        /// More iterations leads to a more stable simulation but is computationally more expensive.
+        /// As a guide, the value should be around 3 to 30.
+        /// </summary>
+        public int SmallIterations
+        {
+            get => _smallIterations;
+            set
+            {
+                if (value <= 0)
+                    throw new ArgumentException("The number of small contact iterations must be larger than zero", nameof(value));
+                _smallIterations = value;
+            }
+        }
+        #endregion
+
+        #region Add/Remove
+        /// <summary>
+        /// Adds a <see cref="RigidBody"/> to the world.
+        /// </summary>
+        /// <param name="body">The body which should be added.</param>
+        public void Add(RigidBody body)
+        {
+            if (body == null)
+                throw new ArgumentNullException(nameof(body), "body can't be null.");
+            if (_bodies.Contains(body))
+                throw new ArgumentException("The body was already added to the world.", nameof(body));
+
+            Events.RaiseAddedRigidBody(body);
+
+            CollisionSystem.AddEntity(body);
+
+            _bodies.Add(body);
+        }
+
+        public bool Remove(RigidBody body)
+        {
+            // remove the body from the world list
+            if (!_bodies.Remove(body))
+                return false;
+
+            // Remove all connected constraints and arbiters
+            foreach (var arbiter in body.arbiters)
+            {
+                ArbiterMap.Remove(arbiter);
+                Events.RaiseBodiesEndCollide(arbiter.Body1, arbiter.Body2);
+            }
+
+            foreach (var constraint in body.constraints)
+            {
+                _constraints.Remove(constraint);
+                Events.RaiseRemovedConstraint(constraint);
+            }
+
+            // remove the body from the collision system
+            CollisionSystem.RemoveEntity(body);
+
+            // remove the body from the island manager
+            _islands.RemoveBody(body);
+
+            Events.RaiseRemovedRigidBody(body);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Add a <see cref="BaseConstraint"/> to the world.
+        /// </summary>
+        /// <param name="constraint">The constraint which should be removed.</param>
+        public void Add(BaseConstraint constraint)
+        {
+            if (!_constraints.Add(constraint))
+                throw new ArgumentException("The constraint was already added to the world.", nameof(constraint));
+
+            _islands.ConstraintCreated(constraint);
+            Events.RaiseAddedConstraint(constraint);
+        }
+
+        /// <summary>
+        /// Add a <see cref="BaseConstraint"/> to the world. Fast, O(1).
+        /// </summary>
+        /// <param name="constraint">The constraint which should be added.</param>
+        /// <returns>True if the constraint was successfully removed.</returns>
+        public bool Remove(BaseConstraint constraint)
+        {
+            if (!_constraints.Remove(constraint))
+                return false;
+
+            Events.RaiseRemovedConstraint(constraint);
+            _islands.ConstraintRemoved(constraint);
+
+            return true;
         }
 
         /// <summary>
@@ -213,7 +402,7 @@ namespace Jitter
         public void Clear()
         {
             // remove bodies from collision system
-            foreach (var body in rigidBodies)
+            foreach (var body in _bodies)
             {
                 CollisionSystem.RemoveEntity(body);
 
@@ -231,172 +420,22 @@ namespace Jitter
             }
 
             // remove bodies from the world
-            rigidBodies.Clear();
+            _bodies.Clear();
 
             // remove constraints
-            foreach (var constraint in constraints)
-            {
+            foreach (var constraint in _constraints)
                 Events.RaiseRemovedConstraint(constraint);
-            }
-            constraints.Clear();
+            _constraints.Clear();
 
             // remove all islands
-            islands.RemoveAll();
+            _islands.RemoveAll();
 
             // delete the arbiters
             ArbiterMap.Clear();
         }
+        #endregion
 
-        /// <summary>
-        /// Every computation <see cref="Step(float)"/> the angular and linear velocity 
-        /// of a <see cref="RigidBody"/> gets multiplied by this value.
-        /// </summary>
-        /// <param name="angularDamping">The factor multiplied with the angular velocity.
-        /// The default value is 0.85.</param>
-        /// <param name="linearDamping">The factor multiplied with the linear velocity.
-        /// The default value is 0.85</param>
-        public void SetDampingFactors(float angularDamping, float linearDamping)
-        {
-            if (angularDamping is < 0.0f or > 1.0f)
-                throw new ArgumentException("Angular damping factor has to be between 0.0 and 1.0", nameof(angularDamping));
-
-            if (linearDamping is < 0.0f or > 1.0f)
-                throw new ArgumentException("Linear damping factor has to be between 0.0 and 1.0", nameof(linearDamping));
-
-            _angularDamping = angularDamping;
-            _linearDamping = linearDamping;
-        }
-
-        /// <summary>
-        /// Sets parameters for the <see cref="RigidBody"/> deactivation process.
-        /// If the bodies angular velocity is less than the angular velocity threshold
-        /// and its linear velocity is lower then the linear velocity threshold for a 
-        /// specific time the body gets deactivated. A body can be reactivated by setting
-        /// <see cref="RigidBody.IsActive"/> to true. A body gets also automatically
-        /// reactivated if another moving object hits it or the <see cref="CollisionIsland"/>
-        /// the object is in gets activated.
-        /// </summary>
-        /// <param name="angularVelocity">The threshold value for the angular velocity. The default value
-        /// is 0.1.</param>
-        /// <param name="linearVelocity">The threshold value for the linear velocity. The default value
-        /// is 0.1</param>
-        /// <param name="time">The threshold value for the time in seconds. The default value is 2.</param>
-        public void SetInactivityThreshold(float angularVelocity, float linearVelocity, float time)
-        {
-            if (angularVelocity < 0.0f)
-                throw new ArgumentException("Angular velocity threshold has to be larger than zero", nameof(angularVelocity));
-
-            if (linearVelocity < 0.0f)
-                throw new ArgumentException("Linear velocity threshold has to be larger than zero", nameof(linearVelocity));
-
-            if (time < 0.0f)
-                throw new ArgumentException("Deactivation time threshold has to be larger than zero", nameof(time));
-
-            inactiveAngularThresholdSq = angularVelocity * angularVelocity;
-            inactiveLinearThresholdSq = linearVelocity * linearVelocity;
-            deactivationTime = time;
-        }
-
-        /// <summary>
-        /// Jitter uses an iterative approach to solve collisions and contacts. You can set the number of
-        /// iterations Jitter should do. In general the more iterations the more stable a simulation gets
-        /// but also costs computation time.
-        /// </summary>
-        /// <param name="iterations">The number of contact iterations. Default value 10.</param>
-        /// <param name="smallIterations">The number of contact iteration used for smaller (two and three constraint) systems. Default value 4.</param>
-        /// <remarks>The number of iterations for collision and contact should be between 3 - 30.
-        /// More iterations means more stability and also a longer calculation time.</remarks>
-        public void SetIterations(int iterations, int smallIterations)
-        {
-            if (iterations < 1) throw new ArgumentException("The number of collision " +
-                 "iterations has to be larger than zero", nameof(iterations));
-
-            if (smallIterations < 1) throw new ArgumentException("The number of collision " +
-                "iterations has to be larger than zero", nameof(smallIterations));
-
-            contactIterations = iterations;
-            this.smallIterations = smallIterations;
-        }
-
-        public bool RemoveBody(RigidBody body)
-        {
-            // remove the body from the world list
-            if (!rigidBodies.Remove(body))
-                return false;
-
-            // Remove all connected constraints and arbiters
-            foreach (var arbiter in body.arbiters)
-            {
-                ArbiterMap.Remove(arbiter);
-                Events.RaiseBodiesEndCollide(arbiter.Body1, arbiter.Body2);
-            }
-
-            foreach (var constraint in body.constraints)
-            {
-                constraints.Remove(constraint);
-                Events.RaiseRemovedConstraint(constraint);
-            }
-
-            // remove the body from the collision system
-            CollisionSystem.RemoveEntity(body);
-
-            // remove the body from the island manager
-            islands.RemoveBody(body);
-
-            Events.RaiseRemovedRigidBody(body);
-
-            return true;
-        }
-
-
-        /// <summary>
-        /// Adds a <see cref="RigidBody"/> to the world.
-        /// </summary>
-        /// <param name="body">The body which should be added.</param>
-        public void AddBody(RigidBody body)
-        {
-            if (body == null) throw new ArgumentNullException(nameof(body), "body can't be null.");
-            if (rigidBodies.Contains(body)) throw new ArgumentException("The body was already added to the world.", nameof(body));
-
-            Events.RaiseAddedRigidBody(body);
-
-            CollisionSystem.AddEntity(body);
-
-            rigidBodies.Add(body);
-        }
-
-        /// <summary>
-        /// Add a <see cref="BaseConstraint"/> to the world. Fast, O(1).
-        /// </summary>
-        /// <param name="constraint">The constraint which should be added.</param>
-        /// <returns>True if the constraint was successfully removed.</returns>
-        public bool RemoveConstraint(BaseConstraint constraint)
-        {
-            if (!constraints.Remove(constraint))
-                return false;
-
-            Events.RaiseRemovedConstraint(constraint);
-            islands.ConstraintRemoved(constraint);
-
-            return true;
-        }
-
-        /// <summary>
-        /// Add a <see cref="BaseConstraint"/> to the world.
-        /// </summary>
-        /// <param name="constraint">The constraint which should be removed.</param>
-        public void AddConstraint(BaseConstraint constraint)
-        {
-            if (!constraints.Add(constraint)) 
-                throw new ArgumentException("The constraint was already added to the world.", nameof(constraint));
-
-            islands.ConstraintCreated(constraint);
-            Events.RaiseAddedConstraint(constraint);
-        }
-
-        private float currentLinearDampFactor = 1.0f;
-        private float currentAngularDampFactor = 1.0f;
-
+        #region Debug Timing
         private readonly Stopwatch sw = new();
 
         public enum DebugType
@@ -405,14 +444,19 @@ namespace Jitter
             PreStep, DeactivateBodies, IntegrateForces, Integrate, PostStep, Num
         }
 
+        private readonly double[] _stepTimesMs = new double[(int)DebugType.Num];
+
         /// <summary>
         /// Time in ms for every part of the <see cref="Step(float)"/> method.
         /// </summary>
         /// <example>int time = DebugTimes[(int)DebugType.CollisionDetect] gives
         /// the amount of time spent on collision detection during the last <see cref="Step(float)"/>.
         /// </example>
-        private readonly double[] debugTimes = new double[(int)DebugType.Num];
-        public IReadOnlyList<double> DebugTimes => debugTimes;
+        public IReadOnlyList<double> DebugTimes => _stepTimesMs;
+        #endregion
+
+        private float currentLinearDampFactor = 1.0f;
+        private float currentAngularDampFactor = 1.0f;
 
         /// <summary>
         /// Integrates the whole world a timestep further in time.
@@ -430,60 +474,54 @@ namespace Jitter
             if (timestep < 0.0f)
                 throw new ArgumentException("The timestep can't be negative.", nameof(timestep));
 
-            // Calculate this
             currentAngularDampFactor = (float)Math.Pow(_angularDamping, timestep);
             currentLinearDampFactor = (float)Math.Pow(_linearDamping, timestep);
 
-            sw.Reset(); sw.Start();
+            sw.Restart();
             Events.RaiseWorldPreStep(timestep);
-            sw.Stop(); debugTimes[(int)DebugType.PreStep] = sw.Elapsed.TotalMilliseconds;
+            _stepTimesMs[(int)DebugType.PreStep] = sw.Elapsed.TotalMilliseconds;
 
-            sw.Reset(); sw.Start();
+            sw.Restart();
             UpdateContacts();
-            sw.Stop(); debugTimes[(int)DebugType.UpdateContacts] = sw.Elapsed.TotalMilliseconds;
+            _stepTimesMs[(int)DebugType.UpdateContacts] = sw.Elapsed.TotalMilliseconds;
 
-            sw.Reset(); sw.Start();
+            sw.Restart();
             while (removedArbiterQueue.Count > 0)
             {
                 var arbiter = removedArbiterQueue.Dequeue();
-                islands.ArbiterRemoved(arbiter);
+                _islands.ArbiterRemoved(arbiter);
                 Arbiter.Destroy(arbiter);
             }
-
-            sw.Stop();
             var ms = sw.Elapsed.TotalMilliseconds;
 
-            sw.Reset();
-            sw.Start();
+            sw.Restart();
             CollisionSystem.Detect();
-            sw.Stop();
-            debugTimes[(int)DebugType.CollisionDetect] = sw.Elapsed.TotalMilliseconds;
+            _stepTimesMs[(int)DebugType.CollisionDetect] = sw.Elapsed.TotalMilliseconds;
 
-            sw.Reset(); sw.Start();
+            sw.Restart();
+            while (addedArbiterQueue.Count > 0)
+                _islands.ArbiterCreated(addedArbiterQueue.Dequeue());
+            _stepTimesMs[(int)DebugType.BuildIslands] = sw.Elapsed.TotalMilliseconds + ms;
 
-            while (addedArbiterQueue.Count > 0) islands.ArbiterCreated(addedArbiterQueue.Dequeue());
-
-            sw.Stop(); debugTimes[(int)DebugType.BuildIslands] = sw.Elapsed.TotalMilliseconds + ms;
-
-            sw.Reset(); sw.Start();
+            sw.Restart();
             CheckDeactivation();
-            sw.Stop(); debugTimes[(int)DebugType.DeactivateBodies] = sw.Elapsed.TotalMilliseconds;
+            _stepTimesMs[(int)DebugType.DeactivateBodies] = sw.Elapsed.TotalMilliseconds;
 
-            sw.Reset(); sw.Start();
+            sw.Restart();
             IntegrateForces();
-            sw.Stop(); debugTimes[(int)DebugType.IntegrateForces] = sw.Elapsed.TotalMilliseconds;
+            _stepTimesMs[(int)DebugType.IntegrateForces] = sw.Elapsed.TotalMilliseconds;
 
-            sw.Reset(); sw.Start();
+            sw.Restart();
             HandleArbiter();
-            sw.Stop(); debugTimes[(int)DebugType.HandleArbiter] = sw.Elapsed.TotalMilliseconds;
+            _stepTimesMs[(int)DebugType.HandleArbiter] = sw.Elapsed.TotalMilliseconds;
 
-            sw.Reset(); sw.Start();
+            sw.Restart();
             Integrate();
-            sw.Stop(); debugTimes[(int)DebugType.Integrate] = sw.Elapsed.TotalMilliseconds;
+            _stepTimesMs[(int)DebugType.Integrate] = sw.Elapsed.TotalMilliseconds;
 
-            sw.Reset(); sw.Start();
+            sw.Restart();
             Events.RaiseWorldPostStep(timestep);
-            sw.Stop(); debugTimes[(int)DebugType.PostStep] = sw.Elapsed.TotalMilliseconds;
+            _stepTimesMs[(int)DebugType.PostStep] = sw.Elapsed.TotalMilliseconds;
         }
 
         private float accumulatedTime;
@@ -581,8 +619,8 @@ namespace Jitter
         private void ArbiterCallback(CollisionIsland island)
         {
             var thisIterations = island.Bodies.Count + island.Constraints.Count > 3
-                               ? contactIterations
-                               : smallIterations;
+                               ? _contactIterations
+                               : _smallIterations;
 
             for (var i = -1; i < thisIterations; i++)
             {
@@ -616,14 +654,14 @@ namespace Jitter
 
         private void HandleArbiter()
         {
-            for (var i = 0; i < islands.Count; i++)
-                if (islands[i].IsActive())
-                    ArbiterCallback(islands[i]);
+            for (var i = 0; i < _islands.Count; i++)
+                if (_islands[i].IsActive())
+                    ArbiterCallback(_islands[i]);
         }
 
         private void IntegrateForces()
         {
-            foreach (var body in rigidBodies)
+            foreach (var body in _bodies)
             {
                 if (!body.IsStatic && body.IsActive)
                 {
@@ -696,7 +734,7 @@ namespace Jitter
         private void Integrate()
         {
             {
-                foreach (var body in rigidBodies)
+                foreach (var body in _bodies)
                 {
                     if (body.IsStatic || !body.IsActive)
                         continue;
@@ -722,11 +760,15 @@ namespace Jitter
             if (arbiter.Body1 == body1)
             {
                 normal = -normal;
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
                 contact = arbiter.AddContact(point1, point2, normal, penetration, ContactSettings);
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
             }
             else
             {
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
                 contact = arbiter.AddContact(point2, point1, normal, penetration, ContactSettings);
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
             }
 
             if (contact != null) Events.RaiseContactCreated(contact);
@@ -736,11 +778,14 @@ namespace Jitter
         private void CheckDeactivation()
         {
             // A body deactivation DOESN'T kill the contacts - they are stored in
-            // the arbitermap within the arbiters. So, waking up ist STABLE - old
+            // the arbitermap within the arbiters. So, waking up is STABLE - old
             // contacts are reused. Also the collisionislands build every frame (based 
             // on the contacts) keep the same.
 
-            foreach (var island in islands)
+            var inactiveLinearThresholdSq = _inactiveLinearThreshold * _inactiveLinearThreshold;
+            var inactiveAngularThresholdSq = _inactiveAngularThreshold * _inactiveAngularThreshold;
+
+            foreach (var island in _islands)
             {
                 var deactivateIsland = true;
 
@@ -757,7 +802,7 @@ namespace Jitter
                             body.linearVelocity.LengthSquared() < inactiveLinearThresholdSq)
                         {
                             body.inactiveTime += _timestep;
-                            if (body.inactiveTime < deactivationTime)
+                            if (body.inactiveTime < DeactivationTime)
                                 deactivateIsland = false;
                         }
                         else

@@ -66,6 +66,11 @@ namespace Jitter.Dynamics
     public class Contact
         : IConstraint
     {
+        /// <summary>
+        /// A contact resource pool.
+        /// </summary>
+        public static readonly ThreadSafeResourcePool<Contact> Pool = new();
+
         private ContactSettings settings;
 
         internal RigidBody body1;
@@ -96,17 +101,8 @@ namespace Jitter.Dynamics
         private bool treatBody1AsStatic;
         private bool treatBody2AsStatic;
 
-
-        private bool body1IsMassPoint;
-        private bool body2IsMassPoint;
-
         private float lostSpeculativeBounce;
         private float speculativeVelocity;
-
-        /// <summary>
-        /// A contact resource pool.
-        /// </summary>
-        public static readonly ThreadSafeResourcePool<Contact> Pool = new();
 
         private float lastTimeStep = float.PositiveInfinity;
 
@@ -184,19 +180,13 @@ namespace Jitter.Dynamics
             var dvy = body2.linearVelocity.Y - body1.linearVelocity.Y;
             var dvz = body2.linearVelocity.Z - body1.linearVelocity.Z;
 
-            if (!body1IsMassPoint)
-            {
-                dvx = dvx - body1.angularVelocity.Y * relativePos1.Z + body1.angularVelocity.Z * relativePos1.Y;
-                dvy = dvy - body1.angularVelocity.Z * relativePos1.X + body1.angularVelocity.X * relativePos1.Z;
-                dvz = dvz - body1.angularVelocity.X * relativePos1.Y + body1.angularVelocity.Y * relativePos1.X;
-            }
+            dvx = dvx - body1.angularVelocity.Y * relativePos1.Z + body1.angularVelocity.Z * relativePos1.Y;
+            dvy = dvy - body1.angularVelocity.Z * relativePos1.X + body1.angularVelocity.X * relativePos1.Z;
+            dvz = dvz - body1.angularVelocity.X * relativePos1.Y + body1.angularVelocity.Y * relativePos1.X;
 
-            if (!body2IsMassPoint)
-            {
-                dvx = dvx + body2.angularVelocity.Y * relativePos2.Z - body2.angularVelocity.Z * relativePos2.Y;
-                dvy = dvy + body2.angularVelocity.Z * relativePos2.X - body2.angularVelocity.X * relativePos2.Z;
-                dvz = dvz + body2.angularVelocity.X * relativePos2.Y - body2.angularVelocity.Y * relativePos2.X;
-            }
+            dvx = dvx + body2.angularVelocity.Y * relativePos2.Z - body2.angularVelocity.Z * relativePos2.Y;
+            dvy = dvy + body2.angularVelocity.Z * relativePos2.X - body2.angularVelocity.X * relativePos2.Z;
+            dvz = dvz + body2.angularVelocity.X * relativePos2.Y - body2.angularVelocity.Y * relativePos2.X;
 
             // this gets us some performance
             if (dvx * dvx + dvy * dvy + dvz * dvz < settings.MinimumVelocity * settings.MinimumVelocity)
@@ -228,29 +218,26 @@ namespace Jitter.Dynamics
             {
                 body1.LinearVelocity -= impulse * body1.inverseMass;
 
-                if (!body1IsMassPoint)
-                {
-                    var num0 = relativePos1.Y * impulse.Z - relativePos1.Z * impulse.Y;
-                    var num1 = relativePos1.Z * impulse.X - relativePos1.X * impulse.Z;
-                    var num2 = relativePos1.X * impulse.Y - relativePos1.Y * impulse.X;
+                var num0 = relativePos1.Y * impulse.Z - relativePos1.Z * impulse.Y;
+                var num1 = relativePos1.Z * impulse.X - relativePos1.X * impulse.Z;
+                var num2 = relativePos1.X * impulse.Y - relativePos1.Y * impulse.X;
 
-                    var num3 =
-                        num0 * body1.invInertiaWorld.M11 +
-                        num1 * body1.invInertiaWorld.M21 +
-                        num2 * body1.invInertiaWorld.M31;
-                    var num4 =
-                        num0 * body1.invInertiaWorld.M12 +
-                        num1 * body1.invInertiaWorld.M22 +
-                        num2 * body1.invInertiaWorld.M32;
-                    var num5 =
-                        num0 * body1.invInertiaWorld.M13 +
-                        num1 * body1.invInertiaWorld.M23 +
-                        num2 * body1.invInertiaWorld.M33;
+                var num3 =
+                    num0 * body1.invInertiaWorld.M11 +
+                    num1 * body1.invInertiaWorld.M21 +
+                    num2 * body1.invInertiaWorld.M31;
+                var num4 =
+                    num0 * body1.invInertiaWorld.M12 +
+                    num1 * body1.invInertiaWorld.M22 +
+                    num2 * body1.invInertiaWorld.M32;
+                var num5 =
+                    num0 * body1.invInertiaWorld.M13 +
+                    num1 * body1.invInertiaWorld.M23 +
+                    num2 * body1.invInertiaWorld.M33;
 
-                    body1.angularVelocity.X -= num3;
-                    body1.angularVelocity.Y -= num4;
-                    body1.angularVelocity.Z -= num5;
-                }
+                body1.angularVelocity.X -= num3;
+                body1.angularVelocity.Y -= num4;
+                body1.angularVelocity.Z -= num5;
             }
 
             if (!treatBody2AsStatic)
@@ -260,30 +247,26 @@ namespace Jitter.Dynamics
                 body2.linearVelocity.Y += impulse.Y * body2.inverseMass;
                 body2.linearVelocity.Z += impulse.Z * body2.inverseMass;
 
-                if (!body2IsMassPoint)
-                {
-                    var num0 = relativePos2.Y * impulse.Z - relativePos2.Z * impulse.Y;
-                    var num1 = relativePos2.Z * impulse.X - relativePos2.X * impulse.Z;
-                    var num2 = relativePos2.X * impulse.Y - relativePos2.Y * impulse.X;
+                var num0 = relativePos2.Y * impulse.Z - relativePos2.Z * impulse.Y;
+                var num1 = relativePos2.Z * impulse.X - relativePos2.X * impulse.Z;
+                var num2 = relativePos2.X * impulse.Y - relativePos2.Y * impulse.X;
 
-                    var num3 =
-                        num0 * body2.invInertiaWorld.M11 +
-                        num1 * body2.invInertiaWorld.M21 +
-                        num2 * body2.invInertiaWorld.M31;
-                    var num4 =
-                        num0 * body2.invInertiaWorld.M12 +
-                        num1 * body2.invInertiaWorld.M22 +
-                        num2 * body2.invInertiaWorld.M32;
-                    var num5 =
-                        num0 * body2.invInertiaWorld.M13 +
-                        num1 * body2.invInertiaWorld.M23 +
-                        num2 * body2.invInertiaWorld.M33;
+                var num3 =
+                    num0 * body2.invInertiaWorld.M11 +
+                    num1 * body2.invInertiaWorld.M21 +
+                    num2 * body2.invInertiaWorld.M31;
+                var num4 =
+                    num0 * body2.invInertiaWorld.M12 +
+                    num1 * body2.invInertiaWorld.M22 +
+                    num2 * body2.invInertiaWorld.M32;
+                var num5 =
+                    num0 * body2.invInertiaWorld.M13 +
+                    num1 * body2.invInertiaWorld.M23 +
+                    num2 * body2.invInertiaWorld.M33;
 
-                    body2.angularVelocity.X += num3;
-                    body2.angularVelocity.Y += num4;
-                    body2.angularVelocity.Z += num5;
-
-                }
+                body2.angularVelocity.X += num3;
+                body2.angularVelocity.Y += num4;
+                body2.angularVelocity.Z += num5;
             }
 
         }
@@ -297,25 +280,11 @@ namespace Jitter.Dynamics
         /// </summary>
         public void UpdatePosition()
         {
-            if (body1IsMassPoint)
-            {
-                p1 = realRelPos1 + body1.position;
-            }
-            else
-            {
-                p1 = realRelPos1.Transform(body1.orientation);
-                p1 += body1.position;
-            }
+            p1 = realRelPos1.Transform(body1.orientation);
+            p1 += body1.position;
 
-            if (body2IsMassPoint)
-            {
-                p2 = realRelPos2 + body2.position;
-            }
-            else
-            {
-                p2 = realRelPos2.Transform(body2.orientation);
-                p2 += body2.position;
-            }
+            p2 = realRelPos2.Transform(body2.orientation);
+            p2 += body2.position;
 
 
             var dist = p1 - p2;
@@ -471,28 +440,24 @@ namespace Jitter.Dynamics
             {
                 kNormal += body1.inverseMass;
 
-                if (!body1IsMassPoint)
-                {
+                // Vector3.Cross(ref relativePos1, ref normal, out rantra);
+                rantra.X = relativePos1.Y * normal.Z - relativePos1.Z * normal.Y;
+                rantra.Y = relativePos1.Z * normal.X - relativePos1.X * normal.Z;
+                rantra.Z = relativePos1.X * normal.Y - relativePos1.Y * normal.X;
 
-                    // Vector3.Cross(ref relativePos1, ref normal, out rantra);
-                    rantra.X = relativePos1.Y * normal.Z - relativePos1.Z * normal.Y;
-                    rantra.Y = relativePos1.Z * normal.X - relativePos1.X * normal.Z;
-                    rantra.Z = relativePos1.X * normal.Y - relativePos1.Y * normal.X;
+                // JVectorExtensions.Transform(ref rantra, ref body1.invInertiaWorld, out rantra);
+                var num0 = rantra.X * body1.invInertiaWorld.M11 + rantra.Y * body1.invInertiaWorld.M21 + rantra.Z * body1.invInertiaWorld.M31;
+                var num1 = rantra.X * body1.invInertiaWorld.M12 + rantra.Y * body1.invInertiaWorld.M22 + rantra.Z * body1.invInertiaWorld.M32;
+                var num2 = rantra.X * body1.invInertiaWorld.M13 + rantra.Y * body1.invInertiaWorld.M23 + rantra.Z * body1.invInertiaWorld.M33;
 
-                    // JVectorExtensions.Transform(ref rantra, ref body1.invInertiaWorld, out rantra);
-                    var num0 = rantra.X * body1.invInertiaWorld.M11 + rantra.Y * body1.invInertiaWorld.M21 + rantra.Z * body1.invInertiaWorld.M31;
-                    var num1 = rantra.X * body1.invInertiaWorld.M12 + rantra.Y * body1.invInertiaWorld.M22 + rantra.Z * body1.invInertiaWorld.M32;
-                    var num2 = rantra.X * body1.invInertiaWorld.M13 + rantra.Y * body1.invInertiaWorld.M23 + rantra.Z * body1.invInertiaWorld.M33;
+                rantra.X = num0; rantra.Y = num1; rantra.Z = num2;
 
-                    rantra.X = num0; rantra.Y = num1; rantra.Z = num2;
+                //Vector3.Cross(ref rantra, ref relativePos1, out rantra);
+                num0 = rantra.Y * relativePos1.Z - rantra.Z * relativePos1.Y;
+                num1 = rantra.Z * relativePos1.X - rantra.X * relativePos1.Z;
+                num2 = rantra.X * relativePos1.Y - rantra.Y * relativePos1.X;
 
-                    //Vector3.Cross(ref rantra, ref relativePos1, out rantra);
-                    num0 = rantra.Y * relativePos1.Z - rantra.Z * relativePos1.Y;
-                    num1 = rantra.Z * relativePos1.X - rantra.X * relativePos1.Z;
-                    num2 = rantra.X * relativePos1.Y - rantra.Y * relativePos1.X;
-
-                    rantra.X = num0; rantra.Y = num1; rantra.Z = num2;
-                }
+                rantra.X = num0; rantra.Y = num1; rantra.Z = num2;
             }
 
             var rbntrb = default(Vector3);
@@ -500,28 +465,24 @@ namespace Jitter.Dynamics
             {
                 kNormal += body2.inverseMass;
 
-                if (!body2IsMassPoint)
-                {
+                // Vector3.Cross(ref relativePos1, ref normal, out rantra);
+                rbntrb.X = relativePos2.Y * normal.Z - relativePos2.Z * normal.Y;
+                rbntrb.Y = relativePos2.Z * normal.X - relativePos2.X * normal.Z;
+                rbntrb.Z = relativePos2.X * normal.Y - relativePos2.Y * normal.X;
 
-                    // Vector3.Cross(ref relativePos1, ref normal, out rantra);
-                    rbntrb.X = relativePos2.Y * normal.Z - relativePos2.Z * normal.Y;
-                    rbntrb.Y = relativePos2.Z * normal.X - relativePos2.X * normal.Z;
-                    rbntrb.Z = relativePos2.X * normal.Y - relativePos2.Y * normal.X;
+                // JVectorExtensions.Transform(ref rantra, ref body1.invInertiaWorld, out rantra);
+                var num0 = rbntrb.X * body2.invInertiaWorld.M11 + rbntrb.Y * body2.invInertiaWorld.M21 + rbntrb.Z * body2.invInertiaWorld.M31;
+                var num1 = rbntrb.X * body2.invInertiaWorld.M12 + rbntrb.Y * body2.invInertiaWorld.M22 + rbntrb.Z * body2.invInertiaWorld.M32;
+                var num2 = rbntrb.X * body2.invInertiaWorld.M13 + rbntrb.Y * body2.invInertiaWorld.M23 + rbntrb.Z * body2.invInertiaWorld.M33;
 
-                    // JVectorExtensions.Transform(ref rantra, ref body1.invInertiaWorld, out rantra);
-                    var num0 = rbntrb.X * body2.invInertiaWorld.M11 + rbntrb.Y * body2.invInertiaWorld.M21 + rbntrb.Z * body2.invInertiaWorld.M31;
-                    var num1 = rbntrb.X * body2.invInertiaWorld.M12 + rbntrb.Y * body2.invInertiaWorld.M22 + rbntrb.Z * body2.invInertiaWorld.M32;
-                    var num2 = rbntrb.X * body2.invInertiaWorld.M13 + rbntrb.Y * body2.invInertiaWorld.M23 + rbntrb.Z * body2.invInertiaWorld.M33;
+                rbntrb.X = num0; rbntrb.Y = num1; rbntrb.Z = num2;
 
-                    rbntrb.X = num0; rbntrb.Y = num1; rbntrb.Z = num2;
+                //Vector3.Cross(ref rantra, ref relativePos1, out rantra);
+                num0 = rbntrb.Y * relativePos2.Z - rbntrb.Z * relativePos2.Y;
+                num1 = rbntrb.Z * relativePos2.X - rbntrb.X * relativePos2.Z;
+                num2 = rbntrb.X * relativePos2.Y - rbntrb.Y * relativePos2.X;
 
-                    //Vector3.Cross(ref rantra, ref relativePos1, out rantra);
-                    num0 = rbntrb.Y * relativePos2.Z - rbntrb.Z * relativePos2.Y;
-                    num1 = rbntrb.Z * relativePos2.X - rbntrb.X * relativePos2.Z;
-                    num2 = rbntrb.X * relativePos2.Y - rbntrb.Y * relativePos2.X;
-
-                    rbntrb.X = num0; rbntrb.Y = num1; rbntrb.Z = num2;
-                }
+                rbntrb.X = num0; rbntrb.Y = num1; rbntrb.Z = num2;
             }
 
             if (!treatBody1AsStatic) kNormal += rantra.X * normal.X + rantra.Y * normal.Y + rantra.Z * normal.Z;
@@ -552,28 +513,25 @@ namespace Jitter.Dynamics
             else
             {
                 kTangent += body1.inverseMass;
-  
-                if (!body1IsMassPoint)
-                {
-                    // Vector3.Cross(ref relativePos1, ref normal, out rantra);
-                    rantra.X = relativePos1.Y * tangent.Z - relativePos1.Z * tangent.Y;
-                    rantra.Y = relativePos1.Z * tangent.X - relativePos1.X * tangent.Z;
-                    rantra.Z = relativePos1.X * tangent.Y - relativePos1.Y * tangent.X;
+                
+                // Vector3.Cross(ref relativePos1, ref normal, out rantra);
+                rantra.X = relativePos1.Y * tangent.Z - relativePos1.Z * tangent.Y;
+                rantra.Y = relativePos1.Z * tangent.X - relativePos1.X * tangent.Z;
+                rantra.Z = relativePos1.X * tangent.Y - relativePos1.Y * tangent.X;
 
-                    // JVectorExtensions.Transform(ref rantra, ref body1.invInertiaWorld, out rantra);
-                    var num0 = rantra.X * body1.invInertiaWorld.M11 + rantra.Y * body1.invInertiaWorld.M21 + rantra.Z * body1.invInertiaWorld.M31;
-                    var num1 = rantra.X * body1.invInertiaWorld.M12 + rantra.Y * body1.invInertiaWorld.M22 + rantra.Z * body1.invInertiaWorld.M32;
-                    var num2 = rantra.X * body1.invInertiaWorld.M13 + rantra.Y * body1.invInertiaWorld.M23 + rantra.Z * body1.invInertiaWorld.M33;
+                // JVectorExtensions.Transform(ref rantra, ref body1.invInertiaWorld, out rantra);
+                var num0 = rantra.X * body1.invInertiaWorld.M11 + rantra.Y * body1.invInertiaWorld.M21 + rantra.Z * body1.invInertiaWorld.M31;
+                var num1 = rantra.X * body1.invInertiaWorld.M12 + rantra.Y * body1.invInertiaWorld.M22 + rantra.Z * body1.invInertiaWorld.M32;
+                var num2 = rantra.X * body1.invInertiaWorld.M13 + rantra.Y * body1.invInertiaWorld.M23 + rantra.Z * body1.invInertiaWorld.M33;
 
-                    rantra.X = num0; rantra.Y = num1; rantra.Z = num2;
+                rantra.X = num0; rantra.Y = num1; rantra.Z = num2;
 
-                    //Vector3.Cross(ref rantra, ref relativePos1, out rantra);
-                    num0 = rantra.Y * relativePos1.Z - rantra.Z * relativePos1.Y;
-                    num1 = rantra.Z * relativePos1.X - rantra.X * relativePos1.Z;
-                    num2 = rantra.X * relativePos1.Y - rantra.Y * relativePos1.X;
+                //Vector3.Cross(ref rantra, ref relativePos1, out rantra);
+                num0 = rantra.Y * relativePos1.Z - rantra.Z * relativePos1.Y;
+                num1 = rantra.Z * relativePos1.X - rantra.X * relativePos1.Z;
+                num2 = rantra.X * relativePos1.Y - rantra.Y * relativePos1.X;
 
-                    rantra.X = num0; rantra.Y = num1; rantra.Z = num2;
-                }
+                rantra.X = num0; rantra.Y = num1; rantra.Z = num2;
 
             }
 
@@ -583,31 +541,15 @@ namespace Jitter.Dynamics
             {
                 kTangent += body2.inverseMass;
 
-                if (!body2IsMassPoint)
-                {
-                    // Vector3.Cross(ref relativePos1, ref normal, out rantra);
-                    rbntrb.X = relativePos2.Y * tangent.Z - relativePos2.Z * tangent.Y;
-                    rbntrb.Y = relativePos2.Z * tangent.X - relativePos2.X * tangent.Z;
-                    rbntrb.Z = relativePos2.X * tangent.Y - relativePos2.Y * tangent.X;
-
-                    // JVectorExtensions.Transform(ref rantra, ref body1.invInertiaWorld, out rantra);
-                    var num0 = rbntrb.X * body2.invInertiaWorld.M11 + rbntrb.Y * body2.invInertiaWorld.M21 + rbntrb.Z * body2.invInertiaWorld.M31;
-                    var num1 = rbntrb.X * body2.invInertiaWorld.M12 + rbntrb.Y * body2.invInertiaWorld.M22 + rbntrb.Z * body2.invInertiaWorld.M32;
-                    var num2 = rbntrb.X * body2.invInertiaWorld.M13 + rbntrb.Y * body2.invInertiaWorld.M23 + rbntrb.Z * body2.invInertiaWorld.M33;
-
-                    rbntrb.X = num0; rbntrb.Y = num1; rbntrb.Z = num2;
-
-                    //Vector3.Cross(ref rantra, ref relativePos1, out rantra);
-                    num0 = rbntrb.Y * relativePos2.Z - rbntrb.Z * relativePos2.Y;
-                    num1 = rbntrb.Z * relativePos2.X - rbntrb.X * relativePos2.Z;
-                    num2 = rbntrb.X * relativePos2.Y - rbntrb.Y * relativePos2.X;
-
-                    rbntrb.X = num0; rbntrb.Y = num1; rbntrb.Z = num2;
-                }
+                rbntrb = Vector3.Cross(relativePos2, tangent);
+                rbntrb = rbntrb.Transform(body2.invInertiaWorld);
+                rbntrb = Vector3.Cross(rbntrb, relativePos2);
             }
 
-            if (!treatBody1AsStatic) kTangent += Vector3.Dot(rantra, tangent);
-            if (!treatBody2AsStatic) kTangent += Vector3.Dot(rbntrb, tangent);
+            if (!treatBody1AsStatic)
+                kTangent += Vector3.Dot(rantra, tangent);
+            if (!treatBody2AsStatic)
+                kTangent += Vector3.Dot(rbntrb, tangent);
             massTangent = 1.0f / kTangent;
 
             restitutionBias = lostSpeculativeBounce;
@@ -620,7 +562,6 @@ namespace Jitter.Dynamics
             {
                 restitutionBias = settings.BiasFactor * (1.0f / timestep) * Math.Max(0.0f, Penetration - settings.AllowedPenetration);
                 restitutionBias = Math.Clamp(restitutionBias, 0.0f, settings.MaximumBias);
-              //  body1IsMassPoint = body2IsMassPoint = false;
             }
       
 
@@ -634,8 +575,7 @@ namespace Jitter.Dynamics
                 var tangentImpulse = massTangent * relTangentVel;
                 var maxTangentImpulse = -StaticFriction * accumulatedNormalImpulse;
 
-                if (tangentImpulse < maxTangentImpulse) friction = DynamicFriction;
-                else friction = StaticFriction;
+                friction = tangentImpulse < maxTangentImpulse ? DynamicFriction : StaticFriction;
             }
 
             Vector3 impulse;
@@ -674,62 +614,54 @@ namespace Jitter.Dynamics
                 body1.linearVelocity.Y -= impulse.Y * body1.inverseMass;
                 body1.linearVelocity.Z -= impulse.Z * body1.inverseMass;
 
-                if (!body1IsMassPoint)
-                {
-                    var num0 = relativePos1.Y * impulse.Z - relativePos1.Z * impulse.Y;
-                    var num1 = relativePos1.Z * impulse.X - relativePos1.X * impulse.Z;
-                    var num2 = relativePos1.X * impulse.Y - relativePos1.Y * impulse.X;
+                var num0 = relativePos1.Y * impulse.Z - relativePos1.Z * impulse.Y;
+                var num1 = relativePos1.Z * impulse.X - relativePos1.X * impulse.Z;
+                var num2 = relativePos1.X * impulse.Y - relativePos1.Y * impulse.X;
 
-                    var num3 =
-                        num0 * body1.invInertiaWorld.M11 +
-                        num1 * body1.invInertiaWorld.M21 +
-                        num2 * body1.invInertiaWorld.M31;
-                    var num4 =
-                        num0 * body1.invInertiaWorld.M12 +
-                        num1 * body1.invInertiaWorld.M22 +
-                        num2 * body1.invInertiaWorld.M32;
-                    var num5 =
-                        num0 * body1.invInertiaWorld.M13 +
-                        num1 * body1.invInertiaWorld.M23 +
-                        num2 * body1.invInertiaWorld.M33;
+                var num3 =
+                    num0 * body1.invInertiaWorld.M11 +
+                    num1 * body1.invInertiaWorld.M21 +
+                    num2 * body1.invInertiaWorld.M31;
+                var num4 =
+                    num0 * body1.invInertiaWorld.M12 +
+                    num1 * body1.invInertiaWorld.M22 +
+                    num2 * body1.invInertiaWorld.M32;
+                var num5 =
+                    num0 * body1.invInertiaWorld.M13 +
+                    num1 * body1.invInertiaWorld.M23 +
+                    num2 * body1.invInertiaWorld.M33;
 
-                    body1.angularVelocity.X -= num3;
-                    body1.angularVelocity.Y -= num4;
-                    body1.angularVelocity.Z -= num5;
-
-                }
+                body1.angularVelocity.X -= num3;
+                body1.angularVelocity.Y -= num4;
+                body1.angularVelocity.Z -= num5;
             }
 
             if (!treatBody2AsStatic)
             {
-
                 body2.linearVelocity.X += impulse.X * body2.inverseMass;
                 body2.linearVelocity.Y += impulse.Y * body2.inverseMass;
                 body2.linearVelocity.Z += impulse.Z * body2.inverseMass;
 
-                if (!body2IsMassPoint)
-                {
-                    var num0 = relativePos2.Y * impulse.Z - relativePos2.Z * impulse.Y;
-                    var num1 = relativePos2.Z * impulse.X - relativePos2.X * impulse.Z;
-                    var num2 = relativePos2.X * impulse.Y - relativePos2.Y * impulse.X;
+                var num0 = relativePos2.Y * impulse.Z - relativePos2.Z * impulse.Y;
+                var num1 = relativePos2.Z * impulse.X - relativePos2.X * impulse.Z;
+                var num2 = relativePos2.X * impulse.Y - relativePos2.Y * impulse.X;
 
-                    var num3 =
-                        num0 * body2.invInertiaWorld.M11 +
-                        num1 * body2.invInertiaWorld.M21 +
-                        num2 * body2.invInertiaWorld.M31;
-                    var num4 =
-                        num0 * body2.invInertiaWorld.M12 +
-                        num1 * body2.invInertiaWorld.M22 +
-                        num2 * body2.invInertiaWorld.M32;
-                    var num5 =
-                        num0 * body2.invInertiaWorld.M13 +
-                        num1 * body2.invInertiaWorld.M23 +
-                        num2 * body2.invInertiaWorld.M33;
+                var num3 =
+                    num0 * body2.invInertiaWorld.M11 +
+                    num1 * body2.invInertiaWorld.M21 +
+                    num2 * body2.invInertiaWorld.M31;
+                var num4 =
+                    num0 * body2.invInertiaWorld.M12 +
+                    num1 * body2.invInertiaWorld.M22 +
+                    num2 * body2.invInertiaWorld.M32;
+                var num5 =
+                    num0 * body2.invInertiaWorld.M13 +
+                    num1 * body2.invInertiaWorld.M23 +
+                    num2 * body2.invInertiaWorld.M33;
 
-                    body2.angularVelocity.X += num3;
-                    body2.angularVelocity.Y += num4;
-                    body2.angularVelocity.Z += num5;
-                }
+                body2.angularVelocity.X += num3;
+                body2.angularVelocity.Y += num4;
+                body2.angularVelocity.Z += num5;
             }
 
             lastTimeStep = timestep;

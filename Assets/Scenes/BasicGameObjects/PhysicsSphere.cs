@@ -29,12 +29,12 @@ namespace Assets.Scenes.BasicGameObjects
                 EnableSpeculativeContacts = true,
             };
 
-            _world.World.AddBody(_body);
+            _world.World.Add(_body);
         }
 
         private void OnDisable()
         {
-            _world.World.RemoveBody(_body);
+            _world.World.Remove(_body);
             _body = null;
         }
 

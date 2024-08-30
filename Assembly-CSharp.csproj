@@ -63,8 +63,8 @@
     <Compile Include="Assets\Scenes\BasicGameObjects\PhysicsSweepCube.cs" />
     <Compile Include="Assets\Scenes\BasicGameObjects\Spawner.cs" />
     <Compile Include="Assets\Scenes\MyriadSharedWorld\UnitySystems.cs" />
-    <Compile Include="Assets\Scenes\MyriadSharedWorld\PhysicsSystems.cs" />
     <Compile Include="Assets\Scenes\BasicGameObjects\PhysicsWorld.cs" />
+    <Compile Include="Assets\Scenes\MyriadSharedWorld\PhysicsSystems.cs" />
     <Compile Include="Assets\Scenes\BasicGameObjects\PhysicsCube.cs" />
     <Compile Include="Assets\Scenes\MyriadSharedWorld\Spawner.cs" />
     <Compile Include="Assets\Scenes\MyriadSharedWorld\PhysicsComponents.cs" />
@@ -946,6 +946,10 @@
       <HintPath>Library\ScriptAssemblies\Myriad.Unity.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Unity.Mathematics">
+      <HintPath>Library\ScriptAssemblies\Unity.Mathematics.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.VisualStudio.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.VisualStudio.Editor.dll</HintPath>
       <Private>False</Private>
@@ -964,6 +968,10 @@
     </Reference>
     <Reference Include="Myriad.Unity.Runtime">
       <HintPath>Library\ScriptAssemblies\Myriad.Unity.Runtime.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Mathematics.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.Mathematics.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>

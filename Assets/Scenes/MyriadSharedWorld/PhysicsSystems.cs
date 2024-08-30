@@ -69,7 +69,7 @@ namespace Assets.Scenes.MyriadSharedWorld
         {
             foreach (var (entity, body) in _world.Query<PhysicsBody>(_query))
             {
-                _physics.AddBody(body.Ref.Body);
+                _physics.Add(body.Ref.Body);
 
                 _cmd.Set(entity, new BoundToWorld
                 {
@@ -89,7 +89,7 @@ namespace Assets.Scenes.MyriadSharedWorld
             {
                 var body = Self.GetComponentRef<PhysicsBody>(buffer.World);
 
-                PhysicsWorld.RemoveBody(body.Body);
+                PhysicsWorld.Remove(body.Body);
                 buffer.CommandBuffer.Remove<BoundToWorld>(Self);
             }
         }

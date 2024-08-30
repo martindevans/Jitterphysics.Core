@@ -270,10 +270,10 @@ namespace Jitter.LinearMath
             M33 = m33;
         }
 
-        /// <summary>
-        /// Gets the determinant of the matrix.
-        /// </summary>
-        /// <returns>The determinant of the matrix.</returns>
+        ///// <summary>
+        ///// Gets the determinant of the matrix.
+        ///// </summary>
+        ///// <returns>The determinant of the matrix.</returns>
         //public float Determinant()
         //{
         //    return M11 * M22 * M33 -M11 * M23 * M32 -M12 * M21 * M33 +M12 * M23 * M31 + M13 * M21 * M32 - M13 * M22 * M31;

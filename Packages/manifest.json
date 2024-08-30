@@ -2,6 +2,7 @@
   "dependencies": {
     "com.github-glitchenzo.nugetforunity": "https://github.com/GlitchEnzo/NuGetForUnity.git?path=/src/NuGetForUnity",
     "com.unity.feature.development": "1.0.1",
+    "com.unity.mathematics": "1.2.6",
     "me.martindevans.myriad-unity-integration": "git@github.com:martindevans/Myriad.ECS.Unity.git?path=/Packages/me.martindevans.myriad-unity-integration",
     "software.placeholder.editor-ui": "git@github.com:Placeholder-Software/Placeholder.Unity.UI.git?path=/Packages/software.placeholder.editor-ui",
     "com.unity.modules.ai": "1.0.0",

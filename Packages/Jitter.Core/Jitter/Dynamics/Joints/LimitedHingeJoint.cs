@@ -86,9 +86,9 @@ namespace Jitter.Dynamics.Joints
         /// </summary>
         public override void Activate()
         {
-            World.AddConstraint(PointOnPointConstraint0);
-            World.AddConstraint(PointOnPointConstraint1);
-            World.AddConstraint(DistanceConstraint);
+            World.Add(PointOnPointConstraint0);
+            World.Add(PointOnPointConstraint1);
+            World.Add(DistanceConstraint);
         }
 
         /// <summary>
@@ -96,9 +96,9 @@ namespace Jitter.Dynamics.Joints
         /// </summary>
         public override void Deactivate()
         {
-            World.RemoveConstraint(PointOnPointConstraint0);
-            World.RemoveConstraint(PointOnPointConstraint1);
-            World.RemoveConstraint(DistanceConstraint);
+            World.Remove(PointOnPointConstraint0);
+            World.Remove(PointOnPointConstraint1);
+            World.Remove(DistanceConstraint);
         }
     }
 }
