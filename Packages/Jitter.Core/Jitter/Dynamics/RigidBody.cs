@@ -531,7 +531,7 @@ namespace Jitter.Dynamics
         /// <inheritdoc />
         public void DebugDraw(IDebugDrawer drawer)
         {
-            for(var i = 0;i<hullPoints.Count;i+=3)
+            for (var i = 0; i < hullPoints.Count; i += 3)
             {
                 var pos1 = hullPoints[i + 0];
                 var pos2 = hullPoints[i + 1];

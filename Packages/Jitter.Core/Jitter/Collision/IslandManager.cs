@@ -106,7 +106,7 @@ namespace Jitter.Collision
                 if (body.island.bodies.Count == 0)
                 {
                     body.island.ClearLists();
-                    Pool.GiveBack(body.island);
+                    Pool.Return(body.island);
                 }
             }
 
@@ -138,7 +138,7 @@ namespace Jitter.Collision
                 "IslandManager Inconsistency: Removed all connections of a body - body is still in a non single Island.");
 
                 body.island.ClearLists();
-                Pool.GiveBack(body.island);
+                Pool.Return(body.island);
 
                 _islands.Remove(body.island);
 
@@ -173,7 +173,7 @@ namespace Jitter.Collision
             {
                 if (body2.island == null)
                 {
-                    var newIsland = Pool.GetNew();
+                    var newIsland = Pool.Take();
                     newIsland.islandManager = this;
 
                     body2.island = newIsland;
@@ -185,7 +185,7 @@ namespace Jitter.Collision
             {
                 if (body1.island == null)
                 {
-                    var newIsland = Pool.GetNew();
+                    var newIsland = Pool.Take();
                     newIsland.islandManager = this;
 
                     body1.island = newIsland;
@@ -299,7 +299,7 @@ namespace Jitter.Collision
                 }
             }
 
-            var island = Pool.GetNew();
+            var island = Pool.Take();
             island.islandManager = this;
 
             _islands.Add(island);
@@ -402,7 +402,7 @@ namespace Jitter.Collision
 
                     var giveBackIsland = smallIslandOwner.island;
 
-                    Pool.GiveBack(giveBackIsland);
+                    Pool.Return(giveBackIsland);
                     _islands.Remove(giveBackIsland);
 
                     foreach (var b in giveBackIsland.bodies)
@@ -427,7 +427,7 @@ namespace Jitter.Collision
             }
             else if (body0.island == null) // <- both are null
             {
-                var island = Pool.GetNew();
+                var island = Pool.Take();
                 island.islandManager = this;
 
                 body0.island = body1.island = island;

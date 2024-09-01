@@ -63,14 +63,13 @@ namespace Jitter.LinearMath
         /// </summary>
         public static readonly Vector3 One = new(1);
 
-        private const float ZeroEpsilonSq = JMath.Epsilon * JMath.Epsilon;
-
         /// <summary>
         /// Checks if the length of the vector is nearly zero.
         /// </summary>
         /// <returns>Returns true if the vector is nearly zero, otherwise false.</returns>
         public static bool IsNearlyZero(this Vector3 vector)
         {
+            const float ZeroEpsilonSq = JMath.Epsilon * JMath.Epsilon;
             return vector.LengthSquared() < ZeroEpsilonSq;
         }
 
@@ -82,18 +81,23 @@ namespace Jitter.LinearMath
         /// <returns>The transformed vector.</returns>
         public static Vector3 Transform(this Vector3 position, in JMatrix matrix)
         {
-            var num0 = position.X * matrix.M11 + position.Y * matrix.M21 + position.Z * matrix.M31;
-            var num1 = position.X * matrix.M12 + position.Y * matrix.M22 + position.Z * matrix.M32;
-            var num2 = position.X * matrix.M13 + position.Y * matrix.M23 + position.Z * matrix.M33;
+            var num0 = Vector3.Dot(position, matrix.Col0);
+            var num1 = Vector3.Dot(position, matrix.Col1);
+            var num2 = Vector3.Dot(position, matrix.Col2);
 
             return new(num0, num1, num2);
         }
 
         public static Vector3 TransposedTransform(this Vector3 position, in JMatrix matrix)
         {
-            var num0 = position.X * matrix.M11 + position.Y * matrix.M12 + position.Z * matrix.M13;
-            var num1 = position.X * matrix.M21 + position.Y * matrix.M22 + position.Z * matrix.M23;
-            var num2 = position.X * matrix.M31 + position.Y * matrix.M32 + position.Z * matrix.M33;
+            var num0 = Vector3.Dot(position, matrix.Row0);
+            var num1 = Vector3.Dot(position, matrix.Row1);
+            var num2 = Vector3.Dot(position, matrix.Row2);
+
+            //var num0x = position.X * matrix.M11 + position.Y * matrix.M12 + position.Z * matrix.M13;
+            //var num1x = position.X * matrix.M21 + position.Y * matrix.M22 + position.Z * matrix.M23;
+            //var num2x = position.X * matrix.M31 + position.Y * matrix.M32 + position.Z * matrix.M33;
+            //Debug.Assert(Math.Abs(num0 - num0x) < float.Epsilon);
 
             return new(num0, num1, num2);
         }

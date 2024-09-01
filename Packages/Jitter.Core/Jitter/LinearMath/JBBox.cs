@@ -90,8 +90,7 @@ namespace Jitter.LinearMath
             Max -= position;
             Min -= position;
 
-            var center = Max + Min;
-            center.X *= 0.5f; center.Y *= 0.5f; center.Z *= 0.5f;
+            var center = (Max + Min) * 0.5f;
 
             var halfExtents = Max - Min;
             halfExtents.X *= 0.5f; halfExtents.Y *= 0.5f; halfExtents.Z *= 0.5f;

@@ -24,7 +24,6 @@ using System.Collections.Generic;
 
 namespace Jitter
 {
-
     /// <summary>
     /// A thread safe resource pool.
     /// </summary>
@@ -33,7 +32,7 @@ namespace Jitter
     public class ThreadSafeResourcePool<T>
         where T : class
     {
-        private readonly Func<T>? create;
+        private readonly Func<T> create;
         private readonly Stack<T> stack = new();
 
         /// <summary>
@@ -41,14 +40,14 @@ namespace Jitter
         /// </summary>
         public ThreadSafeResourcePool(Func<T>? create = null)
         {
-            this.create = create;
+            this.create = create ?? Activator.CreateInstance<T>;
         }
 
         /// <summary>
         /// Removes all cached resources.
         /// So they can get garbage collected.
         /// </summary>
-        public void ResetResourcePool()
+        public void Clear()
         {
             lock (stack)
             {
@@ -60,7 +59,7 @@ namespace Jitter
         /// Gives a resource back to the pool.
         /// </summary>
         /// <param name="obj">The resource to give back</param>
-        public void GiveBack(T obj)
+        public void Return(T obj)
         {
             lock (stack)
             {
@@ -72,92 +71,15 @@ namespace Jitter
         /// Get a free resource.
         /// </summary>
         /// <returns>The free resource.</returns>
-        public T GetNew()
-        {
-            T freeObj;
-
-            lock (stack)
-            {
-                if (stack.Count == 0)
-                {
-                    freeObj = create?.Invoke() ?? Activator.CreateInstance<T>();
-                    stack.Push(freeObj);
-                }
-
-                freeObj = stack.Pop();
-            }
-
-            return freeObj;
-        }
-    }
-
-
-    /// <summary>
-    /// A thread safe resource pool.
-    /// </summary>
-    /// <typeparam name="T">The type of the array of objects to cache. The type T must
-    /// have a parameterless constructor.  Do not specify [].</typeparam>
-    public class ThreadSafeArrayResourcePool<T>
-    {
-        private readonly Stack<T[]> stack = new();
-
-        /// <summary>
-        /// The length of each array object to be created in the pool.
-        /// </summary>
-        private readonly int arrayLength;
-
-        /// <summary>
-        /// Creates a new instance of the ThreadSafeResourcePool class.
-        /// </summary>
-        public ThreadSafeArrayResourcePool(int arrayLength)
-        {
-            this.arrayLength = arrayLength;
-        }
-
-        /// <summary>
-        /// Removes all cached resources.
-        /// So they can get garbage collected.
-        /// </summary>
-        public void ResetResourcePool()
+        public T Take()
         {
             lock (stack)
             {
-                stack.Clear();
-            }
-        }
-
-        /// <summary>
-        /// Gives a resource back to the pool.
-        /// </summary>
-        /// <param name="obj">The resource to give back</param>
-        public void GiveBack(T[] obj)
-        {
-            lock (stack)
-            {
-                stack.Push(obj);
-            }
-        }
-
-        /// <summary>
-        /// Get a free resource.
-        /// </summary>
-        /// <returns>The free resource.</returns>
-        public T[] GetNew()
-        {
-            T[] freeObj;
-
-            lock (stack)
-            {
-                if (stack.Count == 0)
-                {
-                    freeObj = new T[arrayLength];
-                    stack.Push(freeObj);
-                }
-
-                freeObj = stack.Pop();
+                if (stack.Count > 0)
+                    return stack.Pop();
             }
 
-            return freeObj;
+            return create.Invoke();
         }
     }
 }

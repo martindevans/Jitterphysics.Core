@@ -48,8 +48,8 @@ namespace Jitter.Dynamics.Constraints
         /// <param name="lineStartPointBody1"></param>
         /// <param name="lineDirection"></param>
         /// <param name="pointBody2"></param>
-        public PointOnLine(RigidBody body1, RigidBody body2,
-            Vector3 lineStartPointBody1, Vector3 pointBody2) : base(body1,body2)
+        public PointOnLine(RigidBody body1, RigidBody body2, Vector3 lineStartPointBody1, Vector3 pointBody2)
+            : base(body1,body2)
         {
 
             localAnchor1 = lineStartPointBody1 - body1.position;
@@ -88,11 +88,8 @@ namespace Jitter.Dynamics.Constraints
             r1 = localAnchor1.Transform(Body1.orientation);
             r2 = localAnchor2.Transform(Body2.orientation);
 
-            Vector3 dp;
             var p1 = Body1.position + r1;
             var p2 = Body2.position + r2;
-
-            dp = p2 - p1;
 
             var l = lineNormal.Transform(Body1.orientation);
             l = Vector3.Normalize(l);

@@ -18,7 +18,6 @@
 */
 
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Numerics;
 using Jitter.LinearMath;
@@ -131,7 +130,7 @@ namespace Jitter.Collision
             triBoxes = null;
             tris = null;
             nodes = null;
-            nodeStackPool.ResetResourcePool();
+            nodeStackPool.Clear();
         }
 
         /// <summary>
@@ -244,8 +243,8 @@ namespace Jitter.Collision
 
             // now convert to the tighter Node from BuildNodes
             nodes = new Node[buildNodes.Count];
-            nodeStackPool = new(buildNodes.Count);
-            //nodeStack = new UInt16[buildNodes.Count];
+            var poolArraySize = buildNodes.Count;
+            nodeStackPool = new(() => new ushort[poolArraySize]);
             for (var i = 0; i < nodes.Length; i++)
             {
                 nodes[i].nodeIndices = new ushort[buildNodes[i].nodeIndices.Count];
@@ -344,7 +343,7 @@ namespace Jitter.Collision
             var curStackIndex = 0;
             var endStackIndex = 1;
 
-            var nodeStack = nodeStackPool.GetNew();
+            var nodeStack = nodeStackPool.Take();
 
             nodeStack[0] = 0;
 
@@ -373,12 +372,12 @@ namespace Jitter.Collision
                 }
             }
 
-            nodeStackPool.GiveBack(nodeStack);
+            nodeStackPool.Return(nodeStack);
 
             return triCount;
         }
 
-        private ThreadSafeArrayResourcePool<ushort> nodeStackPool;
+        private ThreadSafeResourcePool<ushort[]> nodeStackPool;
 
         /// <summary>
         /// Returns all triangles which intersect the given axis aligned bounding box.
@@ -394,7 +393,7 @@ namespace Jitter.Collision
             var curStackIndex = 0;
             var endStackIndex = 1;
 
-            var nodeStack = nodeStackPool.GetNew();
+            var nodeStack = nodeStackPool.Take();
             nodeStack[0] = 0;
 
             var triCount = 0;
@@ -422,7 +421,7 @@ namespace Jitter.Collision
                 }
             }
 
-            nodeStackPool.GiveBack(nodeStack);
+            nodeStackPool.Return(nodeStack);
             return triCount;
         }
 

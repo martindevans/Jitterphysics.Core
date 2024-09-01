@@ -230,34 +230,21 @@ namespace Jitter.Collision.Shapes
         /// <returns>The resulting axis aligned bounding box.</returns>
         public virtual JBBox GetBoundingBox(JMatrix orientation)
         {
-            JBBox box;
             // I don't think that this can be done faster.
             // 6 is the minimum number of SupportMap calls.
 
-            var vec = new Vector3(orientation.M11, orientation.M21, orientation.M31);
-            vec = SupportMapping(vec);
-            box.Max.X = orientation.M11 * vec.X + orientation.M21 * vec.Y + orientation.M31 * vec.Z;
-
-            vec = new(orientation.M12, orientation.M22, orientation.M32);
-            vec = SupportMapping(vec);
-            box.Max.Y = orientation.M12 * vec.X + orientation.M22 * vec.Y + orientation.M32 * vec.Z;
-
-            vec = new(orientation.M13, orientation.M23, orientation.M33);
-            vec = SupportMapping(vec);
-            box.Max.Z = orientation.M13 * vec.X + orientation.M23 * vec.Y + orientation.M33 * vec.Z;
-
-            vec = new(-orientation.M11, -orientation.M21, -orientation.M31);
-            vec = SupportMapping(vec);
-            box.Min.X = orientation.M11 * vec.X + orientation.M21 * vec.Y + orientation.M31 * vec.Z;
-
-            vec = new(-orientation.M12, -orientation.M22, -orientation.M32);
-            vec = SupportMapping(vec);
-            box.Min.Y = orientation.M12 * vec.X + orientation.M22 * vec.Y + orientation.M32 * vec.Z;
-
-            vec = new(-orientation.M13, -orientation.M23, -orientation.M33);
-            vec = SupportMapping(vec);
-            box.Min.Z = orientation.M13 * vec.X + orientation.M23 * vec.Y + orientation.M33 * vec.Z;
-            return box;
+            return new JBBox(
+                new Vector3(
+                    Vector3.Dot(orientation.Col0, SupportMapping(-orientation.Col0)),
+                    Vector3.Dot(orientation.Col1, SupportMapping(-orientation.Col1)),
+                    Vector3.Dot(orientation.Col2, SupportMapping(-orientation.Col2))
+                ),
+                new Vector3(
+                    Vector3.Dot(orientation.Col0, SupportMapping(orientation.Col0)),
+                    Vector3.Dot(orientation.Col1, SupportMapping(orientation.Col1)),
+                    Vector3.Dot(orientation.Col2, SupportMapping(orientation.Col2))
+                )
+            );
         }
 
         /// <summary>
@@ -322,7 +309,7 @@ namespace Jitter.Collision.Shapes
                 mass += tetrahedronMass;
             }
 
-            inertia = JMatrix.Multiply(JMatrix.Identity, inertia.Trace()) - inertia;
+            inertia = JMatrix.Multiply(JMatrix.Identity, inertia.Trace) - inertia;
             centerOfMass *= (1.0f / mass);
 
             var x = centerOfMass.X;

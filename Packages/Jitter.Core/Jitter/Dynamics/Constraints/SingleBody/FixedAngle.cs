@@ -97,9 +97,7 @@ namespace Jitter.Dynamics.Constraints.SingleBody
 
             softnessOverDt = Softness / timestep;
 
-            effectiveMass.M11 += softnessOverDt;
-            effectiveMass.M22 += softnessOverDt;
-            effectiveMass.M33 += softnessOverDt;
+            effectiveMass.Diagonal += new Vector3(softnessOverDt);
 
             effectiveMass = effectiveMass.Inverse();
             var q = JMatrix.Transpose(InitialOrientation) * Body1.orientation;
@@ -109,7 +107,7 @@ namespace Jitter.Dynamics.Constraints.SingleBody
             var z = q.M21 - q.M12;
 
             var r = MathF.Sqrt(x * x + y * y + z * z);
-            var t = q.M11 + q.M22 + q.M33;
+            var t = q.Trace;
 
             var angle = (float)Math.Atan2(r, t - 1);
             var axis = new Vector3(x, y, z) * angle;

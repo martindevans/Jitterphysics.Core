@@ -91,7 +91,7 @@ namespace Jitter.Dynamics
 
         internal static Arbiter Create(RigidBody body1, RigidBody body2)
         {
-            var a = Pool.GetNew();
+            var a = Pool.Take();
             a.Body1 = body1;
             a.Body2 = body2;
             return a;
@@ -101,12 +101,12 @@ namespace Jitter.Dynamics
         {
             arbiter.Body1 = null!;
             arbiter.Body2 = null!;
-            Pool.GiveBack(arbiter);
+            Pool.Return(arbiter);
         }
 
         internal static void ResetResourcePool()
         {
-            Pool.ResetResourcePool();
+            Pool.Clear();
         }
 
         /// <summary>
@@ -150,7 +150,7 @@ namespace Jitter.Dynamics
             }
             else
             {
-                var contact = Contact.Pool.GetNew();
+                var contact = Contact.Pool.Take();
                 contact.Initialize(Body1, Body2, ref point1, ref point2, ref normal, penetration, true, contactSettings);
                 ContactList.Add(contact);
                 return contact;
@@ -270,7 +270,6 @@ namespace Jitter.Dynamics
             if (w > maxVal)
             {
                 maxIndex = 3;
-                maxVal = w;
             }
 
             return maxIndex;

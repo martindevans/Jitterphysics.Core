@@ -103,11 +103,6 @@ namespace Jitter.Dynamics
             return arbiter;
         }
 
-        internal void Add(ArbiterKey key, Arbiter arbiter)
-        {
-            dictionary.Add(key, arbiter);
-        }
-
         internal void Clear()
         {
             dictionary.Clear();

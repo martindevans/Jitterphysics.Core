@@ -206,8 +206,10 @@ namespace Jitter.Dynamics
 
             var oldTangentImpulse = accumulatedTangentImpulse;
             accumulatedTangentImpulse = oldTangentImpulse + tangentImpulse;
-            if (accumulatedTangentImpulse < -maxTangentImpulse) accumulatedTangentImpulse = -maxTangentImpulse;
-            else if (accumulatedTangentImpulse > maxTangentImpulse) accumulatedTangentImpulse = maxTangentImpulse;
+            if (accumulatedTangentImpulse < -maxTangentImpulse)
+                accumulatedTangentImpulse = -maxTangentImpulse;
+            else if (accumulatedTangentImpulse > maxTangentImpulse)
+                accumulatedTangentImpulse = maxTangentImpulse;
 
             tangentImpulse = accumulatedTangentImpulse - oldTangentImpulse;
 
@@ -222,18 +224,9 @@ namespace Jitter.Dynamics
                 var num1 = relativePos1.Z * impulse.X - relativePos1.X * impulse.Z;
                 var num2 = relativePos1.X * impulse.Y - relativePos1.Y * impulse.X;
 
-                var num3 =
-                    num0 * body1.invInertiaWorld.M11 +
-                    num1 * body1.invInertiaWorld.M21 +
-                    num2 * body1.invInertiaWorld.M31;
-                var num4 =
-                    num0 * body1.invInertiaWorld.M12 +
-                    num1 * body1.invInertiaWorld.M22 +
-                    num2 * body1.invInertiaWorld.M32;
-                var num5 =
-                    num0 * body1.invInertiaWorld.M13 +
-                    num1 * body1.invInertiaWorld.M23 +
-                    num2 * body1.invInertiaWorld.M33;
+                var num3 = num0 * body1.invInertiaWorld.M11 + num1 * body1.invInertiaWorld.M21 + num2 * body1.invInertiaWorld.M31;
+                var num4 = num0 * body1.invInertiaWorld.M12 + num1 * body1.invInertiaWorld.M22 + num2 * body1.invInertiaWorld.M32;
+                var num5 = num0 * body1.invInertiaWorld.M13 + num1 * body1.invInertiaWorld.M23 + num2 * body1.invInertiaWorld.M33;
 
                 body1.angularVelocity.X -= num3;
                 body1.angularVelocity.Y -= num4;
@@ -242,27 +235,15 @@ namespace Jitter.Dynamics
 
             if (!treatBody2AsStatic)
             {
-
-                body2.linearVelocity.X += impulse.X * body2.inverseMass;
-                body2.linearVelocity.Y += impulse.Y * body2.inverseMass;
-                body2.linearVelocity.Z += impulse.Z * body2.inverseMass;
+                body2.LinearVelocity += impulse * body2.inverseMass;
 
                 var num0 = relativePos2.Y * impulse.Z - relativePos2.Z * impulse.Y;
                 var num1 = relativePos2.Z * impulse.X - relativePos2.X * impulse.Z;
                 var num2 = relativePos2.X * impulse.Y - relativePos2.Y * impulse.X;
 
-                var num3 =
-                    num0 * body2.invInertiaWorld.M11 +
-                    num1 * body2.invInertiaWorld.M21 +
-                    num2 * body2.invInertiaWorld.M31;
-                var num4 =
-                    num0 * body2.invInertiaWorld.M12 +
-                    num1 * body2.invInertiaWorld.M22 +
-                    num2 * body2.invInertiaWorld.M32;
-                var num5 =
-                    num0 * body2.invInertiaWorld.M13 +
-                    num1 * body2.invInertiaWorld.M23 +
-                    num2 * body2.invInertiaWorld.M33;
+                var num3 = num0 * body2.invInertiaWorld.M11 + num1 * body2.invInertiaWorld.M21 + num2 * body2.invInertiaWorld.M31;
+                var num4 = num0 * body2.invInertiaWorld.M12 + num1 * body2.invInertiaWorld.M22 + num2 * body2.invInertiaWorld.M32;
+                var num5 = num0 * body2.invInertiaWorld.M13 + num1 * body2.invInertiaWorld.M23 + num2 * body2.invInertiaWorld.M33;
 
                 body2.angularVelocity.X += num3;
                 body2.angularVelocity.Y += num4;

@@ -126,8 +126,6 @@ namespace Jitter
             }
         }
 
-        private float _timestep;
-
         private readonly IslandManager _islands = new();
 
         private readonly HashSet<RigidBody> _bodies = new();
@@ -159,7 +157,7 @@ namespace Jitter
         /// Gets the <see cref="CollisionSystem"/> used
         /// to detect collisions.
         /// </summary>
-        public CollisionSystem CollisionSystem { set; get; }
+        public CollisionSystem CollisionSystem { get; }
 
         /// <summary>
         /// Gets or sets the gravity in this <see cref="World"/>. The default gravity is (0,0,0)
@@ -196,9 +194,9 @@ namespace Jitter
         /// </summary>
         public static void ClearResourcePools()
         {
-            IslandManager.Pool.ResetResourcePool();
+            IslandManager.Pool.Clear();
             Arbiter.ResetResourcePool();
-            Contact.Pool.ResetResourcePool();
+            Contact.Pool.Clear();
         }
 
         #region damping
@@ -457,6 +455,8 @@ namespace Jitter
 
         private float currentLinearDampFactor = 1.0f;
         private float currentAngularDampFactor = 1.0f;
+        private float _timestep;
+        private float _accumulatedTime;
 
         /// <summary>
         /// Integrates the whole world a timestep further in time.
@@ -524,8 +524,6 @@ namespace Jitter
             _stepTimesMs[(int)DebugType.PostStep] = sw.Elapsed.TotalMilliseconds;
         }
 
-        private float accumulatedTime;
-
         /// <summary>
         /// Integrates the whole world several fixed timestep further in time.
         /// </summary>
@@ -539,19 +537,19 @@ namespace Jitter
         public void Step(float totalTime, float timestep, int maxSteps)
         {
             var counter = 0;
-            accumulatedTime += totalTime;
+            _accumulatedTime += totalTime;
 
-            while (accumulatedTime > timestep)
+            while (_accumulatedTime > timestep)
             {
                 Step(timestep);
 
-                accumulatedTime -= timestep;
+                _accumulatedTime -= timestep;
                 counter++;
 
                 if (counter > maxSteps)
                 {
                     // okay, okay... we can't keep up
-                    accumulatedTime = 0.0f;
+                    _accumulatedTime = 0.0f;
                     break;
                 }
             }
@@ -562,7 +560,7 @@ namespace Jitter
         {
             if (arbiter.ContactList.Count == 0)
             {
-                removedArbiterStack.Push(arbiter);
+                _removedArbiterStack.Push(arbiter);
                 return;
             }
 
@@ -573,7 +571,7 @@ namespace Jitter
 
                 if (c.penetration < -ContactSettings.BreakThreshold)
                 {
-                    Contact.Pool.GiveBack(c);
+                    Contact.Pool.Return(c);
                     arbiter.ContactList.RemoveAt(i);
                 }
                 else
@@ -588,7 +586,7 @@ namespace Jitter
                     // following line.
                     if (distance > ContactSettings.BreakThreshold * ContactSettings.BreakThreshold * 100)
                     {
-                        Contact.Pool.GiveBack(c);
+                        Contact.Pool.Return(c);
                         arbiter.ContactList.RemoveAt(i);
                     }
                 }
@@ -596,24 +594,21 @@ namespace Jitter
             }
         }
 
-        private readonly Stack<Arbiter> removedArbiterStack = new();
+        private readonly Stack<Arbiter> _removedArbiterStack = new();
 
         private void UpdateContacts()
         {
             foreach (var arbiter in ArbiterMap.Arbiters)
-            {
                 UpdateArbiterContacts(arbiter);
-            }
 
-            while (removedArbiterStack.Count > 0)
+            while (_removedArbiterStack.Count > 0)
             {
-                var arbiter = removedArbiterStack.Pop();
+                var arbiter = _removedArbiterStack.Pop();
                 ArbiterMap.Remove(arbiter);
 
                 removedArbiterQueue.Enqueue(arbiter);
                 Events.RaiseBodiesEndCollide(arbiter.Body1, arbiter.Body2);
             }
-
         }
 
         private void ArbiterCallback(CollisionIsland island)
@@ -755,23 +750,12 @@ namespace Jitter
                 Events.RaiseBodiesBeginCollide(body1, body2);
             }
 
-            Contact contact;
+            var contact = arbiter.Body1 == body1
+                        ? arbiter.AddContact(point1, point2, -normal, penetration, ContactSettings)
+                        : arbiter.AddContact(point2, point1, normal, penetration, ContactSettings);
 
-            if (arbiter.Body1 == body1)
-            {
-                normal = -normal;
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
-                contact = arbiter.AddContact(point1, point2, normal, penetration, ContactSettings);
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
-            }
-            else
-            {
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
-                contact = arbiter.AddContact(point2, point1, normal, penetration, ContactSettings);
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
-            }
-
-            if (contact != null) Events.RaiseContactCreated(contact);
+            if (contact != null)
+                Events.RaiseContactCreated(contact);
 
         }
 
@@ -789,7 +773,6 @@ namespace Jitter
             {
                 var deactivateIsland = true;
 
-                // global allowdeactivation
                 if (!AllowDeactivation)
                 {
                     deactivateIsland = false;

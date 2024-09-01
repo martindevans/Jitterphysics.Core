@@ -57,19 +57,21 @@ namespace Jitter.Collision
         {
             // THIS IS *THE* HIGH FREQUENCY CODE OF THE COLLLISION PART OF THE ENGINE
 
-            result.X = direction.X * orientation.M11 + direction.Y * orientation.M12 + direction.Z * orientation.M13;
-            result.Y = direction.X * orientation.M21 + direction.Y * orientation.M22 + direction.Z * orientation.M23;
-            result.Z = direction.X * orientation.M31 + direction.Y * orientation.M32 + direction.Z * orientation.M33;
+            var dir = new Vector3(
+                Vector3.Dot(direction, orientation.Row0),
+                Vector3.Dot(direction, orientation.Row1),
+                Vector3.Dot(direction, orientation.Row2)
+            );
 
-            result = support.SupportMapping(result);
+            var supportPoint = support.SupportMapping(dir);
 
-            var x = result.X * orientation.M11 + result.Y * orientation.M21 + result.Z * orientation.M31;
-            var y = result.X * orientation.M12 + result.Y * orientation.M22 + result.Z * orientation.M32;
-            var z = result.X * orientation.M13 + result.Y * orientation.M23 + result.Z * orientation.M33;
+            var xyz = new Vector3(
+                Vector3.Dot(supportPoint, orientation.Col0),
+                Vector3.Dot(supportPoint, orientation.Col1),
+                Vector3.Dot(supportPoint, orientation.Col2)
+            );
 
-            result.X = position.X + x;
-            result.Y = position.Y + y;
-            result.Z = position.Z + z;
+            result = position + xyz;
         }
 
         /// <summary>

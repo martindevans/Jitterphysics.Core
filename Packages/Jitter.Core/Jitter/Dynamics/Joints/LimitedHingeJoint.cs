@@ -24,6 +24,8 @@ namespace Jitter.Dynamics.Joints
         /// <param name="body2">The second body connected to the first one.</param>
         /// <param name="position">The position in world space where both bodies get connected.</param>
         /// <param name="hingeAxis">The axis if the hinge.</param>
+        /// <param name="hingeFwdAngle"></param>
+        /// <param name="hingeBckAngle"></param>
         public LimitedHingeJoint(World world, RigidBody body1, RigidBody body2, Vector3 position, Vector3 hingeAxis, float hingeFwdAngle, float hingeBckAngle)
             : base(world)
         {

@@ -38,19 +38,21 @@ namespace Jitter.Collision
             //JVectorExtensions.Transform(ref result, ref orientation, out result);
             //Vector3.Add(ref result, ref position, out result);
 
-            result.X = direction.X * orientation.M11 + direction.Y * orientation.M12 + direction.Z * orientation.M13;
-            result.Y = direction.X * orientation.M21 + direction.Y * orientation.M22 + direction.Z * orientation.M23;
-            result.Z = direction.X * orientation.M31 + direction.Y * orientation.M32 + direction.Z * orientation.M33;
+            var dir = new Vector3(
+                Vector3.Dot(direction, orientation.Row0),
+                Vector3.Dot(direction, orientation.Row1),
+                Vector3.Dot(direction, orientation.Row2)
+            );
 
-            result = support.SupportMapping(result);
+            var supportPoint = support.SupportMapping(dir);
 
-            var x = result.X * orientation.M11 + result.Y * orientation.M21 + result.Z * orientation.M31;
-            var y = result.X * orientation.M12 + result.Y * orientation.M22 + result.Z * orientation.M32;
-            var z = result.X * orientation.M13 + result.Y * orientation.M23 + result.Z * orientation.M33;
+            var xyz = new Vector3(
+                Vector3.Dot(supportPoint, orientation.Col0),
+                Vector3.Dot(supportPoint, orientation.Col1),
+                Vector3.Dot(supportPoint, orientation.Col2)
+            );
 
-            result.X = position.X + x;
-            result.Y = position.Y + y;
-            result.Z = position.Z + z;
+            result = position + xyz;
         }
 
         /// <summary>
@@ -79,7 +81,7 @@ namespace Jitter.Collision
 
             var maxIter = MaxIterations;
 
-            var simplexSolver = simplexSolverPool.GetNew();
+            var simplexSolver = simplexSolverPool.Take();
 
             simplexSolver.Reset();
 
@@ -94,7 +96,7 @@ namespace Jitter.Collision
                 {
                     var VdotR = Vector3.Dot(v, r);
 
-                    if (VdotR >= -(JMath.Epsilon * JMath.Epsilon)) { simplexSolverPool.GiveBack(simplexSolver); return false; }
+                    if (VdotR >= -(JMath.Epsilon * JMath.Epsilon)) { simplexSolverPool.Return(simplexSolver); return false; }
                     else simplexSolver.Reset();
                 }
                 if (!simplexSolver.InSimplex(w)) simplexSolver.AddVertex(w, x, p);
@@ -102,7 +104,7 @@ namespace Jitter.Collision
                 dist = simplexSolver.Closest(out v) ? v.LengthSquared() : 0.0f;
             }
 
-            simplexSolverPool.GiveBack(simplexSolver);
+            simplexSolverPool.Return(simplexSolver);
             return true;
 
         }
@@ -113,7 +115,7 @@ namespace Jitter.Collision
             out Vector3 p1, out Vector3 p2, out Vector3 normal)
         {
 
-            var simplexSolver = simplexSolverPool.GetNew();
+            var simplexSolver = simplexSolverPool.Take();
             simplexSolver.Reset();
 
             p1 = p2 = default;
@@ -157,7 +159,7 @@ namespace Jitter.Collision
             if (normal.LengthSquared() > JMath.Epsilon * JMath.Epsilon)
                 normal = Vector3.Normalize(normal);
 
-            simplexSolverPool.GiveBack(simplexSolver);
+            simplexSolverPool.Return(simplexSolver);
 
             return true;
 
@@ -281,7 +283,7 @@ namespace Jitter.Collision
         public static bool Raycast(ISupportMappable support, ref JMatrix orientation, 
             ref Vector3 position,ref Vector3 origin,ref Vector3 direction, out float fraction, out Vector3 normal)
         {
-            var simplexSolver = simplexSolverPool.GetNew();
+            var simplexSolver = simplexSolverPool.Take();
             simplexSolver.Reset();
 
             normal = default;
@@ -313,7 +315,7 @@ namespace Jitter.Collision
 
                     if (VdotR >= -JMath.Epsilon)
                     {
-                        simplexSolverPool.GiveBack(simplexSolver);
+                        simplexSolverPool.Return(simplexSolver);
                         return false;
                     }
                     else
@@ -342,7 +344,7 @@ namespace Jitter.Collision
             if (normal.LengthSquared() > JMath.Epsilon * JMath.Epsilon)
                 normal = Vector3.Normalize(normal);
 
-            simplexSolverPool.GiveBack(simplexSolver);
+            simplexSolverPool.Return(simplexSolver);
 
             return true;
         }

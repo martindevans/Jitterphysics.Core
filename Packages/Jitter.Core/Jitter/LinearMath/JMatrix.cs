@@ -30,6 +30,22 @@ namespace Jitter.LinearMath
     /// </summary>
     public struct JMatrix
     {
+        public Vector3 Row0 => new Vector3(M11, M12, M13);
+        public Vector3 Row1 => new Vector3(M21, M22, M23);
+        public Vector3 Row2 => new Vector3(M31, M32, M33);
+
+        public Vector3 Col0 => new Vector3(M11, M21, M31);
+        public Vector3 Col1 => new Vector3(M12, M22, M32);
+        public Vector3 Col2 => new Vector3(M13, M23, M33);
+
+        public Vector3 Diagonal
+        {
+            get => new Vector3(M11, M22, M33);
+            set => (M11, M22, M33) = (value.X, value.Y, value.Z);
+        }
+
+        public float Trace => M11 + M22 + M33;
+
         /// <summary>
         /// M11
         /// </summary>
@@ -42,6 +58,7 @@ namespace Jitter.LinearMath
         /// M13
         /// </summary>
         public float M13;
+
         /// <summary>
         /// M21
         /// </summary>
@@ -54,6 +71,7 @@ namespace Jitter.LinearMath
         /// M23
         /// </summary>
         public float M23;
+
         /// <summary>
         /// M31
         /// </summary>
@@ -500,16 +518,6 @@ namespace Jitter.LinearMath
         {
             Multiply(ref value1, ref value2, out var result);
             return result;
-        }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public readonly float Trace()
-        {
-            return M11 + M22 + M33;
         }
 
         /// <summary>

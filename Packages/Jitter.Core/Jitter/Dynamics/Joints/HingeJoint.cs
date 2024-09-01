@@ -44,8 +44,8 @@ namespace Jitter.Dynamics.Joints
             var pos1 = position; pos1 += hingeAxis;
             var pos2 = position; pos2 -= hingeAxis;
 
-            PointOnPointConstraint0 = new(body1,body2,pos1);
-            PointOnPointConstraint1 = new(body1,body2,pos2);
+            PointOnPointConstraint0 = new(body1, body2, pos1);
+            PointOnPointConstraint1 = new(body1, body2, pos2);
         }
 
         public PointOnPoint PointOnPointConstraint0 { get; }
